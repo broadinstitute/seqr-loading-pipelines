@@ -256,6 +256,7 @@ def create_staging_non_table_entities(
 
 def stage_existing_project_partitions(
     table_name_builder: TableNameBuilder,
+    dataset_type: DatasetType,
     project_guids: list[str],
 ):
     for project_guid in project_guids:
@@ -271,12 +272,13 @@ def stage_existing_project_partitions(
     # Very important piece here:
     # ALL projects in the project_gt_stats table are staged, allowing us to rebuild
     # a production-quality gt_stats materialized view in the staging environment.
-    logged_query(
-        f"""
-        ALTER TABLE {table_name_builder.staging_dst_table(ClickHouseTable.PROJECT_GT_STATS)}
-        ATTACH PARTITION ALL FROM {table_name_builder.dst_table(ClickHouseTable.PROJECT_GT_STATS)}
-        """,
-    )
+    if not dataset_type.export_all_callset_variants:
+        logged_query(
+            f"""
+            ALTER TABLE {table_name_builder.staging_dst_table(ClickHouseTable.PROJECT_GT_STATS)}
+            ATTACH PARTITION ALL FROM {table_name_builder.dst_table(ClickHouseTable.PROJECT_GT_STATS)}
+            """,
+        )
 
 
 def delete_existing_families_from_staging_entries(
@@ -436,16 +438,21 @@ def atomic_entries_insert(
     )
     drop_staging_db()
     create_staging_tables(
-        table_name_builder,
-        [
-            ClickHouseTable.ENTRIES,
-            ClickHouseTable.PROJECT_GT_STATS,
-            ClickHouseTable.GT_STATS,
-        ],
+        table_name_builder(
+            [ClickHouseTable.ENTRIES]
+            if dataset_type.export_all_callset_variants
+            else [
+                ClickHouseTable.ENTRIES,
+                ClickHouseTable.PROJECT_GT_STATS,
+                ClickHouseTable.GT_STATS,
+            ],
+        ),
     )
     create_staging_non_table_entities(
         table_name_builder,
-        [
+        []
+        if dataset_type.export_all_callset_variants
+        else [
             ClickHouseMaterializedView.ENTRIES_TO_PROJECT_GT_STATS_MV,
             ClickHouseMaterializedView.PROJECT_GT_STATS_TO_GT_STATS_MV,
             ClickHouseDictionary.GT_STATS_DICT,
@@ -453,6 +460,7 @@ def atomic_entries_insert(
     )
     stage_existing_project_partitions(
         table_name_builder,
+        dataset_type,
         project_guids,
     )
     delete_existing_families_from_staging_entries(
@@ -467,20 +475,32 @@ def atomic_entries_insert(
         project_guids,
         [
             ClickHouseTable.ENTRIES,
+        ]
+        if dataset_type.export_all_callset_variants
+        else [
+            ClickHouseTable.ENTRIES,
             ClickHouseTable.PROJECT_GT_STATS,
         ],
     )
-    refresh_staged_gt_stats(
-        table_name_builder,
-    )
+    if not dataset_type.export_all_callset_variants:
+        refresh_staged_gt_stats(
+            table_name_builder,
+        )
     replace_project_partitions(
         table_name_builder,
         project_guids,
         [
             ClickHouseTable.ENTRIES,
+        ]
+        if dataset_type.export_all_callset_variants
+        else [
+            ClickHouseTable.ENTRIES,
             ClickHouseTable.PROJECT_GT_STATS,
         ],
     )
+    if dataset_type.export_all_callset_variants:
+        drop_staging_db()
+        return
     exchange_entity(
         table_name_builder,
         ClickHouseTable.GT_STATS,

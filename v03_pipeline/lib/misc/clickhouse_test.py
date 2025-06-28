@@ -622,6 +622,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         stage_existing_project_partitions(
             table_name_builder,
+            DatasetType.SNV_INDEL,
             [
                 'project_a',
                 'project_b',
