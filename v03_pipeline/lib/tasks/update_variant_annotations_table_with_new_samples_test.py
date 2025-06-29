@@ -266,7 +266,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             key='locus',
             globals=hl.Struct(
                 versions=hl.Struct(
-                    gnomad_genomes='1.0',
+                    gnomad_genomes='1.1',
                 ),
                 enums=hl.Struct(
                     gnomad_genomes=hl.Struct(),
@@ -499,8 +499,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                             dbnsfp='1.0',
                             eigen='1.1',
                             exac='1.1',
-                            gnomad_exomes='1.0',
-                            gnomad_genomes='1.0',
+                            gnomad_exomes='1.1',
+                            gnomad_genomes='1.1',
                             splice_ai='1.1',
                             topmed='1.1',
                             gnomad_non_coding_constraint='1.0',
@@ -764,8 +764,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         dbnsfp='1.0',
                         eigen='1.1',
                         exac='1.1',
-                        gnomad_exomes='1.0',
-                        gnomad_genomes='1.0',
+                        gnomad_exomes='1.1',
+                        gnomad_genomes='1.1',
                         splice_ai='1.1',
                         topmed='1.1',
                         gnomad_non_coding_constraint='1.0',
