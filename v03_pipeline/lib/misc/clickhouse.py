@@ -364,7 +364,7 @@ def validate_family_guid_counts(
         logged_query(
             query.substitute(
                 table_name=table_name_builder.src_table(
-                    ClickHouseMaterializedView.ENTRIES,
+                    ClickHouseTable.ENTRIES,
                 ),
             ),
             {'family_guids': family_guids, 'project_guids': project_guids},
@@ -374,7 +374,7 @@ def validate_family_guid_counts(
         logged_query(
             query.substitute(
                 table_name=table_name_builder.staging_dst_table(
-                    ClickHouseMaterializedView.ENTRIES,
+                    ClickHouseTable.ENTRIES,
                 ),
             ),
             {'family_guids': family_guids, 'project_guids': project_guids},
