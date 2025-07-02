@@ -362,7 +362,7 @@ def validate_family_guid_counts(
     )
     src_family_counts = dict(
         logged_query(
-            query.format(
+            query.substitute(
                 table_name=table_name_builder.src_table(
                     ClickHouseMaterializedView.ENTRIES,
                 ),
@@ -372,7 +372,7 @@ def validate_family_guid_counts(
     )
     dst_family_counts = dict(
         logged_query(
-            query.format(
+            query.substitute(
                 table_name=table_name_builder.staging_dst_table(
                     ClickHouseMaterializedView.ENTRIES,
                 ),
