@@ -4,6 +4,7 @@ import os
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
+from string import Template
 
 from clickhouse_driver import Client
 
@@ -345,6 +346,46 @@ def refresh_staged_gt_stats(table_name_builder):
 
 
 @retry()
+def validate_family_guid_counts(
+    table_name_builder: TableNameBuilder,
+    project_guids: list[str],
+    family_guids: list[str],
+) -> None:
+    query = Template(
+        """
+        SELECT family_guid, COUNT(*)
+        FROM $table_name
+        WHERE project_guid in %(project_guids)s
+        AND family_guid in %(family_guids)s
+        GROUP BY 1
+        """,
+    )
+    src_family_counts = dict(
+        logged_query(
+            query.substitute(
+                table_name=table_name_builder.src_table(
+                    ClickHouseTable.ENTRIES,
+                ),
+            ),
+            {'family_guids': family_guids, 'project_guids': project_guids},
+        ),
+    )
+    dst_family_counts = dict(
+        logged_query(
+            query.substitute(
+                table_name=table_name_builder.staging_dst_table(
+                    ClickHouseTable.ENTRIES,
+                ),
+            ),
+            {'family_guids': family_guids, 'project_guids': project_guids},
+        ),
+    )
+    if src_family_counts != dst_family_counts:
+        msg = 'Loaded Row counts are different than expected.'
+        raise ValueError(msg)
+
+
+@retry()
 def reload_staged_gt_stats_dict(table_name_builder):
     logged_query(
         f"""
@@ -485,6 +526,11 @@ def atomic_entries_insert(
         refresh_staged_gt_stats(
             table_name_builder,
         )
+    validate_family_guid_counts(
+        table_name_builder,
+        project_guids,
+        family_guids,
+    )
     replace_project_partitions(
         table_name_builder,
         project_guids,
@@ -525,11 +571,14 @@ def atomic_entries_insert(
     drop_staging_db()
 
 
-def get_clickhouse_client(increased_timeout: bool = False) -> Client:
+def get_clickhouse_client(
+    increased_timeout: bool = False,
+) -> Client:
     return Client(
         host=Env.CLICKHOUSE_SERVICE_HOSTNAME,
         port=Env.CLICKHOUSE_SERVICE_PORT,
         user=Env.CLICKHOUSE_USER,
         **{'password': Env.CLICKHOUSE_PASSWORD} if Env.CLICKHOUSE_PASSWORD else {},
-        **{'send_receive_timeout': 1800} if increased_timeout else {},
+        **{'send_receive_timeout': 3600} if increased_timeout else {},
+        **{'settings': {'send_timeout': 3600, 'receive_timeout': 3600}} if increased_timeout else {},
     )
