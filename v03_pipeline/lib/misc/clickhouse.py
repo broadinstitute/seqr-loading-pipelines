@@ -580,5 +580,7 @@ def get_clickhouse_client(
         user=Env.CLICKHOUSE_USER,
         **{'password': Env.CLICKHOUSE_PASSWORD} if Env.CLICKHOUSE_PASSWORD else {},
         **{'send_receive_timeout': 3600} if increased_timeout else {},
-        **{'settings': {'send_timeout': 3600, 'receive_timeout': 3600}} if increased_timeout else {},
+        **{'settings': {'send_timeout': 3600, 'receive_timeout': 3600}}
+        if increased_timeout
+        else {},
     )
