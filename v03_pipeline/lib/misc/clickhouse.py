@@ -30,6 +30,7 @@ logger = get_logger(__name__)
 
 GOOGLE_XML_API_PATH = 'https://storage.googleapis.com/'
 KEY = 'key'
+OPTIMIZE_TABLE_TIMEOUT_S = 4800
 REDACTED = 'REDACTED'
 STAGING_CLICKHOUSE_DATABASE = 'staging'
 VARIANT_ID = 'variantId'
@@ -582,8 +583,8 @@ def get_clickhouse_client(
         port=Env.CLICKHOUSE_SERVICE_PORT,
         user=Env.CLICKHOUSE_USER,
         **{'password': Env.CLICKHOUSE_PASSWORD} if Env.CLICKHOUSE_PASSWORD else {},
-        **{'send_receive_timeout': 3600} if increased_timeout else {},
-        **{'settings': {'send_timeout': 3600, 'receive_timeout': 3600}}
+        **{'send_receive_timeout': OPTIMIZE_TABLE_TIMEOUT_S} if increased_timeout else {},
+        **{'settings': {'send_timeout': OPTIMIZE_TABLE_TIMEOUT_S, 'receive_timeout': OPTIMIZE_TABLE_TIMEOUT_S}}
         if increased_timeout
         else {},
     )
