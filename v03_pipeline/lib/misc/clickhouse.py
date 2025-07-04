@@ -519,12 +519,12 @@ def atomic_entries_insert(
         table_name_builder,
         family_guids,
     )
+    insert_new_entries(
+        table_name_builder,
+    )
     optimize_entries(
         table_name_builder,
         project_guids,
-    )
-    insert_new_entries(
-        table_name_builder,
     )
     if not dataset_type.export_all_callset_variants:
         refresh_staged_gt_stats(
@@ -583,15 +583,8 @@ def get_clickhouse_client(
         port=Env.CLICKHOUSE_SERVICE_PORT,
         user=Env.CLICKHOUSE_USER,
         **{'password': Env.CLICKHOUSE_PASSWORD} if Env.CLICKHOUSE_PASSWORD else {},
-        **{'send_receive_timeout': OPTIMIZE_TABLE_TIMEOUT_S}
-        if increased_timeout
-        else {},
-        **{
-            'settings': {
-                'send_timeout': OPTIMIZE_TABLE_TIMEOUT_S,
-                'receive_timeout': OPTIMIZE_TABLE_TIMEOUT_S,
-            },
-        }
+        **{'send_receive_timeout': OPTIMIZE_TABLE_TIMEOUT_S} if increased_timeout else {},
+        **{'settings': {'send_timeout': OPTIMIZE_TABLE_TIMEOUT_S, 'receive_timeout': OPTIMIZE_TABLE_TIMEOUT_S}}
         if increased_timeout
         else {},
     )

@@ -25,6 +25,7 @@ from v03_pipeline.lib.misc.clickhouse import (
     reload_staged_gt_stats_dict,
     replace_project_partitions,
     stage_existing_project_partitions,
+    optimize_entries,
 )
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.model.environment import Env
@@ -760,6 +761,10 @@ class ClickhouseTest(MockedDatarootTestCase):
             ),
         )
         insert_new_entries(table_name_builder)
+        optimize_entries(
+            table_name_builder,
+            ['project_a', 'project_d'],
+        )
         staged_project_gt_stats = client.execute(
             f"""
             SELECT project_guid, key, sample_type, sum(het_samples), sum(hom_samples)
