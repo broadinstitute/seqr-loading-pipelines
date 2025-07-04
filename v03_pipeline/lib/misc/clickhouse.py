@@ -590,7 +590,7 @@ def get_clickhouse_client(
             'settings': {
                 'send_timeout': OPTIMIZE_TABLE_TIMEOUT_S,
                 'receive_timeout': OPTIMIZE_TABLE_TIMEOUT_S,
-            }
+            },
         }
         if increased_timeout
         else {},
