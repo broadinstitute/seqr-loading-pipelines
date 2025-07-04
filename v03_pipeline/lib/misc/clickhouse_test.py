@@ -21,11 +21,11 @@ from v03_pipeline.lib.misc.clickhouse import (
     get_clickhouse_client,
     insert_new_entries,
     max_src_key,
+    optimize_entries,
     refresh_staged_gt_stats,
     reload_staged_gt_stats_dict,
     replace_project_partitions,
     stage_existing_project_partitions,
-    optimize_entries,
 )
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.model.environment import Env
