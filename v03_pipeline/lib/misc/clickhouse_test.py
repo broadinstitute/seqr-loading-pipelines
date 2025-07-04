@@ -771,8 +771,11 @@ class ClickhouseTest(MockedDatarootTestCase):
         self.assertCountEqual(
             staged_project_gt_stats,
             [
+                ('project_a', 0, 'WES', 0, 0),
                 ('project_a', 1, 'WGS', 1, 0),
                 ('project_a', 2, 'WGS', 0, 1),
+                ('project_a', 4, 'WES', 0, 0),
+                ('project_a', 4, 'WGS', 0, 0),
                 ('project_b', 1, 'WES', 1, 0),
                 ('project_b', 3, 'WES', 0, 1),
                 ('project_b', 4, 'WES', 0, 1),
