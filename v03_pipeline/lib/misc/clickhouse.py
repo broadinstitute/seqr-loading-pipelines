@@ -328,7 +328,7 @@ def optimize_entries(
             );
             """,
             {'project_guid': project_guid},
-        )
+        )[0][0]
         if not decrs_exist:
             continue
         logged_query(
@@ -343,7 +343,7 @@ def optimize_entries(
         )
 
 
-@retry()
+@retry(delay=5)
 def refresh_staged_gt_stats(table_name_builder):
     logged_query(
         f"""
@@ -357,7 +357,7 @@ def refresh_staged_gt_stats(table_name_builder):
     )
 
 
-@retry()
+@retry(delay=5)
 def validate_family_guid_counts(
     table_name_builder: TableNameBuilder,
     project_guids: list[str],
@@ -397,7 +397,7 @@ def validate_family_guid_counts(
         raise ValueError(msg)
 
 
-@retry()
+@retry(delay=5)
 def reload_staged_gt_stats_dict(table_name_builder):
     logged_query(
         f"""
@@ -406,7 +406,7 @@ def reload_staged_gt_stats_dict(table_name_builder):
     )
 
 
-@retry()  # REPLACE partition is a copy, so this is idempotent.
+@retry(delay=5)  # REPLACE partition is a copy, so this is idempotent.
 def replace_project_partitions(
     table_name_builder: TableNameBuilder,
     project_guids: list[str],
