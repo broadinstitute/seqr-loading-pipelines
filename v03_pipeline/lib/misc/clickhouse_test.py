@@ -21,7 +21,6 @@ from v03_pipeline.lib.misc.clickhouse import (
     get_clickhouse_client,
     insert_new_entries,
     max_src_key,
-    optimize_tables,
     refresh_staged_gt_stats,
     reload_staged_gt_stats_dict,
     replace_project_partitions,
@@ -761,14 +760,6 @@ class ClickhouseTest(MockedDatarootTestCase):
             ),
         )
         insert_new_entries(table_name_builder)
-        optimize_tables(
-            table_name_builder,
-            ['project_a', 'project_d'],
-            [
-                ClickHouseTable.ENTRIES,
-                ClickHouseTable.PROJECT_GT_STATS,
-            ],
-        )
         staged_project_gt_stats = client.execute(
             f"""
             SELECT project_guid, key, sample_type, sum(het_samples), sum(hom_samples)
