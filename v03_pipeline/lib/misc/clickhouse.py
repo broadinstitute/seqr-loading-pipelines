@@ -152,8 +152,8 @@ class TableNameBuilder:
         return f"file('{path}', 'Parquet')"
 
 
-def logged_query(query, params=None, increased_timeout: bool = False):
-    client = get_clickhouse_client(increased_timeout)
+def logged_query(query, params=None, timeout: int | None = None):
+    client = get_clickhouse_client(timeout)
     sanitized_query = query
     if Env.CLICKHOUSE_GCS_HMAC_KEY:
         sanitized_query = sanitized_query.replace(
@@ -339,7 +339,7 @@ def optimize_entries(
             {'project_guid': project_guid},
             # For OPTIMIZE TABLE queries, server is known to not respond with output
             # or progress to the client.
-            increased_timeout=True,
+            timeout=OPTIMIZE_TABLE_TIMEOUT_S,
         )
 
 
@@ -354,6 +354,7 @@ def refresh_staged_gt_stats(table_name_builder):
         f"""
         SYSTEM WAIT VIEW {table_name_builder.staging_dst_table(ClickHouseMaterializedView.PROJECT_GT_STATS_TO_GT_STATS_MV)}
         """,
+        timeout=600,
     )
 
 
@@ -576,22 +577,20 @@ def atomic_entries_insert(
 
 
 def get_clickhouse_client(
-    increased_timeout: bool = False,
+    timeout: int | None = None,
 ) -> Client:
     return Client(
         host=Env.CLICKHOUSE_SERVICE_HOSTNAME,
         port=Env.CLICKHOUSE_SERVICE_PORT,
         user=Env.CLICKHOUSE_USER,
         **{'password': Env.CLICKHOUSE_PASSWORD} if Env.CLICKHOUSE_PASSWORD else {},
-        **{'send_receive_timeout': OPTIMIZE_TABLE_TIMEOUT_S}
-        if increased_timeout
-        else {},
+        **{'send_receive_timeout': timeout} if timeout else {},
         **{
             'settings': {
-                'send_timeout': OPTIMIZE_TABLE_TIMEOUT_S,
-                'receive_timeout': OPTIMIZE_TABLE_TIMEOUT_S,
+                'send_timeout': timeout,
+                'receive_timeout': timeout,
             },
         }
-        if increased_timeout
+        if timeout
         else {},
     )
