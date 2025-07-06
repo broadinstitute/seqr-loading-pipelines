@@ -77,6 +77,7 @@ def get_dataset_type_specific_annotations(
 
 
 def get_calls_export_fields(
+    ht: hl.Table,
     fe: hl.Struct,
     dataset_type: DatasetType,
 ):
@@ -111,10 +112,12 @@ def get_calls_export_fields(
             cn=fe.CN,
             qs=fe.QS,
             defragged=fe.defragged,
-            start=fe.sample_start,
-            end=fe.sample_end,
-            numExon=fe.sample_num_exon,
-            geneIds=fe.sample_gene_ids,
+            start=hl.or_else(fe.sample_start, ht.start_locus.position),
+            end=hl.or_else(fe.sample_end, ht.end_locus.position),
+            numExon=hl.or_else(fe.sample_num_exon, ht.num_exon),
+            geneIds=hl.or_else(
+                fe.sample_gene_ids, hl.set(ht.sorted_gene_consequences.gene_id)
+            ),
             newCall=fe.concordance.new_call,
             prevCall=fe.concordance.prev_call,
             prevOverlap=fe.concordance.prev_overlap,
@@ -149,7 +152,7 @@ def get_entries_export_fields(
         ),
         'filters': ht.filters,
         'calls': ht.family_entries.map(
-            lambda fe: get_calls_export_fields(fe, dataset_type),
+            lambda fe: get_calls_export_fields(ht, fe, dataset_type),
         ),
         'sign': 1,
     }
