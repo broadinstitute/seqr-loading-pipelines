@@ -116,7 +116,7 @@ def get_calls_export_fields(
             end=hl.or_else(fe.sample_end, ht.end_locus.position),
             numExon=hl.or_else(fe.sample_num_exon, ht.num_exon),
             geneIds=hl.or_else(
-                fe.sample_gene_ids, hl.set(ht.sorted_gene_consequences.gene_id)
+                fe.sample_gene_ids, hl.set(ht.sorted_gene_consequences.gene_id),
             ),
             newCall=fe.concordance.new_call,
             prevCall=fe.concordance.prev_call,

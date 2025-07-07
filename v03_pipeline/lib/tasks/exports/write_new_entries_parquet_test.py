@@ -443,7 +443,6 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
             ),
         )
         export_json = convert_ndarray_to_list(df.to_dict('records'))
-        print(export_json)
         self.assertEqual(
             export_json,
             [
