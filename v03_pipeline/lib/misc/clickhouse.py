@@ -75,7 +75,7 @@ class ClickHouseTable(StrEnum):
         }
 
     @property
-    def anti_join_condition(self):
+    def join_condition(self):
         return (
             'src.variantId = dst.variantId'
             if ClickHouseTable.KEY_LOOKUP
