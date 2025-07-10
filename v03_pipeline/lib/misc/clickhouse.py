@@ -429,7 +429,7 @@ def direct_insert(
     logged_query(
         f"""
         INSERT INTO {dst_table}
-        SELECT src.{clickhouse_table.select_fields}
+        SELECT {clickhouse_table.select_fields}
         FROM {src_table} src
         LEFT ANTI JOIN {dst_table} dst
         ON {clickhouse_table.join_condition}
