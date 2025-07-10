@@ -29,7 +29,6 @@ GOOGLE_XML_API_PATH = 'https://storage.googleapis.com/'
 OPTIMIZE_TABLE_TIMEOUT_S = 4800
 REDACTED = 'REDACTED'
 STAGING_CLICKHOUSE_DATABASE = 'staging'
-VARIANT_ID = 'variantId'
 
 
 class ClickHouseTable(StrEnum):
@@ -85,7 +84,9 @@ class ClickHouseTable(StrEnum):
 
     @property
     def select_fields(self):
-        return f'{VARIANT_ID}, key' if self == ClickHouseTable.KEY_LOOKUP else '*'
+        return (
+            'src.variantId, src.key' if self == ClickHouseTable.KEY_LOOKUP else 'src.*'
+        )
 
     @property
     def insert(self) -> Callable:
@@ -428,7 +429,7 @@ def direct_insert(
     logged_query(
         f"""
         INSERT INTO {dst_table}
-        SELECT {clickhouse_table.select_fields}
+        SELECT src.{clickhouse_table.select_fields}
         FROM {src_table} src
         LEFT ANTI JOIN {dst_table} dst
         ON {clickhouse_table.join_condition}
