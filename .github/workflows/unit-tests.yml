@@ -24,6 +24,11 @@ jobs:
           cat <<EOF > test_config.xml
           <clickhouse>
             <user_files_path>/tmp</user_files_path>
+            <profiles>
+              <default>
+                <allow_experimental_correlated_subqueries>1</allow_experimental_correlated_subqueries>
+              </default>
+            </profiles>
           </clickhouse>
           EOF
       - name: Start ClickHouse with mounted config
