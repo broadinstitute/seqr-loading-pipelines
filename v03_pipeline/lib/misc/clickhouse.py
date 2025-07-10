@@ -26,7 +26,6 @@ from v03_pipeline.lib.reference_datasets.reference_dataset import (
 logger = get_logger(__name__)
 
 GOOGLE_XML_API_PATH = 'https://storage.googleapis.com/'
-KEY = 'key'
 OPTIMIZE_TABLE_TIMEOUT_S = 4800
 REDACTED = 'REDACTED'
 STAGING_CLICKHOUSE_DATABASE = 'staging'
@@ -77,12 +76,16 @@ class ClickHouseTable(StrEnum):
         }
 
     @property
-    def key_field(self):
-        return VARIANT_ID if self == ClickHouseTable.KEY_LOOKUP else KEY
+    def anti_join_condition(self):
+        return (
+            'src.variantId = dst.variantId'
+            if ClickHouseTable.KEY_LOOKUP
+            else 'toUInt32(src.key) = dst.key'
+        )
 
     @property
     def select_fields(self):
-        return f'{VARIANT_ID}, {KEY}' if self == ClickHouseTable.KEY_LOOKUP else '*'
+        return f'{VARIANT_ID}, key' if self == ClickHouseTable.KEY_LOOKUP else '*'
 
     @property
     def insert(self) -> Callable:
@@ -427,11 +430,8 @@ def direct_insert(
         INSERT INTO {dst_table}
         SELECT {clickhouse_table.select_fields}
         FROM {src_table} src
-        WHERE NOT EXISTS (
-            SELECT 1
-            FROM {dst_table}
-            WHERE {dst_table}.{clickhouse_table.key_field} = src.{clickhouse_table.key_field}
-        )
+        LEFT ANTI JOIN {dst_table} dst
+        ON {clickhouse_table.join_condition}
         """,
     )
 
