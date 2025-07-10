@@ -78,7 +78,7 @@ class ClickHouseTable(StrEnum):
     def join_condition(self):
         return (
             'src.variantId = dst.variantId'
-            if ClickHouseTable.KEY_LOOKUP
+            if self == ClickHouseTable.KEY_LOOKUP
             else 'toUInt32(src.key) = dst.key'
         )
 
