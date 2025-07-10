@@ -22,9 +22,6 @@ from v03_pipeline.lib.reference_datasets.reference_dataset import (
     BaseReferenceDataset,
     ReferenceDataset,
 )
-from v03_pipeline.lib.tasks.clickhouse_migration.migrate_all_projects_to_clickhouse import (
-    MIGRATION_RUN_ID,
-)
 
 logger = get_logger(__name__)
 
@@ -177,32 +174,6 @@ def logged_query(query, params=None, timeout: int | None = None):
 @retry(delay=1)
 def drop_staging_db():
     logged_query(f'DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};')
-
-
-def dst_key_exists(
-    table_name_builder: TableNameBuilder,
-    clickhouse_table: ClickHouseTable,
-    key: int | str,
-) -> int:
-    query = f"""
-        SELECT EXISTS (
-            SELECT 1
-            FROM {table_name_builder.dst_table(clickhouse_table)}
-            WHERE {clickhouse_table.key_field} = %(key)s
-        )
-        """
-    return logged_query(query, {'key': key})[0][0]
-
-
-def max_src_key(
-    table_name_builder: TableNameBuilder,
-    clickhouse_table: ClickHouseTable,
-) -> int:
-    return logged_query(
-        f"""
-        SELECT max({clickhouse_table.key_field}) FROM {table_name_builder.src_table(clickhouse_table)}
-        """,
-    )[0][0]
 
 
 def create_staging_tables(
@@ -449,28 +420,18 @@ def direct_insert(
         dataset_type,
         run_id,
     )
-    key = max_src_key(
-        table_name_builder,
-        clickhouse_table,
-    )
-    if not key:
-        msg = f'Skipping direct insert of {table_name_builder.dst_table(clickhouse_table)} since src table is empty'
-        logger.info(msg)
-        return
-    if MIGRATION_RUN_ID not in run_id and dst_key_exists(
-        table_name_builder,
-        clickhouse_table,
-        key,
-    ):
-        msg = f'Skipping direct insert of {table_name_builder.dst_table(clickhouse_table)} since {clickhouse_table.key_field}={key} already exists'
-        logger.info(msg)
-        return
+    dst_table = table_name_builder.dst_table(clickhouse_table)
+    src_table = table_name_builder.src_table(clickhouse_table)
     logged_query(
         f"""
-        INSERT INTO {table_name_builder.dst_table(clickhouse_table)}
+        INSERT INTO {dst_table}
         SELECT {clickhouse_table.select_fields}
-        FROM {table_name_builder.src_table(clickhouse_table)}
-        ORDER BY {clickhouse_table.key_field} ASC
+        FROM {src_table} src
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM {dst_table}
+            WHERE {dst_table}.{clickhouse_table.key_field} = {src_table}.{clickhouse_table.key_field}
+        )
         """,
     )
 
