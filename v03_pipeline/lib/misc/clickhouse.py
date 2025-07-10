@@ -430,7 +430,7 @@ def direct_insert(
         WHERE NOT EXISTS (
             SELECT 1
             FROM {dst_table}
-            WHERE {dst_table}.{clickhouse_table.key_field} = {src_table}.{clickhouse_table.key_field}
+            WHERE {dst_table}.{clickhouse_table.key_field} = src.{clickhouse_table.key_field}
         )
         """,
     )
