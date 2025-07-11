@@ -85,7 +85,9 @@ class ClickHouseTable(StrEnum):
     @property
     def select_fields(self):
         return (
-            'src.variantId as variantId, src.key as key' if self == ClickHouseTable.KEY_LOOKUP else 'src.*'
+            'src.variantId as variantId, src.key as key'
+            if self == ClickHouseTable.KEY_LOOKUP
+            else 'src.*'
         )
 
     @property
@@ -431,6 +433,8 @@ def direct_insert(
         CREATE DATABASE {STAGING_CLICKHOUSE_DATABASE}
         """,
     )
+    # NB: Unfortunately there's a bug(?) or inaccuracy if this is attempted without an intermediate
+    # temporary table.
     logged_query(
         f"""
         CREATE OR REPLACE TABLE {STAGING_CLICKHOUSE_DATABASE}.tmp_direct_load ENGINE = MergeTree() ORDER BY () AS (
@@ -444,7 +448,7 @@ def direct_insert(
     logged_query(
         f"""
         INSERT INTO {dst_table} SELECT * FROM {STAGING_CLICKHOUSE_DATABASE}.tmp_direct_load;
-        """
+        """,
     )
     drop_staging_db()
 

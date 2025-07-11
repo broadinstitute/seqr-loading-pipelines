@@ -190,17 +190,17 @@ class ClickhouseTest(MockedDatarootTestCase):
 
     def tearDown(self):
         super().tearDown()
-        #client = get_clickhouse_client()
-        #client.execute(
-        #    f"""
-        #   DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};
-        #   """,
-        #)
-        #client.execute(
-        #    f"""
-        #   DROP DATABASE IF EXISTS {Env.CLICKHOUSE_DATABASE};
-        #   """,
-        #)
+        client = get_clickhouse_client()
+        client.execute(
+            f"""
+          DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};
+          """,
+        )
+        client.execute(
+            f"""
+          DROP DATABASE IF EXISTS {Env.CLICKHOUSE_DATABASE};
+          """,
+        )
 
     def test_get_clickhouse_client(self):
         client = get_clickhouse_client()
