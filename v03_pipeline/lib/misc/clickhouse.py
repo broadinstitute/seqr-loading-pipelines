@@ -85,7 +85,7 @@ class ClickHouseTable(StrEnum):
     @property
     def select_fields(self):
         return (
-            'src.variantId, src.key' if self == ClickHouseTable.KEY_LOOKUP else 'src.*'
+            'src.variantId as variantId, src.key as key' if self == ClickHouseTable.KEY_LOOKUP else 'src.*'
         )
 
     @property
@@ -428,13 +428,25 @@ def direct_insert(
     src_table = table_name_builder.src_table(clickhouse_table)
     logged_query(
         f"""
-        INSERT INTO {dst_table}
-        SELECT {clickhouse_table.select_fields}
-        FROM {src_table} src
-        LEFT ANTI JOIN {dst_table} dst
-        ON {clickhouse_table.join_condition}
+        CREATE DATABASE {STAGING_CLICKHOUSE_DATABASE}
         """,
     )
+    logged_query(
+        f"""
+        CREATE OR REPLACE TABLE {STAGING_CLICKHOUSE_DATABASE}.tmp_direct_load ENGINE = MergeTree() ORDER BY () AS (
+            SELECT {clickhouse_table.select_fields}
+            FROM {src_table} src
+            LEFT ANTI JOIN {dst_table} dst
+            ON {clickhouse_table.join_condition}
+        )
+        """,
+    )
+    logged_query(
+        f"""
+        INSERT INTO {dst_table} SELECT * FROM {STAGING_CLICKHOUSE_DATABASE}.tmp_direct_load;
+        """
+    )
+    drop_staging_db()
 
 
 @retry()

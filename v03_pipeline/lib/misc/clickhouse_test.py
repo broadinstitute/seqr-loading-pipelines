@@ -190,17 +190,17 @@ class ClickhouseTest(MockedDatarootTestCase):
 
     def tearDown(self):
         super().tearDown()
-        client = get_clickhouse_client()
-        client.execute(
-            f"""
-           DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};
-           """,
-        )
-        client.execute(
-            f"""
-           DROP DATABASE IF EXISTS {Env.CLICKHOUSE_DATABASE};
-           """,
-        )
+        #client = get_clickhouse_client()
+        #client.execute(
+        #    f"""
+        #   DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};
+        #   """,
+        #)
+        #client.execute(
+        #    f"""
+        #   DROP DATABASE IF EXISTS {Env.CLICKHOUSE_DATABASE};
+        #   """,
+        #)
 
     def test_get_clickhouse_client(self):
         client = get_clickhouse_client()
@@ -293,13 +293,13 @@ class ClickhouseTest(MockedDatarootTestCase):
         client = get_clickhouse_client()
         df = pd.DataFrame(
             {
-                'key': [10, 11, 12, 13],
                 'variantId': [
                     '1-3-A-C',
                     '2-4-A-T',
                     'Y-9-A-C',
                     'M-2-C-G',
                 ],
+                'key': [10, 11, 12, 13],
             },
         )
         table = pa.Table.from_pandas(df)
