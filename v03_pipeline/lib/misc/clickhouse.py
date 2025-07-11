@@ -76,9 +76,7 @@ class ClickHouseTable(StrEnum):
 
     @property
     def key_field(self):
-        return (
-            'variantId' if self == ClickHouseTable.KEY_LOOKUP else 'key'
-        )
+        return 'variantId' if self == ClickHouseTable.KEY_LOOKUP else 'key'
 
     @property
     def join_condition(self):
@@ -90,11 +88,7 @@ class ClickHouseTable(StrEnum):
 
     @property
     def select_fields(self):
-        return (
-            'variantId, key'
-            if self == ClickHouseTable.KEY_LOOKUP
-            else '*'
-        )
+        return 'variantId, key' if self == ClickHouseTable.KEY_LOOKUP else '*'
 
     @property
     def insert(self) -> Callable:
@@ -452,20 +446,13 @@ def direct_insert(
         )
         """,
     )
-
     logged_query(
         f"""
-        INSERT INTO {dst_table} 
+        INSERT INTO {dst_table}
         SELECT {clickhouse_table.select_fields}
         FROM {src_table} WHERE {clickhouse_table.key_field} IN {STAGING_CLICKHOUSE_DATABASE}._tmp_loadable_keys
         """,
     )
-    res = logged_query(
-        f"""
-        SELECT * FROM {dst_table}
-        """,
-    )
-    print(res)
     drop_staging_db()
 
 
