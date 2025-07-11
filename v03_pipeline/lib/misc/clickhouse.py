@@ -438,7 +438,7 @@ def direct_insert(
     # temporary table, likely due to writing to a table and joining against it at the same time.
     logged_query(
         f"""
-        CREATE TABLE {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys ENGINE = Set AS (
+        CREATE TABLE {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys` ENGINE = Set AS (
             SELECT {clickhouse_table.key_field}
             FROM {src_table} src
             LEFT ANTI JOIN {dst_table} dst
@@ -450,7 +450,7 @@ def direct_insert(
         f"""
         INSERT INTO {dst_table}
         SELECT {clickhouse_table.select_fields}
-        FROM {src_table} WHERE {clickhouse_table.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys
+        FROM {src_table} WHERE {clickhouse_table.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
         """,
     )
     drop_staging_db()
