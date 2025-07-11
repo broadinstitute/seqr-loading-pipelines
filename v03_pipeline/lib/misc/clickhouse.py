@@ -75,6 +75,12 @@ class ClickHouseTable(StrEnum):
         }
 
     @property
+    def key_field(self):
+        return (
+            'variantId' if self == ClickHouseTable.KEY_LOOKUP else 'key'
+        )
+
+    @property
     def join_condition(self):
         return (
             'src.variantId = dst.variantId'
@@ -85,9 +91,9 @@ class ClickHouseTable(StrEnum):
     @property
     def select_fields(self):
         return (
-            'src.variantId as variantId, src.key as key'
+            'variantId, key'
             if self == ClickHouseTable.KEY_LOOKUP
-            else 'src.*'
+            else '*'
         )
 
     @property
@@ -428,6 +434,7 @@ def direct_insert(
     )
     dst_table = table_name_builder.dst_table(clickhouse_table)
     src_table = table_name_builder.src_table(clickhouse_table)
+    drop_staging_db()
     logged_query(
         f"""
         CREATE DATABASE {STAGING_CLICKHOUSE_DATABASE}
@@ -437,19 +444,28 @@ def direct_insert(
     # temporary table.
     logged_query(
         f"""
-        CREATE OR REPLACE TABLE {STAGING_CLICKHOUSE_DATABASE}.tmp_direct_load ENGINE = MergeTree() ORDER BY () AS (
-            SELECT {clickhouse_table.select_fields}
+        CREATE OR REPLACE TABLE {STAGING_CLICKHOUSE_DATABASE}._tmp_loadable_keys ENGINE = Set AS (
+            SELECT {clickhouse_table.key_field}
             FROM {src_table} src
             LEFT ANTI JOIN {dst_table} dst
             ON {clickhouse_table.join_condition}
         )
         """,
     )
+
     logged_query(
         f"""
-        INSERT INTO {dst_table} SELECT * FROM {STAGING_CLICKHOUSE_DATABASE}.tmp_direct_load;
+        INSERT INTO {dst_table} 
+        SELECT {clickhouse_table.select_fields}
+        FROM {src_table} WHERE {clickhouse_table.key_field} IN {STAGING_CLICKHOUSE_DATABASE}._tmp_loadable_keys
         """,
     )
+    res = logged_query(
+        f"""
+        SELECT * FROM {dst_table}
+        """,
+    )
+    print(res)
     drop_staging_db()
 
 
