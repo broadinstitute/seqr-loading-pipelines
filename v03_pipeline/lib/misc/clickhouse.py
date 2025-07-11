@@ -438,7 +438,7 @@ def direct_insert(
     # temporary table.
     logged_query(
         f"""
-        CREATE OR REPLACE TABLE {STAGING_CLICKHOUSE_DATABASE}._tmp_loadable_keys ENGINE = Set AS (
+        CREATE {STAGING_CLICKHOUSE_DATABASE}._tmp_loadable_keys ENGINE = Set AS (
             SELECT {clickhouse_table.key_field}
             FROM {src_table} src
             LEFT ANTI JOIN {dst_table} dst
