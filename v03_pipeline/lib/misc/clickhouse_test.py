@@ -16,11 +16,9 @@ from v03_pipeline.lib.misc.clickhouse import (
     create_staging_tables,
     delete_existing_families_from_staging_entries,
     direct_insert,
-    dst_key_exists,
     exchange_entity,
     get_clickhouse_client,
     insert_new_entries,
-    max_src_key,
     optimize_entries,
     refresh_staged_gt_stats,
     reload_staged_gt_stats_dict,
@@ -195,13 +193,13 @@ class ClickhouseTest(MockedDatarootTestCase):
         client = get_clickhouse_client()
         client.execute(
             f"""
-           DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};
-           """,
+          DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};
+          """,
         )
         client.execute(
             f"""
-           DROP DATABASE IF EXISTS {Env.CLICKHOUSE_DATABASE};
-           """,
+          DROP DATABASE IF EXISTS {Env.CLICKHOUSE_DATABASE};
+          """,
         )
 
     def test_get_clickhouse_client(self):
@@ -235,112 +233,6 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ),
                 "gcs('https://storage.googleapis.com/mock_bucket/v3.1/GRCh38/SNV_INDEL/runs/manual__2025-05-07T17-20-59.702114+00-00/new_entries.parquet/*.parquet', '', '', 'Parquet')",
             )
-
-    def test_dst_key_exists(self):
-        client = get_clickhouse_client()
-        client.execute(
-            f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/clinvar` (key) VALUES',
-            [(1,), (10,), (7,)],
-        )
-        self.assertEqual(
-            dst_key_exists(
-                TableNameBuilder(
-                    ReferenceGenome.GRCh38,
-                    DatasetType.SNV_INDEL,
-                    TEST_RUN_ID,
-                ),
-                ClickHouseTable.CLINVAR,
-                1,
-            ),
-            True,
-        )
-        self.assertEqual(
-            dst_key_exists(
-                TableNameBuilder(
-                    ReferenceGenome.GRCh38,
-                    DatasetType.SNV_INDEL,
-                    TEST_RUN_ID,
-                ),
-                ClickHouseTable.CLINVAR,
-                2,
-            ),
-            False,
-        )
-
-    def test_max_src_key(self):
-        df = pd.DataFrame({'key': [1, 2, 3, 4], 'value': ['a', 'b', 'c', 'd']})
-        table = pa.Table.from_pandas(df)
-        os.makedirs(
-            new_transcripts_parquet_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                TEST_RUN_ID,
-            ),
-        )
-        pq.write_table(
-            table,
-            os.path.join(
-                new_transcripts_parquet_path(
-                    ReferenceGenome.GRCh38,
-                    DatasetType.SNV_INDEL,
-                    TEST_RUN_ID,
-                ),
-                'test.parquet',
-            ),
-        )
-        schema = pa.schema([('key', pa.int32()), ('value', pa.int64())])
-        empty_data = {
-            'key': pa.array([], type=pa.int32()),
-            'value': pa.array([], type=pa.int64()),
-        }
-        table = pa.Table.from_pydict(empty_data, schema=schema)
-        os.makedirs(
-            new_variants_parquet_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                TEST_RUN_ID,
-            ),
-        )
-        pq.write_table(
-            table,
-            os.path.join(
-                new_variants_parquet_path(
-                    ReferenceGenome.GRCh38,
-                    DatasetType.SNV_INDEL,
-                    TEST_RUN_ID,
-                ),
-                'test.parquet',
-            ),
-        )
-        df = pd.read_parquet(
-            new_transcripts_parquet_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                TEST_RUN_ID,
-            ),
-        )
-        self.assertEqual(
-            max_src_key(
-                TableNameBuilder(
-                    ReferenceGenome.GRCh38,
-                    DatasetType.SNV_INDEL,
-                    TEST_RUN_ID,
-                ),
-                ClickHouseTable.TRANSCRIPTS,
-            ),
-            4,
-        )
-        self.assertEqual(
-            max_src_key(
-                TableNameBuilder(
-                    ReferenceGenome.GRCh38,
-                    DatasetType.SNV_INDEL,
-                    TEST_RUN_ID,
-                ),
-                ClickHouseTable.ANNOTATIONS_DISK,
-            ),
-            None,
-        )
 
     def test_direct_insert(self):
         client = get_clickhouse_client()
@@ -401,13 +293,13 @@ class ClickhouseTest(MockedDatarootTestCase):
         client = get_clickhouse_client()
         df = pd.DataFrame(
             {
-                'key': [10, 11, 12, 13],
                 'variantId': [
                     '1-3-A-C',
                     '2-4-A-T',
                     'Y-9-A-C',
                     'M-2-C-G',
                 ],
+                'key': [10, 11, 12, 13],
             },
         )
         table = pa.Table.from_pandas(df)

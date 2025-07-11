@@ -22,18 +22,13 @@ from v03_pipeline.lib.reference_datasets.reference_dataset import (
     BaseReferenceDataset,
     ReferenceDataset,
 )
-from v03_pipeline.lib.tasks.clickhouse_migration.migrate_all_projects_to_clickhouse import (
-    MIGRATION_RUN_ID,
-)
 
 logger = get_logger(__name__)
 
 GOOGLE_XML_API_PATH = 'https://storage.googleapis.com/'
-KEY = 'key'
 OPTIMIZE_TABLE_TIMEOUT_S = 4800
 REDACTED = 'REDACTED'
 STAGING_CLICKHOUSE_DATABASE = 'staging'
-VARIANT_ID = 'variantId'
 
 
 class ClickHouseTable(StrEnum):
@@ -81,11 +76,19 @@ class ClickHouseTable(StrEnum):
 
     @property
     def key_field(self):
-        return VARIANT_ID if self == ClickHouseTable.KEY_LOOKUP else KEY
+        return 'variantId' if self == ClickHouseTable.KEY_LOOKUP else 'key'
+
+    @property
+    def join_condition(self):
+        return (
+            'src.variantId = dst.variantId'
+            if self == ClickHouseTable.KEY_LOOKUP
+            else 'toUInt32(src.key) = dst.key'
+        )
 
     @property
     def select_fields(self):
-        return f'{VARIANT_ID}, {KEY}' if self == ClickHouseTable.KEY_LOOKUP else '*'
+        return 'variantId, key' if self == ClickHouseTable.KEY_LOOKUP else '*'
 
     @property
     def insert(self) -> Callable:
@@ -177,32 +180,6 @@ def logged_query(query, params=None, timeout: int | None = None):
 @retry(delay=1)
 def drop_staging_db():
     logged_query(f'DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};')
-
-
-def dst_key_exists(
-    table_name_builder: TableNameBuilder,
-    clickhouse_table: ClickHouseTable,
-    key: int | str,
-) -> int:
-    query = f"""
-        SELECT EXISTS (
-            SELECT 1
-            FROM {table_name_builder.dst_table(clickhouse_table)}
-            WHERE {clickhouse_table.key_field} = %(key)s
-        )
-        """
-    return logged_query(query, {'key': key})[0][0]
-
-
-def max_src_key(
-    table_name_builder: TableNameBuilder,
-    clickhouse_table: ClickHouseTable,
-) -> int:
-    return logged_query(
-        f"""
-        SELECT max({clickhouse_table.key_field}) FROM {table_name_builder.src_table(clickhouse_table)}
-        """,
-    )[0][0]
 
 
 def create_staging_tables(
@@ -449,30 +426,34 @@ def direct_insert(
         dataset_type,
         run_id,
     )
-    key = max_src_key(
-        table_name_builder,
-        clickhouse_table,
-    )
-    if not key:
-        msg = f'Skipping direct insert of {table_name_builder.dst_table(clickhouse_table)} since src table is empty'
-        logger.info(msg)
-        return
-    if MIGRATION_RUN_ID not in run_id and dst_key_exists(
-        table_name_builder,
-        clickhouse_table,
-        key,
-    ):
-        msg = f'Skipping direct insert of {table_name_builder.dst_table(clickhouse_table)} since {clickhouse_table.key_field}={key} already exists'
-        logger.info(msg)
-        return
+    dst_table = table_name_builder.dst_table(clickhouse_table)
+    src_table = table_name_builder.src_table(clickhouse_table)
+    drop_staging_db()
     logged_query(
         f"""
-        INSERT INTO {table_name_builder.dst_table(clickhouse_table)}
-        SELECT {clickhouse_table.select_fields}
-        FROM {table_name_builder.src_table(clickhouse_table)}
-        ORDER BY {clickhouse_table.key_field} ASC
+        CREATE DATABASE {STAGING_CLICKHOUSE_DATABASE}
         """,
     )
+    # NB: Unfortunately there's a bug(?) or inaccuracy if this is attempted without an intermediate
+    # temporary table, likely due to writing to a table and joining against it at the same time.
+    logged_query(
+        f"""
+        CREATE TABLE {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys` ENGINE = Set AS (
+            SELECT {clickhouse_table.key_field}
+            FROM {src_table} src
+            LEFT ANTI JOIN {dst_table} dst
+            ON {clickhouse_table.join_condition}
+        )
+        """,
+    )
+    logged_query(
+        f"""
+        INSERT INTO {dst_table}
+        SELECT {clickhouse_table.select_fields}
+        FROM {src_table} WHERE {clickhouse_table.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
+        """,
+    )
+    drop_staging_db()
 
 
 @retry()
