@@ -5,8 +5,10 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-GENCODE_GTF_URL = 'http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_{gencode_release}/gencode.v{gencode_release}.annotation.gtf.gz'
-GENCODE_ENSEMBL_TO_REFSEQ_URL = 'https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_{gencode_release}/gencode.v{gencode_release}.metadata.RefSeq.gz'
+# Mirror of 'http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_{gencode_release}/gencode.v{gencode_release}.annotation.gtf.gz'
+GENCODE_GTF_URL = 'https://storage.googleapis.com/seqr-reference-data/gencode/gencode.v{gencode_release}.annotation.gtf.gz'
+# Mirror of 'https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_{gencode_release}/gencode.v{gencode_release}.metadata.RefSeq.gz'
+GENCODE_ENSEMBL_TO_REFSEQ_URL = 'https://storage.googleapis.com/seqr-reference-data/gencode/gencode.v{gencode_release}.metadata.RefSeq.gz'
 
 # expected GTF file header
 GENCODE_FILE_HEADER = [
