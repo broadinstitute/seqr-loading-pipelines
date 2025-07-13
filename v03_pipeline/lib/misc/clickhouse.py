@@ -81,9 +81,9 @@ class ClickHouseTable(StrEnum):
     @property
     def join_condition(self):
         return (
-            'src.variantId = dst.variantId'
+            'assumeNotNull(src.variantId) = dst.variantId'
             if self == ClickHouseTable.KEY_LOOKUP
-            else 'toUInt32(src.key) = dst.key'
+            else 'assumeNotNull(toUInt32(src.key)) = dst.key'
         )
 
     @property
@@ -92,11 +92,32 @@ class ClickHouseTable(StrEnum):
 
     @property
     def insert(self) -> Callable:
-        return (
-            functools.partial(direct_insert, clickhouse_table=self)
-            if self != ClickHouseTable.ENTRIES
-            else functools.partial(atomic_entries_insert, _clickhouse_table=self)
-        )
+        return {
+            ClickHouseTable.ANNOTATIONS_DISK: functools.partial(
+                direct_insert_new_keys,
+                clickhouse_table=self,
+            ),
+            ClickHouseTable.ANNOTATIONS_MEMORY: functools.partial(
+                direct_insert_new_keys,
+                clickhouse_table=self,
+            ),
+            ClickHouseTable.CLINVAR: functools.partial(
+                direct_insert_all_keys,
+                clickhouse_table=self,
+            ),
+            ClickHouseTable.ENTRIES: functools.partial(
+                atomic_entries_insert,
+                _clickhouse_table=self,
+            ),
+            ClickHouseTable.KEY_LOOKUP: functools.partial(
+                direct_insert_all_keys,
+                _clickhouse_table=self,
+            ),
+            ClickHouseTable.TRANSCRIPTS: functools.partial(
+                direct_insert_all_keys,
+                _clickhouse_table=self,
+            ),
+        }[self]
 
 
 class ClickHouseDictionary(StrEnum):
@@ -414,7 +435,7 @@ def exchange_entity(
 
 
 @retry()
-def direct_insert(
+def direct_insert_new_keys(
     clickhouse_table: ClickHouseTable,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
@@ -454,6 +475,30 @@ def direct_insert(
         """,
     )
     drop_staging_db()
+
+
+@retry()
+def direct_insert_all_keys(
+    clickhouse_table: ClickHouseTable,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+    **_,
+) -> None:
+    table_name_builder = TableNameBuilder(
+        reference_genome,
+        dataset_type,
+        run_id,
+    )
+    dst_table = table_name_builder.dst_table(clickhouse_table)
+    src_table = table_name_builder.src_table(clickhouse_table)
+    logged_query(
+        f"""
+        INSERT INTO {dst_table}
+        SELECT {clickhouse_table.select_fields}
+        FROM {src_table}
+        """,
+    )
 
 
 @retry()

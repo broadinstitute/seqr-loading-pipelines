@@ -15,7 +15,8 @@ from v03_pipeline.lib.misc.clickhouse import (
     create_staging_non_table_entities,
     create_staging_tables,
     delete_existing_families_from_staging_entries,
-    direct_insert,
+    direct_insert_all_keys,
+    direct_insert_new_keys,
     exchange_entity,
     get_clickhouse_client,
     insert_new_entries,
@@ -234,7 +235,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 "gcs('https://storage.googleapis.com/mock_bucket/v3.1/GRCh38/SNV_INDEL/runs/manual__2025-05-07T17-20-59.702114+00-00/new_entries.parquet/*.parquet', '', '', 'Parquet')",
             )
 
-    def test_direct_insert(self):
+    def test_direct_insert_all_keys(self):
         client = get_clickhouse_client()
         df = pd.DataFrame({'key': [1, 2, 3, 4], 'transcripts': ['a', 'b', 'c', 'd']})
         table = pa.Table.from_pandas(df)
@@ -260,7 +261,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts` VALUES',
             [(1, 'a'), (10, 'b'), (7, 'c')],
         )
-        direct_insert(
+        direct_insert_all_keys(
             ClickHouseTable.TRANSCRIPTS,
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
@@ -275,7 +276,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
 
         # ensure multiple calls are idempotent
-        direct_insert(
+        direct_insert_all_keys(
             ClickHouseTable.TRANSCRIPTS,
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
@@ -289,7 +290,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             [(1, 'a'), (2, 'b'), (3, 'c'), (4, 'd'), (7, 'c'), (10, 'b')],
         )
 
-    def test_direct_insert_key_lookup(self):
+    def test_direct_insert_key_lookup_new_keys(self):
         client = get_clickhouse_client()
         df = pd.DataFrame(
             {
@@ -325,7 +326,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` VALUES',
             [('1-123-A-C', 1), ('2-234-C-T', 2), ('M-345-C-G', 3)],
         )
-        direct_insert(
+        direct_insert_new_keys(
             ClickHouseTable.KEY_LOOKUP,
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
