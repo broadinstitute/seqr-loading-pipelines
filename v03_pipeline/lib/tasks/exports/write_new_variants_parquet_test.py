@@ -550,7 +550,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                     'svType': 'DUP',
                     'predictions': {'strvctvre': 0.4490000009536743},
                     'populations': {
-                        'seqrPop': {
+                        'sv_callset': {
                             'ac': 1,
                             'af': 4.3387713958509266e-05,
                             'an': 23048,
