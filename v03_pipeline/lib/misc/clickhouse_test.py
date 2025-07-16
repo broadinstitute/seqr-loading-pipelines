@@ -648,7 +648,6 @@ class ClickhouseTest(MockedDatarootTestCase):
         insert_new_entries(table_name_builder)
         optimize_entries(
             table_name_builder,
-            ['project_a', 'project_d'],
         )
         staged_project_gt_stats = client.execute(
             f"""
