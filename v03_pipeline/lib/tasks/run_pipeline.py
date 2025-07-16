@@ -9,9 +9,6 @@ from v03_pipeline.lib.reference_datasets.reference_dataset import (
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )
-from v03_pipeline.lib.tasks.exports.write_new_clinvar_variants_parquet import (
-    WriteNewClinvarVariantsParquetTask,
-)
 from v03_pipeline.lib.tasks.exports.write_new_entries_parquet import (
     WriteNewEntriesParquetTask,
 )
@@ -43,18 +40,6 @@ class RunPipelineTask(luigi.WrapperTask):
                 )
                 for i in range(len(self.project_guids))
             ],
-            *(
-                [self.clone(WriteNewClinvarVariantsParquetTask)]
-                if FeatureFlag.EXPORT_TO_PARQUET
-                and (
-                    ReferenceDataset.clinvar
-                    in BaseReferenceDataset.for_reference_genome_dataset_type(
-                        self.reference_genome,
-                        self.dataset_type,
-                    )
-                )
-                else []
-            ),
             *(
                 [self.clone(WriteNewTranscriptsParquetTask)]
                 if FeatureFlag.EXPORT_TO_PARQUET
