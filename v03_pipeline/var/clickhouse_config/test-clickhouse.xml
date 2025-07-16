@@ -1,6 +1,13 @@
 <clickhouse>
     <user_files_path>/</user_files_path>
 
+    <profiles>
+        <default>
+          <flatten_nested>0</flatten_nested>
+          <join_use_nulls>1</join_use_nulls>
+        </default>
+    </profiles>
+
     <!-- Config that is used when server is run without config file. -->
     <logger>
         <level>trace</level>
@@ -31,10 +38,6 @@
             <named_collection_control>1</named_collection_control>
         </default>
     </users>
-
-    <profiles>
-        <default/>
-    </profiles>
 
     <quotas>
         <default/>
