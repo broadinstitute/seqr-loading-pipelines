@@ -21,7 +21,7 @@ from v03_pipeline.lib.paths import (
 logger = get_logger(__name__)
 
 GOOGLE_XML_API_PATH = 'https://storage.googleapis.com/'
-OPTIMIZE_TABLE_TIMEOUT_S = 4800
+OPTIMIZE_TABLE_TIMEOUT_S = 9999
 REDACTED = 'REDACTED'
 STAGING_CLICKHOUSE_DATABASE = 'staging'
 
@@ -83,10 +83,6 @@ class ClickHouseTable(StrEnum):
             ),
             ClickHouseTable.ANNOTATIONS_MEMORY: functools.partial(
                 direct_insert_new_keys,
-                clickhouse_table=self,
-            ),
-            ClickHouseTable.CLINVAR: functools.partial(
-                direct_insert_all_keys,
                 clickhouse_table=self,
             ),
             ClickHouseTable.ENTRIES: functools.partial(
@@ -294,35 +290,30 @@ def insert_new_entries(
 
 def optimize_entries(
     table_name_builder: TableNameBuilder,
-    project_guids: list[str],
 ) -> None:
     # ClickHouse docs generally recommend against running OPTIMIZE TABLE FINAL.
     # However, forcing the merge to happen at load time should make the
     # application layer free of eventual consistency bugs.
-    for project_guid in project_guids:
-        decrs_exist = logged_query(
-            f"""
-            SELECT EXISTS (
-                SELECT 1
-                FROM {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)}
-                WHERE sign = -1
-                AND project_guid = %(project_guid)s
-            );
-            """,
-            {'project_guid': project_guid},
-        )[0][0]
-        if not decrs_exist:
-            continue
-        logged_query(
-            f"""
-            OPTIMIZE TABLE {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)}
-            PARTITION %(project_guid)s FINAL
-            """,
-            {'project_guid': project_guid},
-            # For OPTIMIZE TABLE queries, server is known to not respond with output
-            # or progress to the client.
-            timeout=OPTIMIZE_TABLE_TIMEOUT_S,
-        )
+    decrs_exist = logged_query(
+        f"""
+        SELECT EXISTS (
+            SELECT 1
+            FROM {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)}
+            WHERE sign = -1
+        );
+        """,
+    )[0][0]
+    if not decrs_exist:
+        return
+    logged_query(
+        f"""
+        OPTIMIZE TABLE {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)}
+        PARTITION %(project_guid)s FINAL
+        """,
+        # For OPTIMIZE TABLE queries, server is known to not respond with output
+        # or progress to the client.
+        timeout=OPTIMIZE_TABLE_TIMEOUT_S,
+    )
 
 
 @retry(delay=5)
@@ -535,7 +526,6 @@ def atomic_entries_insert(
     )
     optimize_entries(
         table_name_builder,
-        project_guids,
     )
     if not dataset_type.export_all_callset_variants:
         refresh_staged_gt_stats(
