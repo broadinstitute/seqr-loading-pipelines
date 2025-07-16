@@ -8,6 +8,7 @@ from v03_pipeline.lib.model import (
 )
 from v03_pipeline.lib.tasks.exports.misc import (
     camelcase_array_structexpression_fields,
+    drop_unexported_fields,
     sorted_hl_struct,
     unmap_formatting_annotation_enums,
     unmap_reference_dataset_annotation_enums,
