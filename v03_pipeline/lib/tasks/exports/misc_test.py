@@ -185,6 +185,7 @@ class MiscTest(unittest.TestCase):
             ),
         )
         ht = hl.read_table(TEST_GRCH37_SNV_INDEL_ANNOTATIONS)
+        ht = drop_unexported_fields(ht)
         ht = unmap_formatting_annotation_enums(
             ht,
             ReferenceGenome.GRCh37,
