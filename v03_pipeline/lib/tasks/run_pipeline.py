@@ -2,10 +2,6 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.model.feature_flag import FeatureFlag
-from v03_pipeline.lib.reference_datasets.reference_dataset import (
-    BaseReferenceDataset,
-    ReferenceDataset,
-)
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )

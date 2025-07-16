@@ -8,10 +8,6 @@ from v03_pipeline.lib.paths import (
     project_table_path,
     variant_annotations_table_path,
 )
-from v03_pipeline.lib.reference_datasets.reference_dataset import (
-    BaseReferenceDataset,
-    ReferenceDataset,
-)
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )

@@ -86,11 +86,12 @@ def export_parquet_filterable_transcripts_fields(
     # Parquet export expects all fields sorted alphabetically
     return OrderedDict(sorted(fields.items()))
 
+
 def drop_unexported_fields(ht: hl.Table) -> hl.Table:
     if hasattr(ht, ReferenceDataset.clinvar.value):
         ht = ht.drop(ReferenceDataset.clinvar.value)
         ht = ht.annotate_globals(
-            nums=ht.globals.enums.drop(ReferenceDataset.clinvar.value)
+            nums=ht.globals.enums.drop(ReferenceDataset.clinvar.value),
         )
     return ht
 

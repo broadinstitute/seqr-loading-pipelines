@@ -17,10 +17,6 @@ from v03_pipeline.lib.paths import (
     new_transcripts_parquet_path,
     new_variants_parquet_path,
 )
-from v03_pipeline.lib.reference_datasets.reference_dataset import (
-    BaseReferenceDataset,
-    ReferenceDataset,
-)
 
 logger = get_logger(__name__)
 
@@ -51,7 +47,6 @@ class ClickHouseTable(StrEnum):
 
     def should_load(
         self,
-        reference_genome: ReferenceGenome,
         dataset_type: DatasetType,
     ):
         if self == ClickHouseTable.TRANSCRIPTS:
