@@ -307,8 +307,7 @@ def optimize_entries(
         return
     logged_query(
         f"""
-        OPTIMIZE TABLE {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)}
-        PARTITION %(project_guid)s FINAL
+        OPTIMIZE TABLE {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)} FINAL
         """,
         # For OPTIMIZE TABLE queries, server is known to not respond with output
         # or progress to the client.
