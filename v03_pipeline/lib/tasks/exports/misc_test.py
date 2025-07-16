@@ -8,7 +8,6 @@ from v03_pipeline.lib.model import (
 )
 from v03_pipeline.lib.tasks.exports.misc import (
     camelcase_array_structexpression_fields,
-    drop_unexported_fields,
     sorted_hl_struct,
     unmap_formatting_annotation_enums,
     unmap_reference_dataset_annotation_enums,
@@ -294,6 +293,7 @@ class MiscTest(unittest.TestCase):
 
     def test_unmap_reference_dataset_annotation_enums(self) -> None:
         ht = hl.read_table(TEST_SNV_INDEL_ANNOTATIONS)
+        ht = drop_unexported_fields(ht)
         ht = unmap_reference_dataset_annotation_enums(
             ht,
             ReferenceGenome.GRCh38,
@@ -391,6 +391,7 @@ class MiscTest(unittest.TestCase):
 
     def test_camelcase_array_structexpression_fields(self) -> None:
         ht = hl.read_table(TEST_SNV_INDEL_ANNOTATIONS)
+        ht = drop_unexported_fields(ht)
         ht = unmap_formatting_annotation_enums(
             ht,
             ReferenceGenome.GRCh38,

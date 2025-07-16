@@ -91,7 +91,7 @@ def drop_unexported_fields(ht: hl.Table) -> hl.Table:
     if hasattr(ht, ReferenceDataset.clinvar.value):
         ht = ht.drop(ReferenceDataset.clinvar.value)
         ht = ht.annotate_globals(
-            nums=ht.globals.enums.drop(ReferenceDataset.clinvar.value),
+            enums=ht.globals.enums.drop(ReferenceDataset.clinvar.value),
         )
     return ht
 
