@@ -8,6 +8,7 @@ from v03_pipeline.lib.model import (
 )
 from v03_pipeline.lib.tasks.exports.misc import (
     camelcase_array_structexpression_fields,
+    drop_unexported_fields,
     sorted_hl_struct,
     unmap_formatting_annotation_enums,
     unmap_reference_dataset_annotation_enums,
@@ -24,6 +25,7 @@ TEST_GRCH37_SNV_INDEL_ANNOTATIONS = (
 class MiscTest(unittest.TestCase):
     def test_unmap_formatting_annotation_enums(self) -> None:
         ht = hl.read_table(TEST_SNV_INDEL_ANNOTATIONS)
+        ht = drop_unexported_fields(ht)
         ht = unmap_formatting_annotation_enums(
             ht,
             ReferenceGenome.GRCh38,
@@ -34,7 +36,6 @@ class MiscTest(unittest.TestCase):
             [
                 'screen',
                 'dbnsfp',
-                'clinvar',
                 'gnomad_exomes',
                 'gnomad_non_coding_constraint',
                 'splice_ai',
@@ -181,18 +182,10 @@ class MiscTest(unittest.TestCase):
                 ),
                 splice_ai=hl.Struct(delta_score=0.0, splice_consequence_id=4),
                 eigen=hl.Struct(Eigen_phred=2.628000020980835),
-                clinvar=hl.Struct(
-                    alleleId=929885,
-                    conflictingPathogenicities=None,
-                    goldStars=1,
-                    submitters=['Labcorp Genetics (formerly Invitae), Labcorp'],
-                    conditions=['not provided'],
-                    assertion_ids=[],
-                    pathogenicity_id=12,
-                ),
             ),
         )
         ht = hl.read_table(TEST_GRCH37_SNV_INDEL_ANNOTATIONS)
+        ht = drop_unexported_fields(ht)
         ht = unmap_formatting_annotation_enums(
             ht,
             ReferenceGenome.GRCh37,
@@ -202,7 +195,6 @@ class MiscTest(unittest.TestCase):
             list(ht.globals.enums.collect()[0].keys()),
             [
                 'dbnsfp',
-                'clinvar',
                 'gnomad_exomes',
                 'splice_ai',
                 'exac',
@@ -298,20 +290,12 @@ class MiscTest(unittest.TestCase):
                     splice_consequence_id=2,
                 ),
                 key_=1424,
-                clinvar=hl.Struct(
-                    alleleId=2193183,
-                    conflictingPathogenicities=None,
-                    goldStars=1,
-                    submitters=['Ambry Genetics'],
-                    conditions=['not specified'],
-                    assertion_ids=[],
-                    pathogenicity_id=14,
-                ),
             ),
         )
 
     def test_unmap_reference_dataset_annotation_enums(self) -> None:
         ht = hl.read_table(TEST_SNV_INDEL_ANNOTATIONS)
+        ht = drop_unexported_fields(ht)
         ht = unmap_reference_dataset_annotation_enums(
             ht,
             ReferenceGenome.GRCh38,
@@ -404,20 +388,12 @@ class MiscTest(unittest.TestCase):
                     splice_consequence='No consequence',
                 ),
                 eigen=hl.Struct(Eigen_phred=2.628000020980835),
-                clinvar=hl.Struct(
-                    alleleId=929885,
-                    conflictingPathogenicities=None,
-                    goldStars=1,
-                    submitters=['Labcorp Genetics (formerly Invitae), Labcorp'],
-                    conditions=['not provided'],
-                    assertions=[],
-                    pathogenicity='Uncertain_significance',
-                ),
             ),
         )
 
     def test_camelcase_array_structexpression_fields(self) -> None:
         ht = hl.read_table(TEST_SNV_INDEL_ANNOTATIONS)
+        ht = drop_unexported_fields(ht)
         ht = unmap_formatting_annotation_enums(
             ht,
             ReferenceGenome.GRCh38,
@@ -511,15 +487,6 @@ class MiscTest(unittest.TestCase):
                     splice_consequence='No consequence',
                 ),
                 eigen=hl.Struct(Eigen_phred=2.628000020980835),
-                clinvar=hl.Struct(
-                    alleleId=929885,
-                    conflictingPathogenicities=None,
-                    goldStars=1,
-                    submitters=['Labcorp Genetics (formerly Invitae), Labcorp'],
-                    conditions=['not provided'],
-                    assertions=[],
-                    pathogenicity='Uncertain_significance',
-                ),
                 sortedTranscriptConsequences=[
                     hl.Struct(
                         aminoAcids='S/L',

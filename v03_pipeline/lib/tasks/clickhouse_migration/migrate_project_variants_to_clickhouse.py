@@ -8,17 +8,10 @@ from v03_pipeline.lib.paths import (
     project_table_path,
     variant_annotations_table_path,
 )
-from v03_pipeline.lib.reference_datasets.reference_dataset import (
-    BaseReferenceDataset,
-    ReferenceDataset,
-)
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
-from v03_pipeline.lib.tasks.exports.write_new_clinvar_variants_parquet import (
-    WriteNewClinvarVariantsParquetTask,
-)
 from v03_pipeline.lib.tasks.exports.write_new_transcripts_parquet import (
     WriteNewTranscriptsParquetTask,
 )
@@ -120,22 +113,6 @@ class MigrateProjectVariantsToClickHouseTask(luigi.WrapperTask):
                 self.clone(
                     WriteNewVariantsParquetTask,
                     callset_path=None,
-                ),
-                *(
-                    [
-                        self.clone(
-                            WriteNewClinvarVariantsParquetTask,
-                            callset_path=None,
-                        ),
-                    ]
-                    if (
-                        ReferenceDataset.clinvar
-                        in BaseReferenceDataset.for_reference_genome_dataset_type(
-                            self.reference_genome,
-                            self.dataset_type,
-                        )
-                    )
-                    else []
                 ),
             ],
         )

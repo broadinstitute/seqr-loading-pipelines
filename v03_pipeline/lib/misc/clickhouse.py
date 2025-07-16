@@ -13,14 +13,9 @@ from v03_pipeline.lib.misc.retry import retry
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import (
-    new_clinvar_variants_parquet_path,
     new_entries_parquet_path,
     new_transcripts_parquet_path,
     new_variants_parquet_path,
-)
-from v03_pipeline.lib.reference_datasets.reference_dataset import (
-    BaseReferenceDataset,
-    ReferenceDataset,
 )
 
 logger = get_logger(__name__)
@@ -34,7 +29,6 @@ STAGING_CLICKHOUSE_DATABASE = 'staging'
 class ClickHouseTable(StrEnum):
     ANNOTATIONS_DISK = 'annotations_disk'
     ANNOTATIONS_MEMORY = 'annotations_memory'
-    CLINVAR = 'clinvar'
     KEY_LOOKUP = 'key_lookup'
     TRANSCRIPTS = 'transcripts'
     ENTRIES = 'entries'
@@ -46,7 +40,6 @@ class ClickHouseTable(StrEnum):
         return {
             ClickHouseTable.ANNOTATIONS_DISK: new_variants_parquet_path,
             ClickHouseTable.ANNOTATIONS_MEMORY: new_variants_parquet_path,
-            ClickHouseTable.CLINVAR: new_clinvar_variants_parquet_path,
             ClickHouseTable.KEY_LOOKUP: new_variants_parquet_path,
             ClickHouseTable.TRANSCRIPTS: new_transcripts_parquet_path,
             ClickHouseTable.ENTRIES: new_entries_parquet_path,
@@ -54,17 +47,8 @@ class ClickHouseTable(StrEnum):
 
     def should_load(
         self,
-        reference_genome: ReferenceGenome,
         dataset_type: DatasetType,
     ):
-        if self == ClickHouseTable.CLINVAR:
-            return (
-                ReferenceDataset.clinvar
-                in BaseReferenceDataset.for_reference_genome_dataset_type(
-                    reference_genome,
-                    dataset_type,
-                )
-            )
         if self == ClickHouseTable.TRANSCRIPTS:
             return dataset_type.should_write_new_transcripts
         return self in {

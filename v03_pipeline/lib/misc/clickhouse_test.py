@@ -140,14 +140,6 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         client.execute(
             f"""
-            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/clinvar` (
-                key UInt32
-            ) ENGINE = MergeTree()
-            ORDER BY key
-        """,
-        )
-        client.execute(
-            f"""
             CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts` (
                 key UInt32,
                 transcripts String
