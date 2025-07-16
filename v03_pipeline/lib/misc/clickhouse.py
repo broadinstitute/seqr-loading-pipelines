@@ -91,11 +91,11 @@ class ClickHouseTable(StrEnum):
             ),
             ClickHouseTable.KEY_LOOKUP: functools.partial(
                 direct_insert_all_keys,
-                _clickhouse_table=self,
+                clickhouse_table=self,
             ),
             ClickHouseTable.TRANSCRIPTS: functools.partial(
                 direct_insert_all_keys,
-                _clickhouse_table=self,
+                clickhouse_table=self,
             ),
         }[self]
 
