@@ -8,6 +8,21 @@
         </default>
     </profiles>
 
+    <users>
+        <default>
+            <password>default_password<password/>
+            <networks>
+                <ip>::/0</ip>
+            </networks>
+
+            <profile>default</profile>
+            <quota>default</quota>
+
+            <access_management>1</access_management>
+            <named_collection_control>1</named_collection_control>
+        </default>
+    </users>
+
     <!-- Config that is used when server is run without config file. -->
     <logger>
         <level>trace</level>
@@ -22,22 +37,6 @@
     <path>./</path>
 
     <mlock_executable>true</mlock_executable>
-
-    <users>
-        <default>
-            <password/>
-
-            <networks>
-                <ip>::/0</ip>
-            </networks>
-
-            <profile>default</profile>
-            <quota>default</quota>
-
-            <access_management>1</access_management>
-            <named_collection_control>1</named_collection_control>
-        </default>
-    </users>
 
     <quotas>
         <default/>
