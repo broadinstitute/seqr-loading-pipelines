@@ -21,7 +21,7 @@ from v03_pipeline.lib.paths import (
 logger = get_logger(__name__)
 
 GOOGLE_XML_API_PATH = 'https://storage.googleapis.com/'
-OPTIMIZE_TABLE_TIMEOUT_S = 9999
+OPTIMIZE_TABLE_TIMEOUT_S = 99999
 REDACTED = 'REDACTED'
 STAGING_CLICKHOUSE_DATABASE = 'staging'
 
