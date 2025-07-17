@@ -10,7 +10,7 @@
 
     <users>
         <default>
-            <password>default_password<password/>
+            <password>default_password</password>
             <networks>
                 <ip>::/0</ip>
             </networks>
