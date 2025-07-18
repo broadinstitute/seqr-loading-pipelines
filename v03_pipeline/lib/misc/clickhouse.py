@@ -287,6 +287,7 @@ def insert_new_entries(
         """,
     )
 
+
 @retry(delay=5)
 def optimize_entries(
     table_name_builder: TableNameBuilder,
