@@ -1,6 +1,7 @@
 import functools
 import hashlib
 import os
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
@@ -21,6 +22,7 @@ from v03_pipeline.lib.paths import (
 logger = get_logger(__name__)
 
 GOOGLE_XML_API_PATH = 'https://storage.googleapis.com/'
+OPTIMIZE_TABLE_WAIT_S = 300
 OPTIMIZE_TABLE_TIMEOUT_S = 99999
 REDACTED = 'REDACTED'
 STAGING_CLICKHOUSE_DATABASE = 'staging'
@@ -288,32 +290,54 @@ def insert_new_entries(
     )
 
 
-@retry(tries=7)  # Aggressive retries!
+@retry()
 def optimize_entries(
     table_name_builder: TableNameBuilder,
 ) -> None:
-    # ClickHouse docs generally recommend against running OPTIMIZE TABLE FINAL.
-    # However, forcing the merge to happen at load time should make the
-    # application layer free of eventual consistency bugs.
-    decrs_exist = logged_query(
-        f"""
-        SELECT EXISTS (
-            SELECT 1
-            FROM {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)}
-            WHERE sign = -1
-        );
-        """,
-    )[0][0]
-    if not decrs_exist:
-        return
-    logged_query(
-        f"""
-        OPTIMIZE TABLE {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)} FINAL
-        """,
-        # For OPTIMIZE TABLE queries, server is known to not respond with output
-        # or progress to the client.
-        timeout=OPTIMIZE_TABLE_TIMEOUT_S,
-    )
+    safely_optimized = False
+    while not safely_optimized:
+        decrs_exist = logged_query(
+            f"""
+            SELECT EXISTS (
+                SELECT 1
+                FROM {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)}
+                WHERE sign = -1
+            );
+            """,
+        )[0][0]
+        merges_running = logged_query(
+            """
+            SELECT EXISTS (
+                SELECT 1
+                FROM system.merges
+                WHERE database = %(database)s
+                AND table = %(table)s
+            );
+            """,
+            {
+                'database': STAGING_CLICKHOUSE_DATABASE,
+                'name': table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)
+                .split('.')[1]
+                .replace('`', ''),
+            },
+        )[0][0]
+        if decrs_exist and merges_running:
+            logger.info('Decrs exist and merges are running, so waiting')
+            time.sleep(OPTIMIZE_TABLE_WAIT_S)
+            continue
+        if not decrs_exist and merges_running:
+            logger.info('No decrs exist but merges are running, so waiting')
+            time.sleep(OPTIMIZE_TABLE_WAIT_S)
+            continue
+        if decrs_exist and not merges_running:
+            logged_query(
+                f"""
+                OPTIMIZE TABLE {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)} FINAL
+                """,
+                timeout=OPTIMIZE_TABLE_TIMEOUT_S,
+            )
+        else:
+            safely_optimized = True
 
 
 @retry(delay=5)
