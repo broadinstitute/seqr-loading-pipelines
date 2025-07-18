@@ -288,7 +288,7 @@ def insert_new_entries(
     )
 
 
-@retry(tries=7) # Aggressive retries!
+@retry(tries=7)  # Aggressive retries!
 def optimize_entries(
     table_name_builder: TableNameBuilder,
 ) -> None:
