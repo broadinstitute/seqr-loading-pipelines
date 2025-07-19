@@ -235,7 +235,8 @@ def create_staging_non_table_entities(
         )
         logged_query(create_entity_statement)
 
-
+# Note that this function is NOT idemptotent.  Clickhouse permits
+# attaching the same partition to a table multiple times.
 def stage_existing_project_partitions(
     table_name_builder: TableNameBuilder,
     dataset_type: DatasetType,
@@ -419,7 +420,8 @@ def replace_project_partitions(
             )
 
 
-# note this is NOT idempotent
+# Note this is NOT idempotent, as running the swap twice will
+# result in the entities not being swapped.
 def exchange_entity(
     table_name_builder,
     clickhouse_entity: ClickHouseEntity,
