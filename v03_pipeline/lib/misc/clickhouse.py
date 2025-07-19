@@ -316,7 +316,7 @@ def optimize_entries(
             """,
             {
                 'database': STAGING_CLICKHOUSE_DATABASE,
-                'name': table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)
+                'table': table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)
                 .split('.')[1]
                 .replace('`', ''),
             },
