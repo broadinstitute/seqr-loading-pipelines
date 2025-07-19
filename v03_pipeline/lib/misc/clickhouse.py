@@ -290,7 +290,7 @@ def insert_new_entries(
     )
 
 
-@retry()
+@retry(tries=5)
 def optimize_entries(
     table_name_builder: TableNameBuilder,
 ) -> None:
@@ -324,12 +324,10 @@ def optimize_entries(
         if decrs_exist and merges_running:
             logger.info('Decrs exist and merges are running, so waiting')
             time.sleep(OPTIMIZE_TABLE_WAIT_S)
-            continue
-        if not decrs_exist and merges_running:
+        elif not decrs_exist and merges_running:
             logger.info('No decrs exist but merges are running, so waiting')
             time.sleep(OPTIMIZE_TABLE_WAIT_S)
-            continue
-        if decrs_exist and not merges_running:
+        elif decrs_exist and not merges_running:
             logged_query(
                 f"""
                 OPTIMIZE TABLE {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)} FINAL
