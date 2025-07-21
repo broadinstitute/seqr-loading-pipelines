@@ -514,7 +514,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         self.assertEqual(
             len(staging_tables),
-            7,
+            6,
         )
         self.assertEqual(
             next(iter([s[0] for s in staging_tables if 'DICTIONARY' in s[0]])).strip(),
