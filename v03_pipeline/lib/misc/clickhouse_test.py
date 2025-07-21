@@ -21,8 +21,8 @@ from v03_pipeline.lib.misc.clickhouse import (
     get_clickhouse_client,
     insert_new_entries,
     optimize_entries,
-    refresh_staged_materialized_views,
-    reload_staged_dictionaries,
+    refresh_materialized_views,
+    reload_dictionaries,
     replace_project_partitions,
     stage_existing_project_partitions,
 )
@@ -694,7 +694,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ('project_d', 4, 'WES', 1, 0),
             ],
         )
-        refresh_staged_materialized_views(
+        refresh_materialized_views(
             table_name_builder,
             ClickHouseMaterializedView.for_dataset_type_atomic_entries_insert_refreshable(
                 DatasetType.SNV_INDEL,
@@ -889,7 +889,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 DatasetType.SNV_INDEL,
             ),
         )
-        reload_staged_dictionaries(
+        reload_dictionaries(
             table_name_builder,
             ClickHouseDictionary.for_dataset_type(DatasetType.SNV_INDEL),
         )

@@ -407,7 +407,7 @@ def optimize_entries(
 
 
 @retry(delay=5)
-def refresh_staged_materialized_views(
+def refresh_materialized_views(
     table_name_builder,
     materialized_views: list[ClickHouseMaterializedView],
 ):
@@ -466,7 +466,7 @@ def validate_family_guid_counts(
 
 
 @retry(delay=5)
-def reload_staged_dictionaries(
+def reload_dictionaries(
     table_name_builder: TableNameBuilder,
     dictionaries: list[ClickHouseDictionary],
 ):
@@ -627,7 +627,7 @@ def atomic_entries_insert(
         project_guids,
         family_guids,
     )
-    refresh_staged_materialized_views(
+    refresh_materialized_views(
         table_name_builder,
         ClickHouseMaterializedView.for_dataset_type_atomic_entries_insert_refreshable(
             dataset_type,
@@ -657,7 +657,7 @@ def atomic_entries_insert(
     # pointing at a staging source and a staging dictionary
     # pointing at a production source... which is not desired
     # behavior.
-    reload_staged_dictionaries(
+    reload_dictionaries(
         table_name_builder,
         ClickHouseDictionary.for_dataset_type(dataset_type),
     )
