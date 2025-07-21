@@ -17,12 +17,12 @@ from v03_pipeline.lib.misc.clickhouse import (
     delete_existing_families_from_staging_entries,
     direct_insert_all_keys,
     direct_insert_new_keys,
-    exchange_entity,
+    exchange_entities,
     get_clickhouse_client,
     insert_new_entries,
     optimize_entries,
-    refresh_staged_gt_stats,
-    reload_staged_gt_stats_dict,
+    refresh_staged_materialized_views,
+    reload_staged_dictionaries,
     replace_project_partitions,
     stage_existing_project_partitions,
 )
@@ -491,28 +491,44 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         create_staging_tables(
             table_name_builder,
-            [
-                ClickHouseTable.ENTRIES,
-                ClickHouseTable.PROJECT_GT_STATS,
-                ClickHouseTable.GT_STATS,
-            ],
+            ClickHouseTable.for_dataset_type_staging(DatasetType.SNV_INDEL),
         )
         create_staging_non_table_entities(
             table_name_builder,
             [
-                ClickHouseMaterializedView.ENTRIES_TO_PROJECT_GT_STATS_MV,
-                ClickHouseMaterializedView.PROJECT_GT_STATS_TO_GT_STATS_MV,
-                ClickHouseDictionary.GT_STATS_DICT,
+                *ClickHouseMaterializedView.for_dataset_type(DatasetType.SNV_INDEL),
+                *ClickHouseDictionary.for_dataset_type(DatasetType.SNV_INDEL),
             ],
+        )
+        staging_tables = client.execute(
+            """
+            SELECT create_table_query FROM system.tables
+            WHERE
+            database = %(database)s
+            """,
+            {'database': STAGING_CLICKHOUSE_DATABASE},
+        )
+        self.assertEqual(
+            len(staging_tables),
+            7,
+        )
+        self.assertEqual(
+            next(iter([s[0] for s in staging_tables if 'DICTIONARY' in s[0]])).strip(),
+            # important test!  Ensuring that the staging dictionary points to the production gt_stats table.
+            f"""
+            CREATE DICTIONARY staging.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/gt_stats_dict` (`key` UInt32, `ac_wes` UInt16, `ac_wgs` UInt16) PRIMARY KEY key SOURCE(CLICKHOUSE(USER {Env.CLICKHOUSE_USER} PASSWORD '[HIDDEN]' DB {Env.CLICKHOUSE_DATABASE} TABLE `GRCh38/SNV_INDEL/gt_stats`)) LIFETIME(MIN 0 MAX 0) LAYOUT(FLAT(MAX_ARRAY_SIZE 10000))
+            """.strip(),
         )
         stage_existing_project_partitions(
             table_name_builder,
-            DatasetType.SNV_INDEL,
             [
                 'project_a',
                 'project_b',
                 'project_d',  # Partition does not exist already.
             ],
+            ClickHouseTable.for_dataset_type_staging_project_partitioned(
+                DatasetType.SNV_INDEL,
+            ),
         )
         staged_projects = client.execute(
             f"""
@@ -674,7 +690,10 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ('project_d', 4, 'WES', 1, 0),
             ],
         )
-        refresh_staged_gt_stats(table_name_builder)
+        refresh_staged_materialized_views(
+            table_name_builder,
+            ClickHouseMaterializedView.for_dataset_type(DatasetType.SNV_INDEL),
+        )
         staged_gt_stats = client.execute(
             f"""
             SELECT * FROM {STAGING_CLICKHOUSE_DATABASE}.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/gt_stats`
@@ -696,10 +715,9 @@ class ClickhouseTest(MockedDatarootTestCase):
         replace_project_partitions(
             table_name_builder,
             ['project_a', 'project_d'],
-            [
-                ClickHouseTable.ENTRIES,
-                ClickHouseTable.PROJECT_GT_STATS,
-            ],
+            ClickHouseTable.for_dataset_type_staging_project_partitioned(
+                DatasetType.SNV_INDEL,
+            ),
         )
         new_entries = client.execute(
             f"""
@@ -859,12 +877,15 @@ class ClickhouseTest(MockedDatarootTestCase):
             existing_gt_stats,
             [],
         )
-        exchange_entity(
+        exchange_entities(
             table_name_builder,
-            ClickHouseTable.GT_STATS,
+            ClickHouseTable.for_dataset_type_staging_unpartitioned(
+                DatasetType.SNV_INDEL,
+            ),
         )
-        reload_staged_gt_stats_dict(
+        reload_staged_dictionaries(
             table_name_builder,
+            ClickHouseDictionary.for_dataset_type(DatasetType.SNV_INDEL),
         )
         new_gt_stats = client.execute(
             f"""
@@ -874,9 +895,9 @@ class ClickhouseTest(MockedDatarootTestCase):
             """,
         )
         self.assertCountEqual(new_gt_stats, [])
-        exchange_entity(
+        exchange_entities(
             table_name_builder,
-            ClickHouseDictionary.GT_STATS_DICT,
+            ClickHouseDictionary.for_dataset_type(DatasetType.SNV_INDEL),
         )
         new_gt_stats_post_exchange = client.execute(
             f"""
@@ -895,26 +916,6 @@ class ClickhouseTest(MockedDatarootTestCase):
                 (4, 5, 0),
                 (5, 2, 0),
             ],
-        )
-
-        staging_tables = client.execute(
-            """
-            SELECT create_table_query FROM system.tables
-            WHERE
-            database = %(database)s
-            """,
-            {'database': STAGING_CLICKHOUSE_DATABASE},
-        )
-        self.assertEqual(
-            len(staging_tables),
-            6,
-        )
-        self.assertEqual(
-            next(iter([s[0] for s in staging_tables if 'DICTIONARY' in s[0]])).strip(),
-            # important test!  Ensuring that the staging dictionary points to the production gt_stats table.
-            f"""
-            CREATE DICTIONARY staging.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/gt_stats_dict` (`key` UInt32, `ac_wes` UInt16, `ac_wgs` UInt16) PRIMARY KEY key SOURCE(CLICKHOUSE(USER {Env.CLICKHOUSE_USER} PASSWORD '[HIDDEN]' DB {Env.CLICKHOUSE_DATABASE} TABLE `GRCh38/SNV_INDEL/gt_stats`)) LIFETIME(MIN 0 MAX 0) LAYOUT(FLAT(MAX_ARRAY_SIZE 10000))
-            """.strip(),
         )
 
     def test_atomic_entries_insert(self):
