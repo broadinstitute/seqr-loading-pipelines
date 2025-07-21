@@ -481,8 +481,8 @@ def reload_staged_dictionaries(
 @retry(delay=5)  # REPLACE partition is a copy, so this is idempotent.
 def replace_project_partitions(
     table_name_builder: TableNameBuilder,
-    project_guids: list[str],
     clickhouse_tables: list[ClickHouseTable],
+    project_guids: list[str],
 ) -> None:
     for clickhouse_table in clickhouse_tables:
         for project_guid in project_guids:
@@ -635,10 +635,10 @@ def atomic_entries_insert(
     )
     replace_project_partitions(
         table_name_builder,
-        project_guids,
         ClickHouseTable.for_dataset_type_atomic_entries_insert_project_partitioned(
             dataset_type,
         ),
+        project_guids,
     )
     exchange_entities(
         table_name_builder,

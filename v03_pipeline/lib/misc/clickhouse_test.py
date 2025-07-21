@@ -720,10 +720,10 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         replace_project_partitions(
             table_name_builder,
-            ['project_a', 'project_d'],
             ClickHouseTable.for_dataset_type_atomic_entries_insert_project_partitioned(
                 DatasetType.SNV_INDEL,
             ),
+            ['project_a', 'project_d'],
         )
         new_entries = client.execute(
             f"""
