@@ -692,7 +692,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         refresh_staged_materialized_views(
             table_name_builder,
-            ClickHouseMaterializedView.for_dataset_type(DatasetType.SNV_INDEL),
+            ClickHouseMaterializedView.for_dataset_type_refreshable(DatasetType.SNV_INDEL),
         )
         staged_gt_stats = client.execute(
             f"""

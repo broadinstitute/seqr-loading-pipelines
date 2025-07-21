@@ -31,7 +31,6 @@ STAGING_CLICKHOUSE_DATABASE = 'staging'
 class ClickHouseTable(StrEnum):
     ANNOTATIONS_DISK = 'annotations_disk'
     ANNOTATIONS_MEMORY = 'annotations_memory'
-    CLINVAR = 'clinvar'
     KEY_LOOKUP = 'key_lookup'
     TRANSCRIPTS = 'transcripts'
     ENTRIES = 'entries'
@@ -117,43 +116,21 @@ class ClickHouseTable(StrEnum):
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseTable']:
-        return {
-            DatasetType.SNV_INDEL: [
-                ClickHouseTable.ENTRIES,
-                ClickHouseTable.PROJECT_GT_STATS,
-            ],
-            DatasetType.MITO: [
-                ClickHouseTable.ENTRIES,
-                ClickHouseTable.PROJECT_GT_STATS,
-            ],
-            DatasetType.SV: [
-                ClickHouseTable.ENTRIES,
-                ClickHouseTable.PROJECT_GT_STATS,
-            ],
-            DatasetType.GCNV: [
-                ClickHouseTable.ENTRIES,
-            ],
-        }[dataset_type]
+        if dataset_type == DatasetType.GCNV:
+            return [ClickHouseTable.ENTRIES]
+        return [
+            ClickHouseTable.ENTRIES,
+            ClickHouseTable.PROJECT_GT_STATS,
+        ]
 
     @classmethod
     def for_dataset_type_staging_unpartitioned(
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseTable']:
-        return {
-            DatasetType.SNV_INDEL: [
-                ClickHouseTable.CLINVAR,
-                ClickHouseTable.GT_STATS,
-            ],
-            DatasetType.MITO: [
-                ClickHouseTable.CLINVAR,
-                ClickHouseTable.GT_STATS,
-            ],
-            DatasetType.SV: [
-                ClickHouseTable.GT_STATS,
-            ],
-            DatasetType.GCNV: [],
-        }[dataset_type]
+        if dataset_type == DatasetType.GCNV:
+            return []
+        return [ClickHouseTable.GT_STATS]
 
 
 class ClickHouseDictionary(StrEnum):
@@ -169,24 +146,23 @@ class ClickHouseDictionary(StrEnum):
 
 
 class ClickHouseMaterializedView(StrEnum):
-    CLINVAR_ALL_VARIANTS_TO_CLINVAR_MV = 'clinvar_all_variants_to_clinvar_mv'
     ENTRIES_TO_PROJECT_GT_STATS_MV = 'entries_to_project_gt_stats_mv'
     PROJECT_GT_STATS_TO_GT_STATS_MV = 'project_gt_stats_to_gt_stats_mv'
 
     @classmethod
-    def for_dataset_type(
+    def for_dataset_type(dataset_type: DatasetType):
+        if dataset_type == DatasetType.GCNV:
+            return []
+        return list(cls)
+
+    @classmethod
+    def for_dataset_type_refreshable(
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseMaterializedView']:
-        return {
-            DatasetType.SNV_INDEL: list(cls),
-            DatasetType.MITO: list(cls),
-            DatasetType.SV: [
-                ClickHouseMaterializedView.ENTRIES_TO_PROJECT_GT_STATS_MV,
-                ClickHouseMaterializedView.PROJECT_GT_STATS_TO_GT_STATS_MV,
-            ],
-            DatasetType.GCNV: [],
-        }[dataset_type]
+        if dataset_type == DatasetType.GCNV:
+            return []
+        return [ClickHouseMaterializedView.PROJECT_GT_STATS_TO_GT_STATS_MV]
 
 
 ClickHouseEntity = ClickHouseDictionary | ClickHouseTable | ClickHouseMaterializedView
@@ -639,7 +615,7 @@ def atomic_entries_insert(
     )
     refresh_staged_materialized_views(
         table_name_builder,
-        ClickHouseMaterializedView.for_dataset_type(dataset_type),
+        ClickHouseMaterializedView.for_dataset_type_refreshable(dataset_type),
     )
     replace_project_partitions(
         table_name_builder,
