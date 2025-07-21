@@ -149,6 +149,24 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         client.execute(
             f"""
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/annotations_memory` (
+                key UInt32,
+                variantId String,
+            ) ENGINE = EmbeddedRocksDB()
+            PRIMARY KEY `key`
+        """,
+        )
+        client.execute(
+            f"""
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/annotations_disk` (
+                key UInt32,
+                variantId String,
+            ) ENGINE = EmbeddedRocksDB()
+            PRIMARY KEY `key`
+        """,
+        )
+        client.execute(
+            f"""
             CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` (
                 variantId String,
                 key UInt32,
@@ -180,6 +198,121 @@ class ClickhouseTest(MockedDatarootTestCase):
             DatasetType.SNV_INDEL,
         )
         os.makedirs(os.path.join(base_path, TEST_RUN_ID), exist_ok=True)
+
+        # Transcripts Parquet
+        df = pd.DataFrame({'key': [1, 2, 3, 4], 'transcripts': ['a', 'b', 'c', 'd']})
+        table = pa.Table.from_pandas(df)
+        os.makedirs(
+            new_transcripts_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
+        )
+        pq.write_table(
+            table,
+            os.path.join(
+                new_transcripts_parquet_path(
+                    ReferenceGenome.GRCh38,
+                    DatasetType.SNV_INDEL,
+                    TEST_RUN_ID,
+                ),
+                'test.parquet',
+            ),
+        )
+
+        # New Variants parquet.
+        df = pd.DataFrame(
+            {
+                'key': [10, 11, 12, 13],
+                'variantId': [
+                    '1-3-A-C',
+                    '2-4-A-T',
+                    'Y-9-A-C',
+                    'M-2-C-G',
+                ],
+            },
+        )
+        table = pa.Table.from_pandas(df)
+        os.makedirs(
+            new_variants_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
+        )
+        pq.write_table(
+            table,
+            os.path.join(
+                new_variants_parquet_path(
+                    ReferenceGenome.GRCh38,
+                    DatasetType.SNV_INDEL,
+                    TEST_RUN_ID,
+                ),
+                'test.parquet',
+            ),
+        )
+
+        # New Entries Parquet
+        df = pd.DataFrame(
+            {
+                'key': [0, 3, 4],
+                'project_guid': [
+                    'project_d',
+                    'project_d',
+                    'project_d',
+                ],
+                'family_guid': [
+                    'family_d1',
+                    'family_d2',
+                    'family_d3',
+                ],
+                'xpos': [
+                    123456789,
+                    123456789,
+                    123456789,
+                ],
+                'sample_type': [
+                    'WES',
+                    'WES',
+                    'WES',
+                ],
+                'calls': [
+                    [('sample_d1', 0), ('sample_d11', 2)],
+                    [('sample_d2', 0)],
+                    [('sample_d3', 1)],
+                ],
+                'sign': [
+                    1,
+                    1,
+                    1,
+                ],
+            },
+        )
+        schema = pa.schema(
+            [
+                ('key', pa.int64()),
+                ('project_guid', pa.string()),
+                ('family_guid', pa.string()),
+                ('xpos', pa.int64()),
+                ('sample_type', pa.string()),
+                (
+                    'calls',
+                    pa.list_(
+                        pa.struct([('sampleId', pa.string()), ('gt', pa.int64())]),
+                    ),
+                ),
+                ('sign', pa.int64()),
+            ],
+        )
+        table = pa.Table.from_pandas(df, schema=schema)
+        os.makedirs(
+            new_entries_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
+        )
 
     def tearDown(self):
         super().tearDown()
@@ -229,26 +362,6 @@ class ClickhouseTest(MockedDatarootTestCase):
 
     def test_direct_insert_all_keys(self):
         client = get_clickhouse_client()
-        df = pd.DataFrame({'key': [1, 2, 3, 4], 'transcripts': ['a', 'b', 'c', 'd']})
-        table = pa.Table.from_pandas(df)
-        os.makedirs(
-            new_transcripts_parquet_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                TEST_RUN_ID,
-            ),
-        )
-        pq.write_table(
-            table,
-            os.path.join(
-                new_transcripts_parquet_path(
-                    ReferenceGenome.GRCh38,
-                    DatasetType.SNV_INDEL,
-                    TEST_RUN_ID,
-                ),
-                'test.parquet',
-            ),
-        )
         client.execute(
             f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts` VALUES',
             [(1, 'a'), (10, 'b'), (7, 'c')],
@@ -288,36 +401,6 @@ class ClickhouseTest(MockedDatarootTestCase):
 
     def test_direct_insert_key_lookup_new_keys(self):
         client = get_clickhouse_client()
-        df = pd.DataFrame(
-            {
-                'variantId': [
-                    '1-3-A-C',
-                    '2-4-A-T',
-                    'Y-9-A-C',
-                    'M-2-C-G',
-                ],
-                'key': [10, 11, 12, 13],
-            },
-        )
-        table = pa.Table.from_pandas(df)
-        os.makedirs(
-            new_variants_parquet_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                TEST_RUN_ID,
-            ),
-        )
-        pq.write_table(
-            table,
-            os.path.join(
-                new_variants_parquet_path(
-                    ReferenceGenome.GRCh38,
-                    DatasetType.SNV_INDEL,
-                    TEST_RUN_ID,
-                ),
-                'test.parquet',
-            ),
-        )
         client.execute(
             f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` VALUES',
             [('1-123-A-C', 1), ('2-234-C-T', 2), ('M-345-C-G', 3)],
@@ -601,76 +684,6 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ('project_c', 5, 'WES', 0, 1),
             ],
         )
-        df = pd.DataFrame(
-            {
-                'key': [0, 3, 4],
-                'project_guid': [
-                    'project_d',
-                    'project_d',
-                    'project_d',
-                ],
-                'family_guid': [
-                    'family_d1',
-                    'family_d2',
-                    'family_d3',
-                ],
-                'xpos': [
-                    123456789,
-                    123456789,
-                    123456789,
-                ],
-                'sample_type': [
-                    'WES',
-                    'WES',
-                    'WES',
-                ],
-                'calls': [
-                    [('sample_d1', 0), ('sample_d11', 2)],
-                    [('sample_d2', 0)],
-                    [('sample_d3', 1)],
-                ],
-                'sign': [
-                    1,
-                    1,
-                    1,
-                ],
-            },
-        )
-        schema = pa.schema(
-            [
-                ('key', pa.int64()),
-                ('project_guid', pa.string()),
-                ('family_guid', pa.string()),
-                ('xpos', pa.int64()),
-                ('sample_type', pa.string()),
-                (
-                    'calls',
-                    pa.list_(
-                        pa.struct([('sampleId', pa.string()), ('gt', pa.int64())]),
-                    ),
-                ),
-                ('sign', pa.int64()),
-            ],
-        )
-        table = pa.Table.from_pandas(df, schema=schema)
-        os.makedirs(
-            new_entries_parquet_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                TEST_RUN_ID,
-            ),
-        )
-        pq.write_table(
-            table,
-            os.path.join(
-                new_entries_parquet_path(
-                    ReferenceGenome.GRCh38,
-                    DatasetType.SNV_INDEL,
-                    TEST_RUN_ID,
-                ),
-                'test.parquet',
-            ),
-        )
         insert_new_entries(table_name_builder)
         optimize_entries(
             table_name_builder,
@@ -930,77 +943,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             ],
         )
 
-    def test_atomic_entries_insert(self):
-        df = pd.DataFrame(
-            {
-                'key': [0, 3, 4],
-                'project_guid': [
-                    'project_d',
-                    'project_d',
-                    'project_d',
-                ],
-                'family_guid': [
-                    'family_d1',
-                    'family_d2',
-                    'family_d3',
-                ],
-                'xpos': [
-                    123456789,
-                    123456789,
-                    123456789,
-                ],
-                'sample_type': [
-                    'WES',
-                    'WES',
-                    'WES',
-                ],
-                'calls': [
-                    [('sample_d1', 0), ('sample_d11', 1)],
-                    [('sample_d2', 0)],
-                    [('sample_d3', 2)],
-                ],
-                'sign': [
-                    1,
-                    1,
-                    1,
-                ],
-            },
-        )
-        schema = pa.schema(
-            [
-                ('key', pa.int64()),
-                ('project_guid', pa.string()),
-                ('family_guid', pa.string()),
-                ('xpos', pa.int64()),
-                ('sample_type', pa.string()),
-                (
-                    'calls',
-                    pa.list_(
-                        pa.struct([('sampleId', pa.string()), ('gt', pa.int64())]),
-                    ),
-                ),
-                ('sign', pa.int64()),
-            ],
-        )
-        table = pa.Table.from_pandas(df, schema=schema)
-        os.makedirs(
-            new_entries_parquet_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                TEST_RUN_ID,
-            ),
-        )
-        pq.write_table(
-            table,
-            os.path.join(
-                new_entries_parquet_path(
-                    ReferenceGenome.GRCh38,
-                    DatasetType.SNV_INDEL,
-                    TEST_RUN_ID,
-                ),
-                'test.parquet',
-            ),
-        )
+    def test_load_complete_run(self):
         atomic_entries_insert(
             ClickHouseTable.ENTRIES,
             TableNameBuilder(
