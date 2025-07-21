@@ -235,6 +235,7 @@ def create_staging_non_table_entities(
         )
         logged_query(create_entity_statement)
 
+
 # Note that this function is NOT idemptotent.  Clickhouse permits
 # attaching the same partition to a table multiple times.
 def stage_existing_project_partitions(
