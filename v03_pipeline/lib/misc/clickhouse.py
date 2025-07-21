@@ -154,6 +154,12 @@ class ClickHouseMaterializedView(StrEnum):
     PROJECT_GT_STATS_TO_GT_STATS_MV = 'project_gt_stats_to_gt_stats_mv'
 
     @classmethod
+    def for_dataset_type_refreshable(cls, dataset_type: DatasetType):
+        if dataset_type in {DatasetType.SNV_INDEL, DatasetType.MITO}:
+            return [ClickHouseMaterializedView.CLINVAR_ALL_VARIANTS_TO_CLINVAR_MV]
+        return []
+
+    @classmethod
     def for_dataset_type_atomic_entries_insert(
         cls,
         dataset_type: DatasetType,
@@ -512,16 +518,9 @@ def exchange_entities(
 @retry()
 def direct_insert_new_keys(
     clickhouse_table: ClickHouseTable,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    run_id: str,
+    table_name_builder: TableNameBuilder,
     **_,
 ) -> None:
-    table_name_builder = TableNameBuilder(
-        reference_genome,
-        dataset_type,
-        run_id,
-    )
     dst_table = table_name_builder.dst_table(clickhouse_table)
     src_table = table_name_builder.src_table(clickhouse_table)
     drop_staging_db()
@@ -555,16 +554,9 @@ def direct_insert_new_keys(
 @retry()
 def direct_insert_all_keys(
     clickhouse_table: ClickHouseTable,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    run_id: str,
+    table_name_builder: TableNameBuilder,
     **_,
 ) -> None:
-    table_name_builder = TableNameBuilder(
-        reference_genome,
-        dataset_type,
-        run_id,
-    )
     dst_table = table_name_builder.dst_table(clickhouse_table)
     src_table = table_name_builder.src_table(clickhouse_table)
     logged_query(
@@ -579,18 +571,12 @@ def direct_insert_all_keys(
 @retry()
 def atomic_entries_insert(
     _clickhouse_table: ClickHouseTable,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    run_id: str,
+    table_name_builder: TableNameBuilder,
     project_guids: list[str],
     family_guids: list[str],
     **_,
 ) -> None:
-    table_name_builder = TableNameBuilder(
-        reference_genome,
-        dataset_type,
-        run_id,
-    )
+    dataset_type = table_name_builder.dataset_type
     drop_staging_db()
     create_staging_tables(
         table_name_builder,

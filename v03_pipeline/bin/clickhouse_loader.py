@@ -8,8 +8,11 @@ import hailtop.fs as hfs
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.clickhouse import (
+    ClickHouseMaterializedView,
     ClickHouseTable,
+    TableNameBuilder,
     drop_staging_db,
+    refresh_materialized_views,
 )
 from v03_pipeline.lib.misc.retry import retry
 from v03_pipeline.lib.misc.runs import get_run_ids
@@ -104,18 +107,27 @@ def main():
                         dataset_type,
                         run_id,
                     )
+                    table_name_builder = TableNameBuilder(
+                        reference_genome,
+                        dataset_type,
+                        run_id,
+                    )
                     for clickhouse_table in ClickHouseTable:
                         if not clickhouse_table.should_load(
                             dataset_type,
                         ):
                             continue
                         clickhouse_table.insert(
-                            reference_genome=reference_genome,
-                            dataset_type=dataset_type,
-                            run_id=run_id,
+                            table_name_builder=table_name_builder,
                             project_guids=project_guids,
                             family_guids=family_guids,
                         )
+                    refresh_materialized_views(
+                        table_name_builder,
+                        ClickHouseMaterializedView.for_dataset_type_refreshable(
+                            dataset_type,
+                        ),
+                    )
                     write_success_file(reference_genome, dataset_type, run_id)
         except Exception:
             logger.exception('Unhandled Exception')

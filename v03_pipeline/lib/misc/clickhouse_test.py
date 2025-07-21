@@ -255,9 +255,11 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         direct_insert_all_keys(
             ClickHouseTable.TRANSCRIPTS,
-            ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
-            TEST_RUN_ID,
+            TableNameBuilder(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
         )
         ret = client.execute(
             f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts`',
@@ -270,9 +272,11 @@ class ClickhouseTest(MockedDatarootTestCase):
         # ensure multiple calls are idempotent
         direct_insert_all_keys(
             ClickHouseTable.TRANSCRIPTS,
-            ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
-            TEST_RUN_ID,
+            TableNameBuilder(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
         )
         ret = client.execute(
             f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts`',
@@ -320,9 +324,11 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         direct_insert_new_keys(
             ClickHouseTable.KEY_LOOKUP,
-            ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
-            TEST_RUN_ID,
+            TableNameBuilder(
+                reference_genome=ReferenceGenome.GRCh38,
+                dataset_type=DatasetType.SNV_INDEL,
+                run_id=TEST_RUN_ID,
+            ),
         )
         ret = client.execute(
             f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` ORDER BY variantId ASC',
@@ -997,9 +1003,11 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         atomic_entries_insert(
             ClickHouseTable.ENTRIES,
-            ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
-            TEST_RUN_ID,
+            TableNameBuilder(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
             ['project_d'],
             ['family_d1', 'family_d2'],
         )
