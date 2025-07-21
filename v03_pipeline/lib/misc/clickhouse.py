@@ -102,17 +102,19 @@ class ClickHouseTable(StrEnum):
         }[self]
 
     @classmethod
-    def for_dataset_type_staging(
+    def for_dataset_type_atomic_entries_insert(
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseTable']:
         return [
-            *cls.for_dataset_type_staging_project_partitioned(dataset_type),
-            *cls.for_dataset_type_staging_unpartitioned(dataset_type),
+            *cls.for_dataset_type_atomic_entries_insert_project_partitioned(
+                dataset_type,
+            ),
+            *cls.for_dataset_type_atomic_entries_insert_unpartitioned(dataset_type),
         ]
 
     @classmethod
-    def for_dataset_type_staging_project_partitioned(
+    def for_dataset_type_atomic_entries_insert_project_partitioned(
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseTable']:
@@ -124,7 +126,7 @@ class ClickHouseTable(StrEnum):
         ]
 
     @classmethod
-    def for_dataset_type_staging_unpartitioned(
+    def for_dataset_type_atomic_entries_insert_unpartitioned(
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseTable']:
@@ -138,7 +140,8 @@ class ClickHouseDictionary(StrEnum):
 
     @classmethod
     def for_dataset_type(
-        cls, dataset_type: DatasetType,
+        cls,
+        dataset_type: DatasetType,
     ) -> list['ClickHouseDictionary']:
         if dataset_type == DatasetType.GCNV:
             return []
@@ -146,17 +149,24 @@ class ClickHouseDictionary(StrEnum):
 
 
 class ClickHouseMaterializedView(StrEnum):
+    CLINVAR_ALL_VARIANTS_TO_CLINVAR_MV = 'clinvar_all_variants_to_clinvar_mv'
     ENTRIES_TO_PROJECT_GT_STATS_MV = 'entries_to_project_gt_stats_mv'
     PROJECT_GT_STATS_TO_GT_STATS_MV = 'project_gt_stats_to_gt_stats_mv'
 
     @classmethod
-    def for_dataset_type(dataset_type: DatasetType):
+    def for_dataset_type_atomic_entries_insert(
+        cls,
+        dataset_type: DatasetType,
+    ) -> list['ClickHouseMaterializedView']:
         if dataset_type == DatasetType.GCNV:
             return []
-        return list(cls)
+        return [
+            ClickHouseMaterializedView.ENTRIES_TO_PROJECT_GT_STATS_MV,
+            ClickHouseMaterializedView.PROJECT_GT_STATS_TO_GT_STATS_MV,
+        ]
 
     @classmethod
-    def for_dataset_type_refreshable(
+    def for_dataset_type_atomic_entries_insert_refreshable(
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseMaterializedView']:
@@ -584,19 +594,23 @@ def atomic_entries_insert(
     drop_staging_db()
     create_staging_tables(
         table_name_builder,
-        ClickHouseTable.for_dataset_type_staging(dataset_type),
+        ClickHouseTable.for_dataset_type_atomic_entries_insert(dataset_type),
     )
     create_staging_non_table_entities(
         table_name_builder,
         [
-            *ClickHouseMaterializedView.for_dataset_type(dataset_type),
+            *ClickHouseMaterializedView.for_dataset_type_atomic_entries_insert(
+                dataset_type,
+            ),
             *ClickHouseDictionary.for_dataset_type(dataset_type),
         ],
     )
     stage_existing_project_partitions(
         table_name_builder,
         project_guids,
-        ClickHouseTable.for_dataset_type_staging_project_partitioned(dataset_type),
+        ClickHouseTable.for_dataset_type_atomic_entries_insert_project_partitioned(
+            dataset_type,
+        ),
     )
     delete_existing_families_from_staging_entries(
         table_name_builder,
@@ -615,16 +629,22 @@ def atomic_entries_insert(
     )
     refresh_staged_materialized_views(
         table_name_builder,
-        ClickHouseMaterializedView.for_dataset_type_refreshable(dataset_type),
+        ClickHouseMaterializedView.for_dataset_type_atomic_entries_insert_refreshable(
+            dataset_type,
+        ),
     )
     replace_project_partitions(
         table_name_builder,
         project_guids,
-        ClickHouseTable.for_dataset_type_staging_project_partitioned(dataset_type),
+        ClickHouseTable.for_dataset_type_atomic_entries_insert_project_partitioned(
+            dataset_type,
+        ),
     )
     exchange_entities(
         table_name_builder,
-        ClickHouseTable.for_dataset_type_staging_unpartitioned(dataset_type),
+        ClickHouseTable.for_dataset_type_atomic_entries_insert_unpartitioned(
+            dataset_type,
+        ),
     )
     # Very important nuance here... the staged dictionary
     # source tables are production tables, so the

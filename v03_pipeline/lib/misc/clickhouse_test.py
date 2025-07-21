@@ -491,12 +491,16 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         create_staging_tables(
             table_name_builder,
-            ClickHouseTable.for_dataset_type_staging(DatasetType.SNV_INDEL),
+            ClickHouseTable.for_dataset_type_atomic_entries_insert(
+                DatasetType.SNV_INDEL,
+            ),
         )
         create_staging_non_table_entities(
             table_name_builder,
             [
-                *ClickHouseMaterializedView.for_dataset_type(DatasetType.SNV_INDEL),
+                *ClickHouseMaterializedView.for_dataset_type_atomic_entries_insert(
+                    DatasetType.SNV_INDEL,
+                ),
                 *ClickHouseDictionary.for_dataset_type(DatasetType.SNV_INDEL),
             ],
         )
@@ -526,7 +530,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 'project_b',
                 'project_d',  # Partition does not exist already.
             ],
-            ClickHouseTable.for_dataset_type_staging_project_partitioned(
+            ClickHouseTable.for_dataset_type_atomic_entries_insert_project_partitioned(
                 DatasetType.SNV_INDEL,
             ),
         )
@@ -692,7 +696,9 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         refresh_staged_materialized_views(
             table_name_builder,
-            ClickHouseMaterializedView.for_dataset_type_refreshable(DatasetType.SNV_INDEL),
+            ClickHouseMaterializedView.for_dataset_type_atomic_entries_insert_refreshable(
+                DatasetType.SNV_INDEL,
+            ),
         )
         staged_gt_stats = client.execute(
             f"""
@@ -715,7 +721,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         replace_project_partitions(
             table_name_builder,
             ['project_a', 'project_d'],
-            ClickHouseTable.for_dataset_type_staging_project_partitioned(
+            ClickHouseTable.for_dataset_type_atomic_entries_insert_project_partitioned(
                 DatasetType.SNV_INDEL,
             ),
         )
@@ -879,7 +885,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         exchange_entities(
             table_name_builder,
-            ClickHouseTable.for_dataset_type_staging_unpartitioned(
+            ClickHouseTable.for_dataset_type_atomic_entries_insert_unpartitioned(
                 DatasetType.SNV_INDEL,
             ),
         )
