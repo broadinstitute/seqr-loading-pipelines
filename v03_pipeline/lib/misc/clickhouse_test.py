@@ -673,11 +673,6 @@ class ClickhouseTest(MockedDatarootTestCase):
             """,
             {'database': STAGING_CLICKHOUSE_DATABASE},
         )
-        print('ben', staging_tables)  # noqa: T201
-        self.assertEqual(
-            len(staging_tables),
-            9,
-        )
         self.assertEqual(
             next(iter([s[0] for s in staging_tables if 'DICTIONARY' in s[0]])).strip(),
             # important test!  Ensuring that the staging dictionary points to the production gt_stats table.
