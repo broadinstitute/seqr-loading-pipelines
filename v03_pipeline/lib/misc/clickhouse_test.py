@@ -11,7 +11,6 @@ from v03_pipeline.lib.misc.clickhouse import (
     ClickHouseMaterializedView,
     ClickHouseTable,
     TableNameBuilder,
-    atomic_entries_insert,
     create_staging_non_table_entities,
     create_staging_tables,
     delete_existing_families_from_staging_entries,
@@ -997,4 +996,29 @@ class ClickhouseTest(MockedDatarootTestCase):
                 (0, 2, 0),
                 (4, 1, 0),
             ],
+        )
+        annotations_disk = client.execute(
+            f"""
+           SELECT *
+           FROM
+           {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/annotations_disk`
+           """,
+        )
+        self.assertCountEqual(
+            annotations_disk,
+            [
+                (10, '1-3-A-C'),
+                (11, '2-4-A-T'),
+                (12, 'Y-9-A-C'),
+                (13, 'M-2-C-G'),
+            ],
+        )
+
+    def test_load_complete_gcnv(self):
+        load_complete_run(
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            TEST_RUN_ID,
+            ['project_d'],
+            ['family_d1', 'family_d2'],
         )
