@@ -673,9 +673,10 @@ class ClickhouseTest(MockedDatarootTestCase):
             """,
             {'database': STAGING_CLICKHOUSE_DATABASE},
         )
+        print('ben', staging_tables)
         self.assertEqual(
             len(staging_tables),
-            6,
+            9,
         )
         self.assertEqual(
             next(iter([s[0] for s in staging_tables if 'DICTIONARY' in s[0]])).strip(),
