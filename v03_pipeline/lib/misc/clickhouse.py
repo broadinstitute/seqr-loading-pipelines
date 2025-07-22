@@ -416,16 +416,17 @@ def optimize_entries(
 def refresh_materialized_views(
     table_name_builder,
     materialized_views: list[ClickHouseMaterializedView],
+    staging=False,
 ):
     for materialized_view in materialized_views:
         logged_query(
             f"""
-            SYSTEM REFRESH VIEW {table_name_builder.staging_dst_table(materialized_view)}
+            SYSTEM REFRESH VIEW {table_name_builder.staging_dst_table(materialized_view) if staging else table_name_builder.dst_table(materialized_view)}
             """,
         )
         logged_query(
             f"""
-            SYSTEM WAIT VIEW {table_name_builder.staging_dst_table(materialized_view)}
+            SYSTEM WAIT VIEW {table_name_builder.staging_dst_table(materialized_view) if staging else table_name_builder.dst_table(materialized_view)}
             """,
             timeout=600,
         )
@@ -618,6 +619,7 @@ def atomic_entries_insert(
         ClickHouseMaterializedView.for_dataset_type_atomic_entries_insert_refreshable(
             dataset_type,
         ),
+        staging=True,
     )
     replace_project_partitions(
         table_name_builder,

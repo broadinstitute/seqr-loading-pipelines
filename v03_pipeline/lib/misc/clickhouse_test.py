@@ -20,6 +20,7 @@ from v03_pipeline.lib.misc.clickhouse import (
     exchange_entities,
     get_clickhouse_client,
     insert_new_entries,
+    load_complete_run,
     optimize_entries,
     refresh_materialized_views,
     reload_dictionaries,
@@ -193,31 +194,42 @@ class ClickhouseTest(MockedDatarootTestCase):
             LAYOUT(FLAT(MAX_ARRAY_SIZE 10000))
             """,
         )
+        client.execute(
+            f"""
+            CREATE MATERIALIZED VIEW {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/clinvar_all_variants_to_clinvar_mv`
+            REFRESH EVERY 10 YEAR ENGINE = Null
+            AS SELECT *
+            FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup`
+            """,
+        )
         base_path = runs_path(
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
         )
         os.makedirs(os.path.join(base_path, TEST_RUN_ID), exist_ok=True)
 
+        def write_test_parquet(df: pd.DataFrame, parquet_path: str, schema=None):
+            if schema:
+                table = pa.Table.from_pandas(df, schema=schema)
+            else:
+                table = pa.Table.from_pandas(df)
+            os.makedirs(parquet_path)
+            pq.write_table(
+                table,
+                os.path.join(
+                    parquet_path,
+                    'test.parquet',
+                ),
+            )
+
         # Transcripts Parquet
         df = pd.DataFrame({'key': [1, 2, 3, 4], 'transcripts': ['a', 'b', 'c', 'd']})
-        table = pa.Table.from_pandas(df)
-        os.makedirs(
+        write_test_parquet(
+            df,
             new_transcripts_parquet_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 TEST_RUN_ID,
-            ),
-        )
-        pq.write_table(
-            table,
-            os.path.join(
-                new_transcripts_parquet_path(
-                    ReferenceGenome.GRCh38,
-                    DatasetType.SNV_INDEL,
-                    TEST_RUN_ID,
-                ),
-                'test.parquet',
             ),
         )
 
@@ -233,23 +245,12 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ],
             },
         )
-        table = pa.Table.from_pandas(df)
-        os.makedirs(
+        write_test_parquet(
+            df,
             new_variants_parquet_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 TEST_RUN_ID,
-            ),
-        )
-        pq.write_table(
-            table,
-            os.path.join(
-                new_variants_parquet_path(
-                    ReferenceGenome.GRCh38,
-                    DatasetType.SNV_INDEL,
-                    TEST_RUN_ID,
-                ),
-                'test.parquet',
             ),
         )
 
@@ -305,13 +306,14 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ('sign', pa.int64()),
             ],
         )
-        table = pa.Table.from_pandas(df, schema=schema)
-        os.makedirs(
+        write_test_parquet(
+            df,
             new_entries_parquet_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 TEST_RUN_ID,
             ),
+            schema,
         )
 
     def tearDown(self):
@@ -603,7 +605,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         self.assertEqual(
             len(staging_tables),
-            7,
+            6,
         )
         self.assertEqual(
             next(iter([s[0] for s in staging_tables if 'DICTIONARY' in s[0]])).strip(),
@@ -718,6 +720,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             ClickHouseMaterializedView.for_dataset_type_atomic_entries_insert_refreshable(
                 DatasetType.SNV_INDEL,
             ),
+            staging=True,
         )
         staged_gt_stats = client.execute(
             f"""
@@ -944,57 +947,54 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
 
     def test_load_complete_run(self):
-        atomic_entries_insert(
-            ClickHouseTable.ENTRIES,
-            TableNameBuilder(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                TEST_RUN_ID,
-            ),
+        load_complete_run(
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            TEST_RUN_ID,
             ['project_d'],
             ['family_d1', 'family_d2'],
         )
         client = get_clickhouse_client()
         project_gt_stats = client.execute(
             f"""
-            SELECT project_guid, key, sample_type, sum(het_samples), sum(hom_samples)
-            FROM
-            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/project_gt_stats`
-            GROUP BY project_guid, key, sample_type
-            """,
+           SELECT project_guid, key, sample_type, sum(het_samples), sum(hom_samples)
+           FROM
+           {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/project_gt_stats`
+           GROUP BY project_guid, key, sample_type
+           """,
         )
         self.assertCountEqual(
             project_gt_stats,
             [
-                ('project_d', 0, 'WES', 1, 0),
-                ('project_d', 4, 'WES', 0, 1),
+                ('project_d', 0, 'WES', 0, 1),
+                ('project_d', 4, 'WES', 1, 0),
             ],
         )
         gt_stats = client.execute(
             f"""
-            SELECT *
-            FROM
-            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
-            """,
+           SELECT *
+           FROM
+           {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
+           """,
         )
         self.assertCountEqual(
             gt_stats,
             [
-                (0, 1, 0),
-                (4, 2, 0),
+                (0, 2, 0),
+                (4, 1, 0),
             ],
         )
         gt_stats_dict = client.execute(
             f"""
-            SELECT *
-            FROM
-            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats_dict`
-            """,
+           SELECT *
+           FROM
+           {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats_dict`
+           """,
         )
         self.assertCountEqual(
             gt_stats_dict,
             [
-                (0, 1, 0),
-                (4, 2, 0),
+                (0, 2, 0),
+                (4, 1, 0),
             ],
         )
