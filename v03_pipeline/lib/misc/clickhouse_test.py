@@ -673,7 +673,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             """,
             {'database': STAGING_CLICKHOUSE_DATABASE},
         )
-        print('ben', staging_tables) # noqa: T201
+        print('ben', staging_tables)  # noqa: T201
         self.assertEqual(
             len(staging_tables),
             9,
