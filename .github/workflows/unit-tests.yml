@@ -32,6 +32,8 @@ jobs:
             -v ${{ github.workspace }}/test_config.xml:/etc/clickhouse-server/config.d/config.xml \
             -v /tmp:/tmp \
             -p 9000:9000 \
+            -e CLICKHOUSE_USER=default \
+            -e CLICKHOUSE_PASSWORD=default_password \
             bitnami/clickhouse:latest
       - name: Wait for ClickHouse
         run: |
