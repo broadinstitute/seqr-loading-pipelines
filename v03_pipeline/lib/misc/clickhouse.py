@@ -21,6 +21,7 @@ from v03_pipeline.lib.paths import (
 
 logger = get_logger(__name__)
 
+CLICKHOUSE_SEARCH_NAMED_COLLECTION = 'clickhouse_search_named_collection'
 GOOGLE_XML_API_PATH = 'https://storage.googleapis.com/'
 OPTIMIZE_TABLE_WAIT_S = 300
 OPTIMIZE_TABLE_TIMEOUT_S = 99999
@@ -154,23 +155,13 @@ class TableNameBuilder:
             '*.parquet',
         )
         if path.startswith('gs://'):
-            return f"gcs('{path.replace('gs://', GOOGLE_XML_API_PATH)}', '{Env.CLICKHOUSE_GCS_HMAC_KEY}', '{Env.CLICKHOUSE_GCS_HMAC_SECRET}', 'Parquet')"
+            return f"gcs({CLICKHOUSE_SEARCH_NAMED_COLLECTION}, url='{path.replace('gs://', GOOGLE_XML_API_PATH)}')"
         return f"file('{path}', 'Parquet')"
 
 
 def logged_query(query, params=None, timeout: int | None = None):
     client = get_clickhouse_client(timeout)
     sanitized_query = query
-    if Env.CLICKHOUSE_GCS_HMAC_KEY:
-        sanitized_query = sanitized_query.replace(
-            Env.CLICKHOUSE_GCS_HMAC_KEY,
-            REDACTED,
-        )
-    if Env.CLICKHOUSE_GCS_HMAC_SECRET:
-        sanitized_query = sanitized_query.replace(
-            Env.CLICKHOUSE_GCS_HMAC_SECRET,
-            REDACTED,
-        )
     if Env.CLICKHOUSE_PASSWORD:
         sanitized_query = sanitized_query.replace(
             Env.CLICKHOUSE_PASSWORD,
