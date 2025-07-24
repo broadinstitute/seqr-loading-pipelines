@@ -598,8 +598,8 @@ def get_clickhouse_client(
     return Client(
         host=Env.CLICKHOUSE_SERVICE_HOSTNAME,
         port=Env.CLICKHOUSE_SERVICE_PORT,
-        user=Env.CLICKHOUSE_USER,
-        **{'password': Env.CLICKHOUSE_PASSWORD} if Env.CLICKHOUSE_PASSWORD else {},
+        user=Env.CLICKHOUSE_WRITER_USER,
+        **{'password': Env.CLICKHOUSE_WRITER_PASSWORD},
         **{'send_receive_timeout': timeout} if timeout else {},
         **{
             'settings': {
