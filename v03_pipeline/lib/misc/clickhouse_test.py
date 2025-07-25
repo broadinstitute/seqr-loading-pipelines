@@ -185,7 +185,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             PRIMARY KEY key
             SOURCE(
                 CLICKHOUSE(
-                    USER {Env.CLICKHOUSE_USER} PASSWORD {Env.CLICKHOUSE_PASSWORD or "''"}
+                    USER {Env.CLICKHOUSE_WRITER_USER} PASSWORD {Env.CLICKHOUSE_WRITER_PASSWORD or "''"}
                     DB {Env.CLICKHOUSE_DATABASE} TABLE `GRCh38/SNV_INDEL/gt_stats`
                 )
             )
@@ -429,7 +429,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 table_name_builder.src_table(
                     ClickHouseTable.ENTRIES,
                 ),
-                "gcs('https://storage.googleapis.com/mock_bucket/v3.1/GRCh38/SNV_INDEL/runs/manual__2025-05-07T17-20-59.702114+00-00/new_entries.parquet/*.parquet', '', '', 'Parquet')",
+                "gcs(clickhouse_search_named_collection, url='https://storage.googleapis.com/mock_bucket/v3.1/GRCh38/SNV_INDEL/runs/manual__2025-05-07T17-20-59.702114+00-00/new_entries.parquet/*.parquet')",
             )
 
     def test_direct_insert_all_keys(self):
@@ -1012,8 +1012,9 @@ class ClickhouseTest(MockedDatarootTestCase):
             ],
         )
 
-    def test_load_complete_run(self):
-        load_complete_run(
+    def test_atomic_entries_insert(self):
+        atomic_entries_insert(
+            ClickHouseTable.ENTRIES,
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
             TEST_RUN_ID,

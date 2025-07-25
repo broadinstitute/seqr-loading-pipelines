@@ -88,6 +88,7 @@ class WriteProjectEntriesParquetTask(BaseWriteParquetTask):
             self.input()[PROJECT_TABLE_TASK].path,
         )
         ht = deglobalize_ids(ht)
+        ht = ht.distinct()
         annotations_ht = hl.read_table(
             self.input()[PROJECT_SUBSETTED_ANNOTATIONS_TABLE_TASK].path,
         )
