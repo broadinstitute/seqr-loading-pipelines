@@ -167,7 +167,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             PRIMARY KEY key
             SOURCE(
                 CLICKHOUSE(
-                    USER {Env.CLICKHOUSE_WRITER_USER} PASSWORD {Env.CLICKHOUSE_PASSWORD or "''"}
+                    USER {Env.CLICKHOUSE_WRITER_USER} PASSWORD {Env.CLICKHOUSE_WRITER_PASSWORD or "''"}
                     DB {Env.CLICKHOUSE_DATABASE} TABLE `GRCh38/SNV_INDEL/gt_stats`
                 )
             )
