@@ -32,8 +32,8 @@ jobs:
             -v ${{ github.workspace }}/test_config.xml:/etc/clickhouse-server/config.d/config.xml \
             -v /tmp:/tmp \
             -p 9000:9000 \
-            -e CLICKHOUSE_USER=clickhouse_test \
-            -e CLICKHOUSE_PASSWORD=clickhouse_test \
+            -e CLICKHOUSE_USER=default \
+            -e CLICKHOUSE_PASSWORD=default_password \
             bitnami/clickhouse:latest
       - name: Wait for ClickHouse
         run: |
@@ -69,8 +69,6 @@ jobs:
           export ACCESS_PRIVATE_REFERENCE_DATASETS=1
           export INCLUDE_PIPELINE_VERSION_IN_PREFIX=1
           export PYSPARK_SUBMIT_ARGS='--driver-memory 8G pyspark-shell'
-          export CLICKHOUSE_USER=clickhouse_test
-          export CLICKHOUSE_PASSWORD=clickhouse_test
           export CLICKHOUSE_DATABASE=test
           nosetests --with-coverage --cover-package v03_pipeline/lib v03_pipeline/lib
           coverage report --omit '*test*' --fail-under=75
