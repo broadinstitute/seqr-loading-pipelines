@@ -375,7 +375,7 @@ CONFIG = {
         },
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
+            VERSION: '1.1',
             PATH: 'gs://gcp-public-data--gnomad/release/4.1/ht/exomes/gnomad.exomes.v4.1.sites.ht',
         },
     },
@@ -387,7 +387,7 @@ CONFIG = {
         },
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
+            VERSION: '1.1',
             PATH: 'gs://gcp-public-data--gnomad/release/4.1/ht/genomes/gnomad.genomes.v4.1.sites.ht',
         },
     },
