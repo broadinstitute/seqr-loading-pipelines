@@ -678,7 +678,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             next(iter([s[0] for s in staging_tables if 'DICTIONARY' in s[0]])).strip(),
             # important test!  Ensuring that the staging dictionary points to the production gt_stats table.
             f"""
-            CREATE DICTIONARY staging.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/gt_stats_dict` (`key` UInt32, `ac_wes` UInt16, `ac_wgs` UInt16) PRIMARY KEY key SOURCE(CLICKHOUSE(USER {Env.CLICKHOUSE_USER} PASSWORD '[HIDDEN]' DB {Env.CLICKHOUSE_DATABASE} TABLE `GRCh38/SNV_INDEL/gt_stats`)) LIFETIME(MIN 0 MAX 0) LAYOUT(FLAT(MAX_ARRAY_SIZE 10000))
+            CREATE DICTIONARY staging.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/gt_stats_dict` (`key` UInt32, `ac_wes` UInt16, `ac_wgs` UInt16) PRIMARY KEY key SOURCE(CLICKHOUSE(USER {Env.CLICKHOUSE_WRITER_USER} PASSWORD '[HIDDEN]' DB {Env.CLICKHOUSE_DATABASE} TABLE `GRCh38/SNV_INDEL/gt_stats`)) LIFETIME(MIN 0 MAX 0) LAYOUT(FLAT(MAX_ARRAY_SIZE 10000))
             """.strip(),
         )
         stage_existing_project_partitions(
@@ -1014,11 +1014,14 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
 
     def test_atomic_entries_insert(self):
-        atomic_entries_insert(
-            ClickHouseTable.ENTRIES,
+        table_name_builder = TableNameBuilder(
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
             TEST_RUN_ID,
+        )
+        atomic_entries_insert(
+            ClickHouseTable.ENTRIES,
+            table_name_builder,
             ['project_d'],
             ['family_d1', 'family_d2'],
         )
