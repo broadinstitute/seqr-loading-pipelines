@@ -1013,15 +1013,11 @@ class ClickhouseTest(MockedDatarootTestCase):
             ],
         )
 
-    def test_atomic_entries_insert(self):
-        table_name_builder = TableNameBuilder(
+    def test_load_complete_run_snv_indel(self):
+        load_complete_run(
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
             TEST_RUN_ID,
-        )
-        atomic_entries_insert(
-            ClickHouseTable.ENTRIES,
-            table_name_builder,
             ['project_d'],
             ['family_d1', 'family_d2'],
         )
