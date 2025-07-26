@@ -11,7 +11,6 @@ from v03_pipeline.lib.misc.clickhouse import (
     ClickHouseMaterializedView,
     ClickHouseTable,
     TableNameBuilder,
-    atomic_entries_insert,
     create_staging_non_table_entities,
     create_staging_tables,
     delete_existing_families_from_staging_entries,
