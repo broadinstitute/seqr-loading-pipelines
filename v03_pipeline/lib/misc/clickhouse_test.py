@@ -11,18 +11,18 @@ from v03_pipeline.lib.misc.clickhouse import (
     ClickHouseMaterializedView,
     ClickHouseTable,
     TableNameBuilder,
-    atomic_entries_insert,
     create_staging_non_table_entities,
     create_staging_tables,
     delete_existing_families_from_staging_entries,
     direct_insert_all_keys,
     direct_insert_new_keys,
-    exchange_entity,
+    exchange_entities,
     get_clickhouse_client,
     insert_new_entries,
+    load_complete_run,
     optimize_entries,
-    refresh_staged_gt_stats,
-    reload_staged_gt_stats_dict,
+    refresh_materialized_views,
+    reload_dictionaries,
     replace_project_partitions,
     stage_existing_project_partitions,
 )
@@ -149,6 +149,24 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         client.execute(
             f"""
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/annotations_memory` (
+                key UInt32,
+                variantId String,
+            ) ENGINE = EmbeddedRocksDB()
+            PRIMARY KEY `key`
+        """,
+        )
+        client.execute(
+            f"""
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/annotations_disk` (
+                key UInt32,
+                variantId String,
+            ) ENGINE = EmbeddedRocksDB()
+            PRIMARY KEY `key`
+        """,
+        )
+        client.execute(
+            f"""
             CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` (
                 variantId String,
                 key UInt32,
@@ -175,11 +193,198 @@ class ClickhouseTest(MockedDatarootTestCase):
             LAYOUT(FLAT(MAX_ARRAY_SIZE 10000))
             """,
         )
+        client.execute(
+            f"""
+            CREATE MATERIALIZED VIEW {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/clinvar_all_variants_to_clinvar_mv`
+            REFRESH EVERY 10 YEAR ENGINE = Null
+            AS SELECT *
+            FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup`
+            """,
+        )
+        client.execute(
+            f"""
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/entries` (
+                `key` UInt32,
+                `project_guid` LowCardinality(String),
+                `family_guid` String,
+                `xpos` UInt64 CODEC(Delta(8), ZSTD(1)),
+                `sample_type` Enum8('WES' = 0, 'WGS' = 1),
+                `calls` Array(
+                    Tuple(
+                        sampleId String,
+                        gt Nullable(Enum8('REF' = 0, 'HET' = 1, 'HOM' = 2)),
+                    )
+                ),
+                `sign` Int8,
+                PROJECTION xpos_projection
+                (
+                    SELECT *
+                    ORDER BY xpos
+                )
+            )
+            ENGINE = CollapsingMergeTree(sign)
+            PARTITION BY project_guid
+            ORDER BY (project_guid, family_guid, key)
+            SETTINGS deduplicate_merge_projection_mode = 'rebuild';
+            """,
+        )
+        client.execute(
+            f"""
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/annotations_memory` (
+                key UInt32,
+                variantId String,
+            ) ENGINE = EmbeddedRocksDB()
+            PRIMARY KEY `key`
+        """,
+        )
+        client.execute(
+            f"""
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/annotations_disk` (
+                key UInt32,
+                variantId String,
+            ) ENGINE = EmbeddedRocksDB()
+            PRIMARY KEY `key`
+        """,
+        )
+        client.execute(
+            f"""
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/key_lookup` (
+                variantId String,
+                key UInt32,
+            ) ENGINE = EmbeddedRocksDB()
+            PRIMARY KEY `variantId`
+        """,
+        )
         base_path = runs_path(
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
         )
         os.makedirs(os.path.join(base_path, TEST_RUN_ID), exist_ok=True)
+
+        def write_test_parquet(df: pd.DataFrame, parquet_path: str, schema=None):
+            if schema:
+                table = pa.Table.from_pandas(df, schema=schema)
+            else:
+                table = pa.Table.from_pandas(df)
+            os.makedirs(parquet_path)
+            pq.write_table(
+                table,
+                os.path.join(
+                    parquet_path,
+                    'test.parquet',
+                ),
+            )
+
+        # Transcripts Parquet
+        df = pd.DataFrame({'key': [1, 2, 3, 4], 'transcripts': ['a', 'b', 'c', 'd']})
+        write_test_parquet(
+            df,
+            new_transcripts_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
+        )
+
+        # New Variants parquet.
+        df = pd.DataFrame(
+            {
+                'key': [10, 11, 12, 13],
+                'variantId': [
+                    '1-3-A-C',
+                    '2-4-A-T',
+                    'Y-9-A-C',
+                    'M-2-C-G',
+                ],
+            },
+        )
+        write_test_parquet(
+            df,
+            new_variants_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
+        )
+        write_test_parquet(
+            df,
+            new_variants_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.GCNV,
+                TEST_RUN_ID,
+            ),
+        )
+
+        # New Entries Parquet
+        df = pd.DataFrame(
+            {
+                'key': [0, 3, 4],
+                'project_guid': [
+                    'project_d',
+                    'project_d',
+                    'project_d',
+                ],
+                'family_guid': [
+                    'family_d1',
+                    'family_d2',
+                    'family_d3',
+                ],
+                'xpos': [
+                    123456789,
+                    123456789,
+                    123456789,
+                ],
+                'sample_type': [
+                    'WES',
+                    'WES',
+                    'WES',
+                ],
+                'calls': [
+                    [('sample_d1', 0), ('sample_d11', 2)],
+                    [('sample_d2', 0)],
+                    [('sample_d3', 1)],
+                ],
+                'sign': [
+                    1,
+                    1,
+                    1,
+                ],
+            },
+        )
+        schema = pa.schema(
+            [
+                ('key', pa.int64()),
+                ('project_guid', pa.string()),
+                ('family_guid', pa.string()),
+                ('xpos', pa.int64()),
+                ('sample_type', pa.string()),
+                (
+                    'calls',
+                    pa.list_(
+                        pa.struct([('sampleId', pa.string()), ('gt', pa.int64())]),
+                    ),
+                ),
+                ('sign', pa.int64()),
+            ],
+        )
+        write_test_parquet(
+            df,
+            new_entries_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
+            schema,
+        )
+        write_test_parquet(
+            df,
+            new_entries_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.GCNV,
+                TEST_RUN_ID,
+            ),
+            schema,
+        )
 
     def tearDown(self):
         super().tearDown()
@@ -229,35 +434,17 @@ class ClickhouseTest(MockedDatarootTestCase):
 
     def test_direct_insert_all_keys(self):
         client = get_clickhouse_client()
-        df = pd.DataFrame({'key': [1, 2, 3, 4], 'transcripts': ['a', 'b', 'c', 'd']})
-        table = pa.Table.from_pandas(df)
-        os.makedirs(
-            new_transcripts_parquet_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                TEST_RUN_ID,
-            ),
-        )
-        pq.write_table(
-            table,
-            os.path.join(
-                new_transcripts_parquet_path(
-                    ReferenceGenome.GRCh38,
-                    DatasetType.SNV_INDEL,
-                    TEST_RUN_ID,
-                ),
-                'test.parquet',
-            ),
-        )
         client.execute(
             f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts` VALUES',
             [(1, 'a'), (10, 'b'), (7, 'c')],
         )
         direct_insert_all_keys(
             ClickHouseTable.TRANSCRIPTS,
-            ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
-            TEST_RUN_ID,
+            TableNameBuilder(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
         )
         ret = client.execute(
             f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts`',
@@ -270,9 +457,11 @@ class ClickhouseTest(MockedDatarootTestCase):
         # ensure multiple calls are idempotent
         direct_insert_all_keys(
             ClickHouseTable.TRANSCRIPTS,
-            ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
-            TEST_RUN_ID,
+            TableNameBuilder(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
         )
         ret = client.execute(
             f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts`',
@@ -284,45 +473,17 @@ class ClickhouseTest(MockedDatarootTestCase):
 
     def test_direct_insert_key_lookup_new_keys(self):
         client = get_clickhouse_client()
-        df = pd.DataFrame(
-            {
-                'variantId': [
-                    '1-3-A-C',
-                    '2-4-A-T',
-                    'Y-9-A-C',
-                    'M-2-C-G',
-                ],
-                'key': [10, 11, 12, 13],
-            },
-        )
-        table = pa.Table.from_pandas(df)
-        os.makedirs(
-            new_variants_parquet_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                TEST_RUN_ID,
-            ),
-        )
-        pq.write_table(
-            table,
-            os.path.join(
-                new_variants_parquet_path(
-                    ReferenceGenome.GRCh38,
-                    DatasetType.SNV_INDEL,
-                    TEST_RUN_ID,
-                ),
-                'test.parquet',
-            ),
-        )
         client.execute(
             f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` VALUES',
             [('1-123-A-C', 1), ('2-234-C-T', 2), ('M-345-C-G', 3)],
         )
         direct_insert_new_keys(
             ClickHouseTable.KEY_LOOKUP,
-            ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
-            TEST_RUN_ID,
+            TableNameBuilder(
+                reference_genome=ReferenceGenome.GRCh38,
+                dataset_type=DatasetType.SNV_INDEL,
+                run_id=TEST_RUN_ID,
+            ),
         )
         ret = client.execute(
             f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` ORDER BY variantId ASC',
@@ -491,28 +652,44 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         create_staging_tables(
             table_name_builder,
-            [
-                ClickHouseTable.ENTRIES,
-                ClickHouseTable.PROJECT_GT_STATS,
-                ClickHouseTable.GT_STATS,
-            ],
+            ClickHouseTable.for_dataset_type_atomic_entries_insert(
+                DatasetType.SNV_INDEL,
+            ),
         )
         create_staging_non_table_entities(
             table_name_builder,
             [
-                ClickHouseMaterializedView.ENTRIES_TO_PROJECT_GT_STATS_MV,
-                ClickHouseMaterializedView.PROJECT_GT_STATS_TO_GT_STATS_MV,
-                ClickHouseDictionary.GT_STATS_DICT,
+                *ClickHouseMaterializedView.for_dataset_type_atomic_entries_insert(
+                    DatasetType.SNV_INDEL,
+                ),
+                *ClickHouseDictionary.for_dataset_type(DatasetType.SNV_INDEL),
             ],
+        )
+        staging_tables = client.execute(
+            """
+            SELECT create_table_query FROM system.tables
+            WHERE
+            database = %(database)s
+            """,
+            {'database': STAGING_CLICKHOUSE_DATABASE},
+        )
+        self.assertEqual(
+            next(iter([s[0] for s in staging_tables if 'DICTIONARY' in s[0]])).strip(),
+            # important test!  Ensuring that the staging dictionary points to the production gt_stats table.
+            f"""
+            CREATE DICTIONARY staging.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/gt_stats_dict` (`key` UInt32, `ac_wes` UInt16, `ac_wgs` UInt16) PRIMARY KEY key SOURCE(CLICKHOUSE(USER {Env.CLICKHOUSE_WRITER_USER} PASSWORD '[HIDDEN]' DB {Env.CLICKHOUSE_DATABASE} TABLE `GRCh38/SNV_INDEL/gt_stats`)) LIFETIME(MIN 0 MAX 0) LAYOUT(FLAT(MAX_ARRAY_SIZE 10000))
+            """.strip(),
         )
         stage_existing_project_partitions(
             table_name_builder,
-            DatasetType.SNV_INDEL,
             [
                 'project_a',
                 'project_b',
                 'project_d',  # Partition does not exist already.
             ],
+            ClickHouseTable.for_dataset_type_atomic_entries_insert_project_partitioned(
+                DatasetType.SNV_INDEL,
+            ),
         )
         staged_projects = client.execute(
             f"""
@@ -575,76 +752,6 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ('project_c', 5, 'WES', 0, 1),
             ],
         )
-        df = pd.DataFrame(
-            {
-                'key': [0, 3, 4],
-                'project_guid': [
-                    'project_d',
-                    'project_d',
-                    'project_d',
-                ],
-                'family_guid': [
-                    'family_d1',
-                    'family_d2',
-                    'family_d3',
-                ],
-                'xpos': [
-                    123456789,
-                    123456789,
-                    123456789,
-                ],
-                'sample_type': [
-                    'WES',
-                    'WES',
-                    'WES',
-                ],
-                'calls': [
-                    [('sample_d1', 0), ('sample_d11', 2)],
-                    [('sample_d2', 0)],
-                    [('sample_d3', 1)],
-                ],
-                'sign': [
-                    1,
-                    1,
-                    1,
-                ],
-            },
-        )
-        schema = pa.schema(
-            [
-                ('key', pa.int64()),
-                ('project_guid', pa.string()),
-                ('family_guid', pa.string()),
-                ('xpos', pa.int64()),
-                ('sample_type', pa.string()),
-                (
-                    'calls',
-                    pa.list_(
-                        pa.struct([('sampleId', pa.string()), ('gt', pa.int64())]),
-                    ),
-                ),
-                ('sign', pa.int64()),
-            ],
-        )
-        table = pa.Table.from_pandas(df, schema=schema)
-        os.makedirs(
-            new_entries_parquet_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                TEST_RUN_ID,
-            ),
-        )
-        pq.write_table(
-            table,
-            os.path.join(
-                new_entries_parquet_path(
-                    ReferenceGenome.GRCh38,
-                    DatasetType.SNV_INDEL,
-                    TEST_RUN_ID,
-                ),
-                'test.parquet',
-            ),
-        )
         insert_new_entries(table_name_builder)
         optimize_entries(
             table_name_builder,
@@ -674,7 +781,13 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ('project_d', 4, 'WES', 1, 0),
             ],
         )
-        refresh_staged_gt_stats(table_name_builder)
+        refresh_materialized_views(
+            table_name_builder,
+            ClickHouseMaterializedView.for_dataset_type_atomic_entries_insert_refreshable(
+                DatasetType.SNV_INDEL,
+            ),
+            staging=True,
+        )
         staged_gt_stats = client.execute(
             f"""
             SELECT * FROM {STAGING_CLICKHOUSE_DATABASE}.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/gt_stats`
@@ -695,11 +808,10 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         replace_project_partitions(
             table_name_builder,
+            ClickHouseTable.for_dataset_type_atomic_entries_insert_project_partitioned(
+                DatasetType.SNV_INDEL,
+            ),
             ['project_a', 'project_d'],
-            [
-                ClickHouseTable.ENTRIES,
-                ClickHouseTable.PROJECT_GT_STATS,
-            ],
         )
         new_entries = client.execute(
             f"""
@@ -859,12 +971,15 @@ class ClickhouseTest(MockedDatarootTestCase):
             existing_gt_stats,
             [],
         )
-        exchange_entity(
+        exchange_entities(
             table_name_builder,
-            ClickHouseTable.GT_STATS,
+            ClickHouseTable.for_dataset_type_atomic_entries_insert_unpartitioned(
+                DatasetType.SNV_INDEL,
+            ),
         )
-        reload_staged_gt_stats_dict(
+        reload_dictionaries(
             table_name_builder,
+            ClickHouseDictionary.for_dataset_type(DatasetType.SNV_INDEL),
         )
         new_gt_stats = client.execute(
             f"""
@@ -874,9 +989,9 @@ class ClickhouseTest(MockedDatarootTestCase):
             """,
         )
         self.assertCountEqual(new_gt_stats, [])
-        exchange_entity(
+        exchange_entities(
             table_name_builder,
-            ClickHouseDictionary.GT_STATS_DICT,
+            ClickHouseDictionary.for_dataset_type(DatasetType.SNV_INDEL),
         )
         new_gt_stats_post_exchange = client.execute(
             f"""
@@ -897,99 +1012,8 @@ class ClickhouseTest(MockedDatarootTestCase):
             ],
         )
 
-        staging_tables = client.execute(
-            """
-            SELECT create_table_query FROM system.tables
-            WHERE
-            database = %(database)s
-            """,
-            {'database': STAGING_CLICKHOUSE_DATABASE},
-        )
-        self.assertEqual(
-            len(staging_tables),
-            6,
-        )
-        self.assertEqual(
-            next(iter([s[0] for s in staging_tables if 'DICTIONARY' in s[0]])).strip(),
-            # important test!  Ensuring that the staging dictionary points to the production gt_stats table.
-            f"""
-            CREATE DICTIONARY staging.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/gt_stats_dict` (`key` UInt32, `ac_wes` UInt16, `ac_wgs` UInt16) PRIMARY KEY key SOURCE(CLICKHOUSE(USER {Env.CLICKHOUSE_WRITER_USER} PASSWORD '[HIDDEN]' DB {Env.CLICKHOUSE_DATABASE} TABLE `GRCh38/SNV_INDEL/gt_stats`)) LIFETIME(MIN 0 MAX 0) LAYOUT(FLAT(MAX_ARRAY_SIZE 10000))
-            """.strip(),
-        )
-
-    def test_atomic_entries_insert(self):
-        df = pd.DataFrame(
-            {
-                'key': [0, 3, 4],
-                'project_guid': [
-                    'project_d',
-                    'project_d',
-                    'project_d',
-                ],
-                'family_guid': [
-                    'family_d1',
-                    'family_d2',
-                    'family_d3',
-                ],
-                'xpos': [
-                    123456789,
-                    123456789,
-                    123456789,
-                ],
-                'sample_type': [
-                    'WES',
-                    'WES',
-                    'WES',
-                ],
-                'calls': [
-                    [('sample_d1', 0), ('sample_d11', 1)],
-                    [('sample_d2', 0)],
-                    [('sample_d3', 2)],
-                ],
-                'sign': [
-                    1,
-                    1,
-                    1,
-                ],
-            },
-        )
-        schema = pa.schema(
-            [
-                ('key', pa.int64()),
-                ('project_guid', pa.string()),
-                ('family_guid', pa.string()),
-                ('xpos', pa.int64()),
-                ('sample_type', pa.string()),
-                (
-                    'calls',
-                    pa.list_(
-                        pa.struct([('sampleId', pa.string()), ('gt', pa.int64())]),
-                    ),
-                ),
-                ('sign', pa.int64()),
-            ],
-        )
-        table = pa.Table.from_pandas(df, schema=schema)
-        os.makedirs(
-            new_entries_parquet_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                TEST_RUN_ID,
-            ),
-        )
-        pq.write_table(
-            table,
-            os.path.join(
-                new_entries_parquet_path(
-                    ReferenceGenome.GRCh38,
-                    DatasetType.SNV_INDEL,
-                    TEST_RUN_ID,
-                ),
-                'test.parquet',
-            ),
-        )
-        atomic_entries_insert(
-            ClickHouseTable.ENTRIES,
+    def test_load_complete_run_snv_indel(self):
+        load_complete_run(
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
             TEST_RUN_ID,
@@ -999,44 +1023,86 @@ class ClickhouseTest(MockedDatarootTestCase):
         client = get_clickhouse_client()
         project_gt_stats = client.execute(
             f"""
-            SELECT project_guid, key, sample_type, sum(het_samples), sum(hom_samples)
-            FROM
-            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/project_gt_stats`
-            GROUP BY project_guid, key, sample_type
-            """,
+           SELECT project_guid, key, sample_type, sum(het_samples), sum(hom_samples)
+           FROM
+           {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/project_gt_stats`
+           GROUP BY project_guid, key, sample_type
+           """,
         )
         self.assertCountEqual(
             project_gt_stats,
             [
-                ('project_d', 0, 'WES', 1, 0),
-                ('project_d', 4, 'WES', 0, 1),
+                ('project_d', 0, 'WES', 0, 1),
+                ('project_d', 4, 'WES', 1, 0),
             ],
         )
         gt_stats = client.execute(
             f"""
-            SELECT *
-            FROM
-            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
-            """,
+           SELECT *
+           FROM
+           {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
+           """,
         )
         self.assertCountEqual(
             gt_stats,
             [
-                (0, 1, 0),
-                (4, 2, 0),
+                (0, 2, 0),
+                (4, 1, 0),
             ],
         )
         gt_stats_dict = client.execute(
             f"""
-            SELECT *
-            FROM
-            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats_dict`
-            """,
+           SELECT *
+           FROM
+           {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats_dict`
+           """,
         )
         self.assertCountEqual(
             gt_stats_dict,
             [
-                (0, 1, 0),
-                (4, 2, 0),
+                (0, 2, 0),
+                (4, 1, 0),
             ],
         )
+        annotations_disk = client.execute(
+            f"""
+           SELECT *
+           FROM
+           {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/annotations_disk`
+           """,
+        )
+        self.assertCountEqual(
+            annotations_disk,
+            [
+                (10, '1-3-A-C'),
+                (11, '2-4-A-T'),
+                (12, 'Y-9-A-C'),
+                (13, 'M-2-C-G'),
+            ],
+        )
+
+    def test_load_complete_gcnv(self):
+        load_complete_run(
+            ReferenceGenome.GRCh38,
+            DatasetType.GCNV,
+            TEST_RUN_ID,
+            ['project_d'],
+            ['family_d1', 'family_d2'],
+        )
+        client = get_clickhouse_client()
+        annotations_disk_count = client.execute(
+            f"""
+           SELECT COUNT(*)
+           FROM
+           {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/annotations_disk`
+           """,
+        )[0][0]
+        self.assertEqual(annotations_disk_count, 4)
+        entries_count = client.execute(
+            f"""
+           SELECT COUNT(*)
+           FROM
+           {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/entries`
+           """,
+        )[0][0]
+        self.assertEqual(entries_count, 3)

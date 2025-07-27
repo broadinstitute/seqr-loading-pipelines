@@ -8,8 +8,8 @@ import hailtop.fs as hfs
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.clickhouse import (
-    ClickHouseTable,
     drop_staging_db,
+    load_complete_run,
 )
 from v03_pipeline.lib.misc.retry import retry
 from v03_pipeline.lib.misc.runs import get_run_ids
@@ -96,26 +96,18 @@ def main():
                         in failed_clickhouse_loads[reference_genome, dataset_type]
                     ):
                         continue
-
-                    msg = f'Attempting load of run: {reference_genome.value}/{dataset_type.value}/{run_id}'
-                    logger.info(msg)
                     project_guids, family_guids = fetch_run_metadata(
                         reference_genome,
                         dataset_type,
                         run_id,
                     )
-                    for clickhouse_table in ClickHouseTable:
-                        if not clickhouse_table.should_load(
-                            dataset_type,
-                        ):
-                            continue
-                        clickhouse_table.insert(
-                            reference_genome=reference_genome,
-                            dataset_type=dataset_type,
-                            run_id=run_id,
-                            project_guids=project_guids,
-                            family_guids=family_guids,
-                        )
+                    load_complete_run(
+                        reference_genome,
+                        dataset_type,
+                        run_id,
+                        project_guids,
+                        family_guids,
+                    )
                     write_success_file(reference_genome, dataset_type, run_id)
         except Exception:
             logger.exception('Unhandled Exception')
