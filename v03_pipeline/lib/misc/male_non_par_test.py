@@ -30,6 +30,7 @@ class MaleNonParTest(unittest.TestCase):
         )
         mt = overwrite_male_non_par_calls(
             mt,
+            DatasetType.SV,
             {
                 Family(
                     family_guid='family_1',
