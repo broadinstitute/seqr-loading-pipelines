@@ -3,11 +3,11 @@ import unittest
 import hail as hl
 
 from v03_pipeline.lib.misc.io import import_callset, select_relevant_fields
-from v03_pipeline.lib.misc.pedigree import Family, Sample
-from v03_pipeline.lib.misc.sample_ids import subset_samples
-from v03_pipeline.lib.misc.sv import (
+from v03_pipeline.lib.misc.male_non_par import (
     overwrite_male_non_par_calls,
 )
+from v03_pipeline.lib.misc.pedigree import Family, Sample
+from v03_pipeline.lib.misc.sample_ids import subset_samples
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, Sex
 
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
