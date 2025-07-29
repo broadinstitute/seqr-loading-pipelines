@@ -2,6 +2,7 @@ import hail as hl
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.exports.misc import reformat_transcripts_for_export
+from v03_pipeline.lib.misc.io import import_pedigree
 
 STANDARD_CONTIGS = hl.set(
     [c.replace('MT', 'M') for c in ReferenceGenome.GRCh37.standard_contigs],
@@ -154,6 +155,15 @@ def get_entries_export_fields(
         'filters': ht.filters,
         'calls': ht.family_entries.map(
             lambda fe: get_calls_export_fields(ht, fe, dataset_type),
+        ),
+        **(
+            {
+                'is_hemizygous_call': ht.family_entries.map(
+                    lambda fe: fe.is_haploid() & (fe.GT.n_alt_alleles() == 1)
+                ),
+            }
+            if dataset_type == DatasetType.SNV_INDEL
+            else {}
         ),
         'sign': 1,
     }

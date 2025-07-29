@@ -152,6 +152,11 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                             'dp': 4,
                         },
                     ],
+                    'is_hemizygous_call': [
+                        False,
+                        False,
+                        False,
+                    ],
                     'sign': 1,
                 },
                 {
@@ -179,6 +184,11 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                             'dp': 5,
                         },
                     ],
+                    'is_hemizygous_call': [
+                        False,
+                        False,
+                        False,
+                    ],
                     'sign': 1,
                 },
             ],
@@ -201,6 +211,11 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                         'ab': 0.10000000149011612,
                         'dp': 10,
                     },
+                ],
+                'is_hemizygous_call': [
+                    False,
+                    False,
+                    False,
                 ],
                 'sign': 1,
             },
