@@ -12,12 +12,12 @@ from v03_pipeline.lib.misc.io import (
     import_pedigree,
     remap_pedigree_hash,
 )
+from v03_pipeline.lib.misc.male_non_par import overwrite_male_non_par_calls
 from v03_pipeline.lib.misc.pedigree import (
     parse_pedigree_ht_to_families,
     parse_pedigree_ht_to_remap_ht,
 )
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
-from v03_pipeline.lib.misc.male_non_par import overwrite_male_non_par_calls
 from v03_pipeline.lib.misc.validation import SeqrValidationError
 from v03_pipeline.lib.model.feature_flag import FeatureFlag
 from v03_pipeline.lib.paths import (

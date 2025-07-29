@@ -4,8 +4,6 @@ import math
 import hail as hl
 
 from v03_pipeline.lib.annotations import sv
-from v03_pipeline.lib.misc.pedigree import Family
-from v03_pipeline.lib.model import ReferenceGenome, Sex
 
 WRONG_CHROM_PENALTY = 1e9
 

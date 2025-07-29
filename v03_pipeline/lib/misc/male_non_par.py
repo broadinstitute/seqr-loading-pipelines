@@ -45,7 +45,7 @@ def overwrite_male_non_par_calls(
                         mt.end_locus,
                     )
                     if dataset_type == DatasetType.SV
-                    else hl.interval(mt.locus.position)
+                    else hl.interval(mt.locus.position),
                 )
                 & mt.GT.is_het()
             ),
