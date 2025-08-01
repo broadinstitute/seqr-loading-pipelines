@@ -289,6 +289,13 @@ def create_staging_non_table_entities(
                 "PASSWORD '[HIDDEN]'",
                 f'PASSWORD {Env.CLICKHOUSE_WRITER_PASSWORD}',
             )
+            # Handle inconsistency within ClickHouse where DB is not propagated
+            # within the Create DB query
+            if f'DB {Env.CLICKHOUSE_DATABASE}' not in create_entity_statement:
+                create_entity_statement.replace(
+                    'TABLE',
+                    f'DB {Env.CLICKHOUSE_DATABASE} TABLE',
+                )
         create_entity_statement = create_entity_statement.replace(
             table_name_builder.dst_prefix,
             table_name_builder.staging_dst_prefix,
