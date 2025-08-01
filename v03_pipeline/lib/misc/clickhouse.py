@@ -23,7 +23,7 @@ logger = get_logger(__name__)
 
 CLICKHOUSE_SEARCH_NAMED_COLLECTION = 'clickhouse_search_named_collection'
 GOOGLE_XML_API_PATH = 'https://storage.googleapis.com/'
-OPTIMIZE_TABLE_WAIT_S = 300
+OPTIMIZE_TABLE_WAIT_S = 150
 OPTIMIZE_TABLE_TIMEOUT_S = 99999
 REDACTED = 'REDACTED'
 STAGING_CLICKHOUSE_DATABASE = 'staging'
