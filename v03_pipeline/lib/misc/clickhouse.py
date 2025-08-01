@@ -392,22 +392,20 @@ def optimize_entries(
                 .replace('`', ''),
             },
         )[0][0]
-        if decrs_exist and merges_running:
-            logger.info('Decrs exist and merges are running, so waiting')
+        if decrs_exist:
+            if merges_running:
+                logger.info('Decrs exist and merges are running, so waiting')
+            else:
+                logged.info('Decrs exist and no merges are running, so optimizing')
+                logged_query(
+                    f"""
+                    OPTIMIZE TABLE {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)} FINAL
+                    """,
+                    timeout=OPTIMIZE_TABLE_TIMEOUT_S,
+                )
             time.sleep(OPTIMIZE_TABLE_WAIT_S)
-        elif not decrs_exist and merges_running:
-            logger.info('No decrs exist but merges are running, so waiting')
-            time.sleep(OPTIMIZE_TABLE_WAIT_S)
-        elif decrs_exist and not merges_running:
-            logged_query(
-                f"""
-                OPTIMIZE TABLE {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)} FINAL
-                """,
-                timeout=OPTIMIZE_TABLE_TIMEOUT_S,
-            )
         else:
             safely_optimized = True
-
 
 @retry(delay=5)
 def refresh_materialized_views(
