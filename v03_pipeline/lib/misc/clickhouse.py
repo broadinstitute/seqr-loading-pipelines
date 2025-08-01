@@ -292,7 +292,7 @@ def create_staging_non_table_entities(
             # Handle inconsistency within ClickHouse where DB is not propagated
             # within the Create DB query
             if f'DB {Env.CLICKHOUSE_DATABASE}' not in create_entity_statement:
-                create_entity_statement.replace(
+                create_entity_statement = create_entity_statement.replace(
                     'TABLE',
                     f'DB {Env.CLICKHOUSE_DATABASE} TABLE',
                 )
