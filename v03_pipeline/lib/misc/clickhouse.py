@@ -396,7 +396,7 @@ def optimize_entries(
             if merges_running:
                 logger.info('Decrs exist and merges are running, so waiting')
             else:
-                logged.info('Decrs exist and no merges are running, so optimizing')
+                logger.info('Decrs exist and no merges are running, so optimizing')
                 logged_query(
                     f"""
                     OPTIMIZE TABLE {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)} FINAL
@@ -406,6 +406,7 @@ def optimize_entries(
             time.sleep(OPTIMIZE_TABLE_WAIT_S)
         else:
             safely_optimized = True
+
 
 @retry(delay=5)
 def refresh_materialized_views(
