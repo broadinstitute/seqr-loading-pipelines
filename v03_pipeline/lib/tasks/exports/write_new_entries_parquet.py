@@ -32,7 +32,6 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 )
 
 ANNOTATIONS_TABLE_TASK = 'annotations_table_task'
-HIGH_AF_VARIANTS_TABLE_TASK = 'high_af_variants_table_task'
 REMAPPED_AND_SUBSETTED_CALLSET_TASKS = 'remapped_and_subsetted_callset_tasks'
 
 
@@ -59,20 +58,6 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
                 )
                 for i in range(len(self.project_guids))
             ],
-            **(
-                {
-                    HIGH_AF_VARIANTS_TABLE_TASK: self.clone(
-                        UpdatedReferenceDatasetQueryTask,
-                        reference_dataset_query=ReferenceDatasetQuery.high_af_variants,
-                    ),
-                }
-                if ReferenceDatasetQuery.high_af_variants
-                in BaseReferenceDataset.for_reference_genome_dataset_type(
-                    self.reference_genome,
-                    self.dataset_type,
-                )
-                else {}
-            ),
         }
 
     def create_table(self) -> None:
@@ -100,12 +85,6 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
                 ),
             )
             ht = ht.join(annotations_ht)
-
-            if self.input().get(HIGH_AF_VARIANTS_TABLE_TASK):
-                gnomad_high_af_ht = hl.read_table(
-                    self.input()[HIGH_AF_VARIANTS_TABLE_TASK].path,
-                )
-                ht = ht.join(gnomad_high_af_ht, 'left')
 
             # the family entries ht will contain rows
             # where at least one family is defined... after explosion,
