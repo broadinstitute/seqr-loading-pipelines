@@ -35,24 +35,6 @@ async def loading_pipeline_enqueue(request: web.Request) -> web.Response:
     except ValueError as e:
         raise web.HTTPBadRequest from e
 
-    try:
-        async with aiofiles.open(loading_pipeline_queue_path()) as f:
-            return web.json_response(
-                {
-                    'Failed to queue due to in process request': json.loads(
-                        await f.read(),
-                    ),
-                },
-                #
-                # The 409 (Conflict) status code indicates that the request
-                # could not be completed due to a conflict with the current
-                # state of the target resource.
-                #
-                status=web_exceptions.HTTPConflict.status_code,
-            )
-    except FileNotFoundError:
-        pass
-
     async with aiofiles.open(loading_pipeline_queue_path(), 'w') as f:
         await f.write(lpr.model_dump_json())
     return web.json_response(

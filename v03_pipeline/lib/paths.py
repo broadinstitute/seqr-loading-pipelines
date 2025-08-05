@@ -1,6 +1,8 @@
 import hashlib
 import os
 
+from uuid import uuid1
+
 import hailtop.fs as hfs
 
 from v03_pipeline.lib.model import (
@@ -450,8 +452,15 @@ def loading_pipeline_queue_path() -> str:
     return os.path.join(
         LOCAL_DISK_MOUNT_PATH,
         'loading_pipeline_queue',
-        'request.json',
+        f'request_{uuid1().int}.json',
     )
+
+def get_latest_queue_path() -> str:
+    queue_dir = os.path.join(
+        LOCAL_DISK_MOUNT_PATH,
+        'loading_pipeline_queue',
+    )
+    return min(os.listdir(queue_dir), key=os.path.getctime)
 
 
 def pipeline_run_success_file_path(

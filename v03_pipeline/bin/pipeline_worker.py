@@ -9,7 +9,7 @@ from v03_pipeline.api.model import LoadingPipelineRequest
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import FeatureFlag
 from v03_pipeline.lib.paths import (
-    loading_pipeline_queue_path,
+    get_latest_queue_path,
     project_pedigree_path,
 )
 from v03_pipeline.lib.tasks.trigger_hail_backend_reload import TriggerHailBackendReload
@@ -21,9 +21,10 @@ logger = get_logger(__name__)
 def main():
     while True:
         try:
-            if not os.path.exists(loading_pipeline_queue_path()):
+            latest_queue_path = get_latest_queue_path()
+            if latest_queue_path is None:
                 continue
-            with open(loading_pipeline_queue_path()) as f:
+            with open(latest_queue_path) as f:
                 lpr = LoadingPipelineRequest.model_validate_json(f.read())
             project_pedigree_paths = [
                 project_pedigree_path(
@@ -55,9 +56,9 @@ def main():
         except Exception:
             logger.exception('Unhandled Exception')
         finally:
-            if os.path.exists(loading_pipeline_queue_path()):
-                os.remove(loading_pipeline_queue_path())
-            logger.info('Waiting for work')
+            if latest_queue_path is not None and os.path.exists(latest_queue_path):
+                os.remove(latest_queue_path)
+            logger.info('Looking for more work')
             time.sleep(1)
 
 
