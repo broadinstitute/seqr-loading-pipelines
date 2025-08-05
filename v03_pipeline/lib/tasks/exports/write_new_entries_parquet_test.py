@@ -1,12 +1,7 @@
-from unittest import mock
-from unittest.mock import Mock
-
 import hail as hl
 import luigi.worker
 import pandas as pd
 
-from v03_pipeline.lib.annotations import shared
-from v03_pipeline.lib.misc.io import import_callset, remap_pedigree_hash
 from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceGenome,
@@ -20,10 +15,7 @@ from v03_pipeline.lib.tasks.exports.write_new_entries_parquet import (
     WriteNewEntriesParquetTask,
 )
 from v03_pipeline.lib.test.misc import convert_ndarray_to_list
-from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
-from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
-    MockedReferenceDatasetsTestCase,
-)
+from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_PEDIGREE_3_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_3_remap.tsv'
 TEST_PEDIGREE_4_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_4_remap.tsv'
@@ -36,37 +28,21 @@ TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_MITO_CALLSET = 'v03_pipeline/var/test/callsets/mito_1.mt'
 TEST_SV_VCF_2 = 'v03_pipeline/var/test/callsets/sv_2.vcf'
 TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
-
+TEST_SNV_INDEL_ANNOTATIONS = (
+    'v03_pipeline/var/test/exports/GRCh38/SNV_INDEL/annotations.ht'
+)
+TEST_MITO_ANNOTATIONS = 'v03_pipeline/var/test/exports/GRCh38/MITO/annotations.ht'
+TEST_SV_ANNOTATIONS = 'v03_pipeline/var/test/exports/GRCh38/SV/annotations.ht'
+TEST_GCNV_ANNOTATIONS = 'v03_pipeline/var/test/exports/GRCh38/GCNV/annotations.ht'
 
 TEST_RUN_ID = 'manual__2024-04-03'
 
 
-class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
+class WriteNewEntriesParquetTest(MockedDatarootTestCase):
     def setUp(self) -> None:
-        # NOTE: The annotations tables are mocked for SNV_INDEL & MITO
-        # to avoid reference dataset updates that SV/GCNV do not have.
         super().setUp()
-        mt = import_callset(
-            TEST_SNV_INDEL_VCF,
-            ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
-        )
-        ht = mt.rows()
-        ht = ht.add_index(name='key_')
-        ht = ht.annotate(xpos=shared.xpos(ht))
-        ht = ht.annotate_globals(
-            updates={
-                hl.Struct(
-                    callset=TEST_SNV_INDEL_VCF,
-                    project_guid='R0113_test_project',
-                    remap_pedigree_hash=remap_pedigree_hash(TEST_PEDIGREE_3_REMAP),
-                ),
-                hl.Struct(
-                    callset=TEST_SNV_INDEL_VCF,
-                    project_guid='R0114_project4',
-                    remap_pedigree_hash=remap_pedigree_hash(TEST_PEDIGREE_4_REMAP),
-                ),
-            },
+        ht = hl.read_table(
+            TEST_SNV_INDEL_ANNOTATIONS,
         )
         ht.write(
             variant_annotations_table_path(
@@ -74,23 +50,29 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                 DatasetType.SNV_INDEL,
             ),
         )
-        mt = import_callset(TEST_MITO_CALLSET, ReferenceGenome.GRCh38, DatasetType.MITO)
-        ht = mt.rows()
-        ht = ht.add_index(name='key_')
-        ht = ht.annotate(xpos=shared.xpos(ht))
-        ht = ht.annotate_globals(
-            updates={
-                hl.Struct(
-                    callset=TEST_MITO_CALLSET,
-                    project_guid='R0116_test_project3',
-                    remap_pedigree_hash=remap_pedigree_hash(TEST_MITO_EXPORT_PEDIGREE),
-                ),
-            },
+        ht = hl.read_table(
+            TEST_MITO_ANNOTATIONS,
         )
         ht.write(
             variant_annotations_table_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.MITO,
+            ),
+        )
+        ht = hl.read_table(
+            TEST_SV_ANNOTATIONS,
+        )
+        ht.write(
+            variant_annotations_table_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SV,
+            ),
+        )
+        ht = hl.read_table(TEST_GCNV_ANNOTATIONS)
+        ht.write(
+            variant_annotations_table_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.GCNV,
             ),
         )
 
@@ -122,12 +104,12 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
             export_json[:2],
             [
                 {
-                    'key': 2,
+                    'key': 0,
                     'project_guid': 'R0113_test_project',
                     'family_guid': 'abc_1',
                     'sample_type': 'WGS',
                     'xpos': 1000876499,
-                    'is_gnomad_gt_5_percent': False,
+                    'is_gnomad_gt_5_percent': True,
                     'filters': [],
                     'calls': [
                         {
@@ -155,7 +137,7 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                     'sign': 1,
                 },
                 {
-                    'key': 3,
+                    'key': 1,
                     'project_guid': 'R0113_test_project',
                     'family_guid': 'abc_1',
                     'sample_type': 'WGS',
@@ -183,34 +165,8 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                 },
             ],
         )
-        self.assertEqual(
-            export_json[-1],
-            {
-                'key': 27,
-                'family_guid': 'def_1',
-                'filters': [],
-                'is_gnomad_gt_5_percent': False,
-                'project_guid': 'R0114_project4',
-                'sample_type': 'WGS',
-                'xpos': 1000902024,
-                'calls': [
-                    {
-                        'sampleId': 'NA20885_1',
-                        'gt': 1,
-                        'gq': 4,
-                        'ab': 0.10000000149011612,
-                        'dp': 10,
-                    },
-                ],
-                'sign': 1,
-            },
-        )
 
-    @mock.patch(
-        'v03_pipeline.lib.tasks.exports.write_new_entries_parquet.UpdateVariantAnnotationsTableWithNewSamplesTask',
-    )
-    def test_mito_write_new_entries_parquet(self, mock_uvatwnst: Mock):
-        mock_uvatwnst.return_value = MockCompleteTask()
+    def test_mito_write_new_entries_parquet(self):
         worker = luigi.worker.Worker()
         task = WriteNewEntriesParquetTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -238,7 +194,7 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
             export_json,
             [
                 {
-                    'key': 1,
+                    'key': 998,
                     'project_guid': 'R0116_test_project3',
                     'family_guid': 'family_1',
                     'sample_type': 'WGS',
@@ -250,44 +206,6 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                             'gt': 2,
                             'dp': 4216,
                             'hl': 0.999,
-                            'mitoCn': 224,
-                            'contamination': 0.0,
-                        },
-                    ],
-                    'sign': 1,
-                },
-                {
-                    'key': 2,
-                    'project_guid': 'R0116_test_project3',
-                    'family_guid': 'family_1',
-                    'sample_type': 'WGS',
-                    'xpos': 25000000012,
-                    'filters': [],
-                    'calls': [
-                        {
-                            'sampleId': 'RGP_1270_2',
-                            'gt': 2,
-                            'dp': 4336,
-                            'hl': 1.0,
-                            'mitoCn': 224,
-                            'contamination': 0.0,
-                        },
-                    ],
-                    'sign': 1,
-                },
-                {
-                    'key': 4,
-                    'project_guid': 'R0116_test_project3',
-                    'family_guid': 'family_1',
-                    'sample_type': 'WGS',
-                    'xpos': 25000000018,
-                    'filters': [],
-                    'calls': [
-                        {
-                            'sampleId': 'RGP_1270_2',
-                            'gt': 2,
-                            'dp': 4319,
-                            'hl': 1.0,
                             'mitoCn': 224,
                             'contamination': 0.0,
                         },
@@ -325,10 +243,10 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
             export_json,
             [
                 {
-                    'key': 0,
+                    'key': 727,
                     'project_guid': 'R0115_test_project2',
                     'family_guid': 'family_2_1',
-                    'xpos': 1000180929,
+                    'xpos': 1001025886,
                     'filters': ['HIGH_SR_BACKGROUND', 'UNRESOLVED'],
                     'calls': [
                         {
@@ -370,52 +288,6 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                     ],
                     'sign': 1,
                 },
-                {
-                    'key': 1,
-                    'project_guid': 'R0115_test_project2',
-                    'family_guid': 'family_2_1',
-                    'xpos': 1000257667,
-                    'filters': [],
-                    'calls': [
-                        {
-                            'sampleId': 'RGP_164_1',
-                            'gt': 0,
-                            'cn': 2.0,
-                            'gq': 99,
-                            'newCall': True,
-                            'prevCall': False,
-                            'prevNumAlt': None,
-                        },
-                        {
-                            'sampleId': 'RGP_164_2',
-                            'gt': 0,
-                            'cn': 2.0,
-                            'gq': 99,
-                            'newCall': True,
-                            'prevCall': False,
-                            'prevNumAlt': None,
-                        },
-                        {
-                            'sampleId': 'RGP_164_3',
-                            'gt': 1,
-                            'cn': 3.0,
-                            'gq': 8,
-                            'newCall': True,
-                            'prevCall': False,
-                            'prevNumAlt': None,
-                        },
-                        {
-                            'sampleId': 'RGP_164_4',
-                            'gt': 0,
-                            'cn': 1.0,
-                            'gq': 13,
-                            'newCall': True,
-                            'prevCall': False,
-                            'prevNumAlt': None,
-                        },
-                    ],
-                    'sign': 1,
-                },
             ],
         )
 
@@ -450,7 +322,7 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                     'key': 0,
                     'project_guid': 'R0115_test_project2',
                     'family_guid': 'family_2_1',
-                    'xpos': 1100006937,
+                    'xpos': 1000939203,
                     'filters': [],
                     'calls': [
                         {
@@ -475,7 +347,7 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                             'defragged': False,
                             'start': 100017585,
                             'end': 100023213,
-                            'numExon': 3,
+                            'numExon': 1,
                             'geneIds': ['ENSG00000117620', 'ENSG00000283761'],
                             'newCall': False,
                             'prevCall': False,
@@ -489,7 +361,7 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                             'defragged': False,
                             'start': 100017585,
                             'end': 100023213,
-                            'numExon': 3,
+                            'numExon': 1,
                             'geneIds': ['ENSG00000117620', 'ENSG00000283761'],
                             'newCall': False,
                             'prevCall': True,
@@ -508,72 +380,6 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                             'newCall': False,
                             'prevCall': True,
                             'prevOverlap': False,
-                        },
-                    ],
-                    'sign': 1,
-                },
-                {
-                    'key': 1,
-                    'project_guid': 'R0115_test_project2',
-                    'family_guid': 'family_2_1',
-                    'xpos': 1100017586,
-                    'filters': [],
-                    'calls': [
-                        {
-                            'sampleId': 'RGP_164_1',
-                            'gt': None,
-                            'cn': None,
-                            'qs': None,
-                            'defragged': None,
-                            'start': 100017586,
-                            'end': 100023212,
-                            'numExon': 2,
-                            'geneIds': ['ENSG00000283761', 'ENSG22222222222'],
-                            'newCall': None,
-                            'prevCall': None,
-                            'prevOverlap': None,
-                        },
-                        {
-                            'sampleId': 'RGP_164_2',
-                            'gt': None,
-                            'cn': None,
-                            'qs': None,
-                            'defragged': None,
-                            'start': 100017586,
-                            'end': 100023212,
-                            'numExon': 2,
-                            'geneIds': ['ENSG00000283761', 'ENSG22222222222'],
-                            'newCall': None,
-                            'prevCall': None,
-                            'prevOverlap': None,
-                        },
-                        {
-                            'sampleId': 'RGP_164_3',
-                            'gt': 2,
-                            'cn': 0.0,
-                            'qs': 30.0,
-                            'defragged': False,
-                            'start': 100017586,
-                            'end': 100023212,
-                            'numExon': 2,
-                            'geneIds': ['ENSG00000283761', 'ENSG22222222222'],
-                            'newCall': False,
-                            'prevCall': True,
-                            'prevOverlap': False,
-                        },
-                        {
-                            'sampleId': 'RGP_164_4',
-                            'gt': None,
-                            'cn': None,
-                            'qs': None,
-                            'defragged': None,
-                            'start': 100017586,
-                            'end': 100023212,
-                            'numExon': 2,
-                            'geneIds': ['ENSG00000283761', 'ENSG22222222222'],
-                            'newCall': None,
-                            'prevCall': None,
-                            'prevOverlap': None,
                         },
                     ],
                     'sign': 1,

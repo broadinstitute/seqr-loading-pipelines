@@ -3,6 +3,7 @@ import hail as hl
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.exports.misc import reformat_transcripts_for_export
 
+FIVE_PERCENT = 0.05
 STANDARD_CONTIGS = hl.set(
     [c.replace('MT', 'M') for c in ReferenceGenome.GRCh37.standard_contigs],
 )
@@ -146,9 +147,12 @@ def get_entries_export_fields(
         'xpos': ht.xpos,
         **(
             {
-                'is_gnomad_gt_5_percent': hl.is_defined(ht.is_gt_5_percent),
+                'is_gnomad_gt_5_percent': hl.or_else(
+                    ht.gnomad_genomes.AF_POPMAX_OR_GLOBAL > FIVE_PERCENT,
+                    False,
+                ),
             }
-            if hasattr(ht, 'is_gt_5_percent')
+            if dataset_type == DatasetType.SNV_INDEL
             else {}
         ),
         'filters': ht.filters,
