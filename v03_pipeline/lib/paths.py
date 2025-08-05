@@ -455,7 +455,7 @@ def loading_pipeline_queue_path() -> str:
         f'request_{uuid1().int}.json',
     )
 
-def get_latest_queue_path() -> str:
+def get_oldest_queue_path() -> str:
     queue_dir = os.path.join(
         LOCAL_DISK_MOUNT_PATH,
         'loading_pipeline_queue',

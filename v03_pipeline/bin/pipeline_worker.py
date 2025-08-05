@@ -9,7 +9,7 @@ from v03_pipeline.api.model import LoadingPipelineRequest
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import FeatureFlag
 from v03_pipeline.lib.paths import (
-    get_latest_queue_path,
+    get_oldest_queue_path,
     project_pedigree_path,
 )
 from v03_pipeline.lib.tasks.trigger_hail_backend_reload import TriggerHailBackendReload
@@ -21,7 +21,7 @@ logger = get_logger(__name__)
 def main():
     while True:
         try:
-            latest_queue_path = get_latest_queue_path()
+            latest_queue_path = get_oldest_queue_path()
             if latest_queue_path is None:
                 continue
             with open(latest_queue_path) as f:
