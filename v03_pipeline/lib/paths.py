@@ -460,7 +460,10 @@ def get_latest_queue_path() -> str:
         LOCAL_DISK_MOUNT_PATH,
         'loading_pipeline_queue',
     )
-    return min(os.listdir(queue_dir), key=os.path.getctime)
+    queue_files = os.listdir(queue_dir)
+    if len(queue_files) == 0:
+        return None
+    return queue_dir + '/' + min(queue_files, key=os.path.getctime)
 
 
 def pipeline_run_success_file_path(
