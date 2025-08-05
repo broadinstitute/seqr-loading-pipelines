@@ -14,10 +14,6 @@ from v03_pipeline.lib.paths import (
     pipeline_run_success_file_path,
     project_table_path,
 )
-from v03_pipeline.lib.reference_datasets.reference_dataset import (
-    BaseReferenceDataset,
-    ReferenceDatasetQuery,
-)
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )
@@ -28,9 +24,6 @@ from v03_pipeline.lib.tasks.clickhouse_migration.migrate_project_variants_to_cli
 )
 from v03_pipeline.lib.tasks.exports.fields import get_entries_export_fields
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
-from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_query import (
-    UpdatedReferenceDatasetQueryTask,
-)
 
 PROJECT_SUBSETTED_ANNOTATIONS_TABLE_TASK = 'project_subsetted_annotations_table_task'
 PROJECT_TABLE_TASK = 'project_table_task'

@@ -42,58 +42,6 @@ TEST_RUN_ID = 'manual__2024-04-03'
 
 
 class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
-    def setUp(self) -> None:
-        # NOTE: The annotations tables are mocked for SNV_INDEL & MITO
-        # to avoid reference dataset updates that SV/GCNV do not have.
-        super().setUp()
-        mt = import_callset(
-            TEST_SNV_INDEL_VCF,
-            ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
-        )
-        ht = mt.rows()
-        ht = ht.add_index(name='key_')
-        ht = ht.annotate(xpos=shared.xpos(ht))
-        ht = ht.annotate_globals(
-            updates={
-                hl.Struct(
-                    callset=TEST_SNV_INDEL_VCF,
-                    project_guid='R0113_test_project',
-                    remap_pedigree_hash=remap_pedigree_hash(TEST_PEDIGREE_3_REMAP),
-                ),
-                hl.Struct(
-                    callset=TEST_SNV_INDEL_VCF,
-                    project_guid='R0114_project4',
-                    remap_pedigree_hash=remap_pedigree_hash(TEST_PEDIGREE_4_REMAP),
-                ),
-            },
-        )
-        ht.write(
-            variant_annotations_table_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-            ),
-        )
-        mt = import_callset(TEST_MITO_CALLSET, ReferenceGenome.GRCh38, DatasetType.MITO)
-        ht = mt.rows()
-        ht = ht.add_index(name='key_')
-        ht = ht.annotate(xpos=shared.xpos(ht))
-        ht = ht.annotate_globals(
-            updates={
-                hl.Struct(
-                    callset=TEST_MITO_CALLSET,
-                    project_guid='R0116_test_project3',
-                    remap_pedigree_hash=remap_pedigree_hash(TEST_MITO_EXPORT_PEDIGREE),
-                ),
-            },
-        )
-        ht.write(
-            variant_annotations_table_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.MITO,
-            ),
-        )
-
     def test_write_new_entries_parquet(self):
         worker = luigi.worker.Worker()
         task = WriteNewEntriesParquetTask(
@@ -206,11 +154,7 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
             },
         )
 
-    @mock.patch(
-        'v03_pipeline.lib.tasks.exports.write_new_entries_parquet.UpdateVariantAnnotationsTableWithNewSamplesTask',
-    )
-    def test_mito_write_new_entries_parquet(self, mock_uvatwnst: Mock):
-        mock_uvatwnst.return_value = MockCompleteTask()
+    def test_mito_write_new_entries_parquet(self):
         worker = luigi.worker.Worker()
         task = WriteNewEntriesParquetTask(
             reference_genome=ReferenceGenome.GRCh38,

@@ -150,7 +150,7 @@ def get_entries_export_fields(
                 'is_gnomad_gt_5_percent': hl.or_else(
                     ht.gnomad_genomes.AF_POPMAX_OR_GLOBAL > FIVE_PERCENT,
                     False,
-                )
+                ),
             }
             if dataset_type == DatasetType.SNV_INDEL
             else {}
