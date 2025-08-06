@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 import hail as hl
 
@@ -325,9 +326,10 @@ class ValidationTest(unittest.TestCase):
         self.assertIsNone(
             validate_sample_type(
                 mt,
-                coding_and_noncoding_variants_ht,
                 ReferenceGenome.GRCh38,
                 SampleType.WGS,
+                ['project_a'],
+                coding_and_noncoding_variants_ht,
             ),
         )
         self.assertRaisesRegex(
@@ -335,9 +337,10 @@ class ValidationTest(unittest.TestCase):
             'specified as WES but appears to be WGS',
             validate_sample_type,
             mt,
-            coding_and_noncoding_variants_ht,
             ReferenceGenome.GRCh38,
             SampleType.WES,
+            ['project_a'],
+            coding_and_noncoding_variants_ht,
         )
 
         # has coding, but not noncoding now.
@@ -381,9 +384,10 @@ class ValidationTest(unittest.TestCase):
         self.assertIsNone(
             validate_sample_type(
                 mt,
-                coding_and_noncoding_variants_ht,
                 ReferenceGenome.GRCh38,
                 SampleType.WES,
+                ['project_a'],
+                coding_and_noncoding_variants_ht,
             ),
         )
         self.assertRaisesRegex(
@@ -391,9 +395,10 @@ class ValidationTest(unittest.TestCase):
             'specified as WGS but appears to be WES',
             validate_sample_type,
             mt,
-            coding_and_noncoding_variants_ht,
             ReferenceGenome.GRCh38,
             SampleType.WGS,
+            ['project_a'],
+            coding_and_noncoding_variants_ht,
         )
 
         # has noncoding, but not coding now.
@@ -439,7 +444,21 @@ class ValidationTest(unittest.TestCase):
             'contains noncoding variants but is missing common coding variants',
             validate_sample_type,
             mt,
-            coding_and_noncoding_variants_ht,
             ReferenceGenome.GRCh38,
             SampleType.WGS,
+            ['project_a'],
+            coding_and_noncoding_variants_ht,
         )
+
+        # Validation safe if all projects are to be skipped
+        with patch('v03_pipeline.lib.misc.validation.Env') as mock_env:
+            mock_env.SAMPLE_TYPE_VALIDATION_EXCLUDED_PROJECTS = ['project_a']
+            self.assertIsNone(
+                validate_sample_type(
+                    mt,
+                    ReferenceGenome.GRCh38,
+                    SampleType.WGS,
+                    ['project_a'],
+                    coding_and_noncoding_variants_ht,
+                ),
+            )
