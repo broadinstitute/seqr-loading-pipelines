@@ -4,6 +4,7 @@ import hail as hl
 
 from v03_pipeline.lib.misc.family_entries import (
     compute_callset_family_entries_ht,
+    deduplicate_by_most_non_ref_calls,
     deglobalize_ids,
     globalize_ids,
     join_family_entries_hts,
@@ -527,6 +528,160 @@ class FamilyEntriesTest(unittest.TestCase):
                             hl.Struct(a=11),
                             hl.Struct(a=12),
                         ],
+                    ],
+                ),
+            ],
+        )
+
+    def test_deduplicate_by_most_non_ref_calls(self) -> None:
+        project_ht = hl.Table.parallelize(
+            [
+                {
+                    'id': 0,
+                    'filters': {'PASS', 'HIGH_SR_BACKGROUND'},
+                    'family_entries': [
+                        [
+                            hl.Struct(
+                                GT=hl.Call(alleles=[0, 1], phased=False),
+                                family_guid='family_a',
+                                s='sample_1',
+                            ),
+                            hl.Struct(
+                                GT=hl.Call(alleles=[0, 0], phased=False),
+                                family_guid='family_a',
+                                s='sample_2',
+                            ),
+                        ],
+                        [
+                            hl.Struct(
+                                GT=hl.Call(alleles=[0, 1], phased=False),
+                                family_guid='family_b',
+                                s='sample_3',
+                            ),
+                            None,
+                        ],
+                        None,
+                    ],
+                },
+                {
+                    'id': 0,
+                    'filters': {'PASS'},
+                    'family_entries': [
+                        [
+                            None,
+                            hl.Struct(
+                                GT=hl.Call(alleles=[0, 0], phased=False),
+                                family_guid='family_a',
+                                s='sample_2',
+                            ),
+                        ],
+                        [
+                            hl.Struct(
+                                GT=hl.Call(alleles=[0, 1], phased=False),
+                                family_guid='family_b',
+                                s='sample_3',
+                            ),
+                            None,
+                        ],
+                        None,
+                    ],
+                },
+                {
+                    'id': 2,
+                    'filters': {'HIGH_SR_BACKGROUND'},
+                    'family_entries': [
+                        None,
+                        None,
+                    ],
+                },
+                {
+                    'id': 3,
+                    'filters': {'PASS'},
+                    'family_entries': [
+                        [
+                            hl.Struct(
+                                GT=hl.Call(alleles=[0, 1], phased=False),
+                                family_guid='family_a',
+                                s='sample_1',
+                            ),
+                            hl.Struct(
+                                GT=hl.Call(alleles=[0, 1], phased=False),
+                                family_guid='family_a',
+                                s='sample_2',
+                            ),
+                        ],
+                        None,
+                    ],
+                },
+            ],
+            hl.tstruct(
+                id=hl.tint32,
+                filters=hl.tset(hl.tstr),
+                family_entries=hl.tarray(
+                    hl.tarray(
+                        hl.tstruct(
+                            GT=hl.tcall,
+                            family_guid=hl.tstr,
+                            s=hl.tstr,
+                        ),
+                    ),
+                ),
+            ),
+            key='id',
+        )
+        ht = deduplicate_by_most_non_ref_calls(project_ht)
+        self.assertEqual(
+            ht.collect(),
+            [
+                hl.Struct(
+                    id=0,
+                    filters={'PASS', 'HIGH_SR_BACKGROUND'},
+                    family_entries=[
+                        [
+                            hl.Struct(
+                                GT=hl.Call(alleles=[0, 1], phased=False),
+                                family_guid='family_a',
+                                s='sample_1',
+                            ),
+                            hl.Struct(
+                                GT=hl.Call(alleles=[0, 0], phased=False),
+                                family_guid='family_a',
+                                s='sample_2',
+                            ),
+                        ],
+                        [
+                            hl.Struct(
+                                GT=hl.Call(alleles=[0, 1], phased=False),
+                                family_guid='family_b',
+                                s='sample_3',
+                            ),
+                            None,
+                        ],
+                        None,
+                    ],
+                ),
+                hl.Struct(
+                    id=2,
+                    filters={'HIGH_SR_BACKGROUND'},
+                    family_entries=[None, None],
+                ),
+                hl.Struct(
+                    id=3,
+                    filters={'PASS'},
+                    family_entries=[
+                        [
+                            hl.Struct(
+                                GT=hl.Call(alleles=[0, 1], phased=False),
+                                family_guid='family_a',
+                                s='sample_1',
+                            ),
+                            hl.Struct(
+                                GT=hl.Call(alleles=[0, 1], phased=False),
+                                family_guid='family_a',
+                                s='sample_2',
+                            ),
+                        ],
+                        None,
                     ],
                 ),
             ],

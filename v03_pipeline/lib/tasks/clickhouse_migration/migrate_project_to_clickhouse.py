@@ -5,6 +5,7 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.misc.family_entries import (
+    deduplicate_by_most_non_ref_calls,
     deglobalize_ids,
 )
 from v03_pipeline.lib.model import SampleType
@@ -64,7 +65,7 @@ class WriteProjectEntriesParquetTask(BaseWriteParquetTask):
             self.input()[PROJECT_TABLE_TASK].path,
         )
         ht = deglobalize_ids(ht)
-        ht = ht.distinct()
+        ht = deduplicate_by_most_non_ref_calls(ht)
         annotations_ht = hl.read_table(
             self.input()[PROJECT_SUBSETTED_ANNOTATIONS_TABLE_TASK].path,
         )
