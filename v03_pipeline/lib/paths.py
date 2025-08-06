@@ -447,27 +447,26 @@ def project_pedigree_path(
         f'{project_guid}_pedigree.tsv',
     )
 
+def loading_pipeline_queue_dir() -> str:
+    """
+    Returns the directory where loading pipeline requests are queued.
+    """
+    return os.path.join(
+        LOCAL_DISK_MOUNT_PATH,
+        'loading_pipeline_queue',
+    )
 
 def loading_pipeline_queue_path() -> str:
+    """
+    Returns a new path for a loading pipeline queue request file.
+    """
     run_id = datetime.datetime.now(datetime.UTC).strftime(
         '%Y%m%d-%H%M%S',
     )
     return os.path.join(
-        LOCAL_DISK_MOUNT_PATH,
-        'loading_pipeline_queue',
+        loading_pipeline_queue_dir(),
         f'request_{run_id}_{uuid.uuid1().int}.json',
     )
-
-def get_oldest_queue_path() -> str:
-    queue_dir = os.path.join(
-        LOCAL_DISK_MOUNT_PATH,
-        'loading_pipeline_queue',
-    )
-    queue_files = os.listdir(queue_dir)
-    if len(queue_files) == 0:
-        return None
-    return queue_dir + '/' + min(queue_files, key=os.path.getctime)
-
 
 def pipeline_run_success_file_path(
     reference_genome: ReferenceGenome,

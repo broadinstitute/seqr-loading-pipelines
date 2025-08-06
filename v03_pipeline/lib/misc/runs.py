@@ -1,3 +1,5 @@
+import os
+
 from collections import defaultdict
 
 import hailtop.fs as hfs
@@ -8,7 +10,19 @@ from v03_pipeline.lib.paths import (
     clickhouse_load_fail_file_path,
     clickhouse_load_success_file_path,
     pipeline_run_success_file_path,
+    loading_pipeline_queue_dir
 )
+
+def get_oldest_queue_path() -> str|None:
+    """
+    Returns the path of the oldest loading pipeline request file in the queue directory.
+    If the directory is empty, returns None.
+    """
+    queue_dir = loading_pipeline_queue_dir()
+    queue_files = os.listdir(queue_dir)
+    if len(queue_files) == 0:
+        return None
+    return queue_dir + '/' + min(queue_files, key=os.path.getctime)
 
 
 @retry()
