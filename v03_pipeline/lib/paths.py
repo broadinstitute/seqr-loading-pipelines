@@ -1,7 +1,7 @@
 import hashlib
 import os
-
-from uuid import uuid1
+import uuid
+import datetime
 
 import hailtop.fs as hfs
 
@@ -449,10 +449,13 @@ def project_pedigree_path(
 
 
 def loading_pipeline_queue_path() -> str:
+    run_id = datetime.datetime.now(datetime.UTC).strftime(
+        '%Y%m%d-%H%M%S',
+    )
     return os.path.join(
         LOCAL_DISK_MOUNT_PATH,
         'loading_pipeline_queue',
-        f'request_{uuid1().int}.json',
+        f'request_{run_id}_{uuid.uuid1().int}.json',
     )
 
 def get_oldest_queue_path() -> str:

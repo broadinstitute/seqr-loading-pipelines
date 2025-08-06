@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import datetime
+import re
 import os
 import time
 
@@ -35,9 +35,10 @@ def main():
                 )
                 for project_guid in lpr.projects_to_run
             ]
-            run_id = datetime.datetime.now(datetime.UTC).strftime(
-                '%Y%m%d-%H%M%S',
-            )
+            run_id = re.search(
+                r'request_(\d{8}-\d{6})_\d+\.json',
+                os.path.basename(latest_queue_path),
+            ).group(1)
             loading_run_task_params = {
                 'project_guids': lpr.projects_to_run,
                 'project_pedigree_paths': project_pedigree_paths,
