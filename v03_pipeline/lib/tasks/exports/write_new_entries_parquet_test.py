@@ -54,7 +54,9 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
         ht = ht.annotate(
             gnomad_genomes=hl.Struct(
                 AF_POPMAX_OR_GLOBAL=hl.if_else(
-                    ht.key_ == HIGH_GNOMAD_AF_VARIANT_KEY, 0.1, 0.005,
+                    ht.key_ == HIGH_GNOMAD_AF_VARIANT_KEY,
+                    0.1,
+                    0.005,
                 ),
             ),
         )
