@@ -421,7 +421,7 @@ class MiscTest(unittest.TestCase):
                     position=876499,
                     reference_genome='GRCh38',
                 ),
-                alleles=["A","G"],
+                alleles=['A', 'G'],
                 rg37_locus=hl.Locus(
                     contig=1,
                     position=874501,
