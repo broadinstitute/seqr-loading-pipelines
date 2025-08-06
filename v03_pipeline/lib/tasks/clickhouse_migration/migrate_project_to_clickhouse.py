@@ -5,8 +5,8 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.misc.family_entries import (
-    deglobalize_ids,
     deduplicate_by_most_non_ref_calls,
+    deglobalize_ids,
 )
 from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.paths import (
