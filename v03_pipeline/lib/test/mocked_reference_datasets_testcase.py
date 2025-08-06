@@ -13,9 +13,9 @@ REFERENCE_DATASETS_PATH = 'v03_pipeline/var/test/reference_datasets'
 
 
 class MockedReferenceDatasetsTestCase(MockedDatarootTestCase):
-    @responses.activate
     def setUp(self) -> None:
         super().setUp()
+        responses.start()
         for reference_genome in ReferenceGenome:
             with mock_clinvar_urls(reference_genome):
                 path = os.path.join(
@@ -38,3 +38,8 @@ class MockedReferenceDatasetsTestCase(MockedDatarootTestCase):
                             ),
                         ),
                     )
+
+    def tearDown(self):
+        super().tearDown()
+        responses.stop()
+        responses.reset()

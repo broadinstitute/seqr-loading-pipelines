@@ -1,6 +1,3 @@
-from unittest import mock
-from unittest.mock import Mock
-
 import hail as hl
 import luigi.worker
 import pandas as pd
@@ -20,7 +17,6 @@ from v03_pipeline.lib.tasks.exports.write_new_entries_parquet import (
     WriteNewEntriesParquetTask,
 )
 from v03_pipeline.lib.test.misc import convert_ndarray_to_list
-from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
     MockedReferenceDatasetsTestCase,
 )
@@ -38,10 +34,70 @@ TEST_SV_VCF_2 = 'v03_pipeline/var/test/callsets/sv_2.vcf'
 TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
 
 
+HIGH_GNOMAD_AF_VARIANT_KEY = 2
 TEST_RUN_ID = 'manual__2024-04-03'
 
 
 class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
+    def setUp(self) -> None:
+        # NOTE: The annotations tables are mocked for SNV_INDEL & MITO
+        # to avoid reference dataset updates that SV/GCNV do not have.
+        super().setUp()
+        mt = import_callset(
+            TEST_SNV_INDEL_VCF,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+        )
+        ht = mt.rows()
+        ht = ht.add_index(name='key_')
+        ht = ht.annotate(xpos=shared.xpos(ht))
+        ht = ht.annotate(
+            gnomad_genomes=hl.Struct(
+                AF_POPMAX_OR_GLOBAL=hl.if_else(
+                    ht.key_ == HIGH_GNOMAD_AF_VARIANT_KEY, 0.1, 0.005
+                ),
+            ),
+        )
+        ht = ht.annotate_globals(
+            updates={
+                hl.Struct(
+                    callset=TEST_SNV_INDEL_VCF,
+                    project_guid='R0113_test_project',
+                    remap_pedigree_hash=remap_pedigree_hash(TEST_PEDIGREE_3_REMAP),
+                ),
+                hl.Struct(
+                    callset=TEST_SNV_INDEL_VCF,
+                    project_guid='R0114_project4',
+                    remap_pedigree_hash=remap_pedigree_hash(TEST_PEDIGREE_4_REMAP),
+                ),
+            },
+        )
+        ht.write(
+            variant_annotations_table_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+            ),
+        )
+        mt = import_callset(TEST_MITO_CALLSET, ReferenceGenome.GRCh38, DatasetType.MITO)
+        ht = mt.rows()
+        ht = ht.add_index(name='key_')
+        ht = ht.annotate(xpos=shared.xpos(ht))
+        ht = ht.annotate_globals(
+            updates={
+                hl.Struct(
+                    callset=TEST_MITO_CALLSET,
+                    project_guid='R0116_test_project3',
+                    remap_pedigree_hash=remap_pedigree_hash(TEST_MITO_EXPORT_PEDIGREE),
+                ),
+            },
+        )
+        ht.write(
+            variant_annotations_table_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.MITO,
+            ),
+        )
+
     def test_write_new_entries_parquet(self):
         worker = luigi.worker.Worker()
         task = WriteNewEntriesParquetTask(
@@ -70,12 +126,12 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
             export_json[:2],
             [
                 {
-                    'key': 2,
+                    'key': HIGH_GNOMAD_AF_VARIANT_KEY,
                     'project_guid': 'R0113_test_project',
                     'family_guid': 'abc_1',
                     'sample_type': 'WGS',
                     'xpos': 1000876499,
-                    'is_gnomad_gt_5_percent': False,
+                    'is_gnomad_gt_5_percent': True,
                     'filters': [],
                     'calls': [
                         {
