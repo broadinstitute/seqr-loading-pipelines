@@ -182,3 +182,6 @@ def join_family_entries_hts(ht: hl.Table, callset_ht: hl.Table) -> hl.Table:
             ht.family_samples.items().extend(ht.family_samples_1.items()),
         ),
     )
+
+def deduplicate_by_most_non_ref_calls(ht: hl.Table) -> hl.Table:
+    return ht

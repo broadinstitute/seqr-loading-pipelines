@@ -5,6 +5,7 @@ import luigi.util
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.family_entries import (
     compute_callset_family_entries_ht,
+    deduplicate_by_most_non_ref_calls,
     deglobalize_ids,
 )
 from v03_pipeline.lib.paths import (
@@ -71,6 +72,7 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
                 ),
             )
             ht = deglobalize_ids(ht)
+            ht = deduplicate_by_most_non_ref_calls(ht)
             annotations_ht = hl.read_table(
                 variant_annotations_table_path(
                     self.reference_genome,
