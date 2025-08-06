@@ -177,6 +177,6 @@ class UpdatedReferenceDatasetQueryTaskTest(MockedDatarootTestCase):
         high_af_variants_ht = hl.read_table(high_af_variants_ht_path)
         self.assertEqual(
             hl.eval(high_af_variants_ht.version),
-            '1.0',
+            '1.1',
         )
         self.assertTrue(hasattr(high_af_variants_ht, 'is_gt_1_percent'))
