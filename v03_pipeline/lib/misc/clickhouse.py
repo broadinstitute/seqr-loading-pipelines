@@ -55,7 +55,6 @@ class ClickHouseTable(StrEnum):
         if self == ClickHouseTable.TRANSCRIPTS:
             return dataset_type.should_write_new_transcripts
         return self in {
-            ClickHouseTable.ANNOTATIONS_DISK,
             ClickHouseTable.ANNOTATIONS_MEMORY,
             ClickHouseTable.KEY_LOOKUP,
             ClickHouseTable.ENTRIES,
@@ -80,18 +79,8 @@ class ClickHouseTable(StrEnum):
     @property
     def insert(self) -> Callable:
         return {
-            ClickHouseTable.ANNOTATIONS_DISK: functools.partial(
-                direct_insert_new_keys,
-                clickhouse_table=self,
-            ),
-            ClickHouseTable.ANNOTATIONS_MEMORY: functools.partial(
-                direct_insert_new_keys,
-                clickhouse_table=self,
-            ),
-            ClickHouseTable.ENTRIES: functools.partial(
-                atomic_entries_insert,
-                _clickhouse_table=self,
-            ),
+            ClickHouseTable.ANNOTATIONS_MEMORY: direct_insert_annotations,
+            ClickHouseTable.ENTRIES: atomic_entries_insert,
             ClickHouseTable.KEY_LOOKUP: functools.partial(
                 direct_insert_all_keys,
                 clickhouse_table=self,
@@ -101,6 +90,15 @@ class ClickHouseTable(StrEnum):
                 clickhouse_table=self,
             ),
         }[self]
+
+    @classmethod
+    def for_dataset_type_additional_annotations_tables(
+        cls,
+        dataset_type: DatasetType,
+    ) -> list['ClickHouseTable']:
+        if dataset_type == DatasetType.SNV_INDEL:
+            return [ClickHouseTable.ANNOTATIONS_DISK]
+        return []
 
     @classmethod
     def for_dataset_type_atomic_entries_insert(
@@ -513,13 +511,9 @@ def exchange_entities(
 
 
 @retry()
-def direct_insert_new_keys(
-    clickhouse_table: ClickHouseTable,
-    table_name_builder: TableNameBuilder,
-    **_,
-) -> None:
-    dst_table = table_name_builder.dst_table(clickhouse_table)
-    src_table = table_name_builder.src_table(clickhouse_table)
+def direct_insert_annotations(table_name_builder: TableNameBuilder) -> None:
+    dst_table = table_name_builder.dst_table(ClickHouseTable.ANNOTATIONS_MEMORY)
+    src_table = table_name_builder.src_table(ClickHouseTable.ANNOTATIONS_MEMORY)
     drop_staging_db()
     logged_query(
         f"""
@@ -531,20 +525,34 @@ def direct_insert_new_keys(
     logged_query(
         f"""
         CREATE TABLE {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys` ENGINE = Set AS (
-            SELECT {clickhouse_table.key_field}
+            SELECT {ClickHouseTable.ANNOTATIONS_MEMORY.key_field}
             FROM {src_table} src
             LEFT ANTI JOIN {dst_table} dst
-            ON {clickhouse_table.join_condition}
+            ON {ClickHouseTable.ANNOTATIONS_MEMORY.join_condition}
         )
         """,
     )
     logged_query(
         f"""
         INSERT INTO {dst_table}
-        SELECT {clickhouse_table.select_fields}
-        FROM {src_table} WHERE {clickhouse_table.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
+        SELECT {ClickHouseTable.ANNOTATIONS_MEMORY.select_fields}
+        FROM {src_table} WHERE {ClickHouseTable.ANNOTATIONS_MEMORY.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
         """,
     )
+    for (
+        clickhouse_table
+    ) in ClickHouseTable.for_dataset_type_additional_annotations_tables(
+        table_name_builder.dataset_type,
+    ):
+        src_table = table_name_builder.dst_table(clickhouse_table)
+        dst_table = table_name_builder.dst_table(clickhouse_table)
+        logged_query(
+            f"""
+            INSERT INTO {dst_table}
+            SELECT {clickhouse_table.select_fields}
+            FROM {src_table} WHERE {clickhouse_table.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
+            """,
+        )
     drop_staging_db()
 
 
@@ -567,7 +575,6 @@ def direct_insert_all_keys(
 
 @retry()
 def atomic_entries_insert(
-    _clickhouse_table: ClickHouseTable,
     table_name_builder: TableNameBuilder,
     project_guids: list[str],
     family_guids: list[str],

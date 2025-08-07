@@ -15,7 +15,6 @@ from v03_pipeline.lib.misc.clickhouse import (
     create_staging_tables,
     delete_existing_families_from_staging_entries,
     direct_insert_all_keys,
-    direct_insert_new_keys,
     exchange_entities,
     get_clickhouse_client,
     insert_new_entries,
@@ -231,15 +230,6 @@ class ClickhouseTest(MockedDatarootTestCase):
         client.execute(
             f"""
             CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/annotations_memory` (
-                key UInt32,
-                variantId String,
-            ) ENGINE = EmbeddedRocksDB()
-            PRIMARY KEY `key`
-        """,
-        )
-        client.execute(
-            f"""
-            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/annotations_disk` (
                 key UInt32,
                 variantId String,
             ) ENGINE = EmbeddedRocksDB()
@@ -469,36 +459,6 @@ class ClickhouseTest(MockedDatarootTestCase):
         self.assertEqual(
             ret,
             [(1, 'a'), (2, 'b'), (3, 'c'), (4, 'd'), (7, 'c'), (10, 'b')],
-        )
-
-    def test_direct_insert_key_lookup_new_keys(self):
-        client = get_clickhouse_client()
-        client.execute(
-            f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` VALUES',
-            [('1-123-A-C', 1), ('2-234-C-T', 2), ('M-345-C-G', 3)],
-        )
-        direct_insert_new_keys(
-            ClickHouseTable.KEY_LOOKUP,
-            TableNameBuilder(
-                reference_genome=ReferenceGenome.GRCh38,
-                dataset_type=DatasetType.SNV_INDEL,
-                run_id=TEST_RUN_ID,
-            ),
-        )
-        ret = client.execute(
-            f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` ORDER BY variantId ASC',
-        )
-        self.assertEqual(
-            ret,
-            [
-                ('1-123-A-C', 1),
-                ('1-3-A-C', 10),
-                ('2-234-C-T', 2),
-                ('2-4-A-T', 11),
-                ('M-2-C-G', 13),
-                ('M-345-C-G', 3),
-                ('Y-9-A-C', 12),
-            ],
         )
 
     def test_entries_insert_flow(self):
@@ -1094,7 +1054,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             f"""
            SELECT COUNT(*)
            FROM
-           {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/annotations_disk`
+           {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/annotations_memory`
            """,
         )[0][0]
         self.assertEqual(annotations_disk_count, 4)
