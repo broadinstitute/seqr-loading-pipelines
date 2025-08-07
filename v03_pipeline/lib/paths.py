@@ -1,5 +1,7 @@
+import datetime
 import hashlib
 import os
+import uuid
 
 import hailtop.fs as hfs
 
@@ -446,11 +448,26 @@ def project_pedigree_path(
     )
 
 
-def loading_pipeline_queue_path() -> str:
+def loading_pipeline_queue_dir() -> str:
+    """
+    Returns the directory where loading pipeline requests are queued.
+    """
     return os.path.join(
         LOCAL_DISK_MOUNT_PATH,
         'loading_pipeline_queue',
-        'request.json',
+    )
+
+
+def loading_pipeline_queue_path() -> str:
+    """
+    Returns a new path for a loading pipeline queue request file.
+    """
+    run_id = datetime.datetime.now(datetime.UTC).strftime(
+        '%Y%m%d-%H%M%S',
+    )
+    return os.path.join(
+        loading_pipeline_queue_dir(),
+        f'request_{run_id}_{str(uuid.uuid1().int)[:4]}.json',
     )
 
 

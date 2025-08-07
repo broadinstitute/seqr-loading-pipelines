@@ -1,4 +1,3 @@
-import json
 import os
 import traceback
 
@@ -8,6 +7,8 @@ from aiohttp import web, web_exceptions
 
 from v03_pipeline.api.model import LoadingPipelineRequest
 from v03_pipeline.lib.logger import get_logger
+from v03_pipeline.lib.misc.runs import is_queue_full
+from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import loading_pipeline_queue_path
 
 logger = get_logger(__name__)
@@ -30,28 +31,18 @@ async def loading_pipeline_enqueue(request: web.Request) -> web.Response:
     if not request.body_exists:
         raise web.HTTPUnprocessableEntity
 
+    if is_queue_full():
+        return web.json_response(
+            {
+                f'Loading pipeline queue is full. Please try again later. (limit={Env.LOADING_QUEUE_LIMIT})',
+            },
+            status=web_exceptions.HTTPConflict.status_code,
+        )
+
     try:
         lpr = LoadingPipelineRequest.model_validate(await request.json())
     except ValueError as e:
         raise web.HTTPBadRequest from e
-
-    try:
-        async with aiofiles.open(loading_pipeline_queue_path()) as f:
-            return web.json_response(
-                {
-                    'Failed to queue due to in process request': json.loads(
-                        await f.read(),
-                    ),
-                },
-                #
-                # The 409 (Conflict) status code indicates that the request
-                # could not be completed due to a conflict with the current
-                # state of the target resource.
-                #
-                status=web_exceptions.HTTPConflict.status_code,
-            )
-    except FileNotFoundError:
-        pass
 
     async with aiofiles.open(loading_pipeline_queue_path(), 'w') as f:
         await f.write(lpr.model_dump_json())

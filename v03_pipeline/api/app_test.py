@@ -92,6 +92,7 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
                     'projects_to_run': ['project_a'],
                     'reference_genome': 'GRCh38',
                     'sample_type': 'WGS',
+                    'skip_check_sex_and_relatedness': False,
                     'skip_validation': False,
                 },
             },
@@ -106,5 +107,5 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
         ) as resp:
             self.assertEqual(
                 resp.status,
-                web_exceptions.HTTPConflict.status_code,
+                web_exceptions.HTTPAccepted.status_code,
             )
