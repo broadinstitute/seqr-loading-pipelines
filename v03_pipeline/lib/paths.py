@@ -465,7 +465,7 @@ def loading_pipeline_queue_path() -> str:
     )
     return os.path.join(
         loading_pipeline_queue_dir(),
-        f'request_{run_id}_{uuid.uuid1().int}.json',
+        f'request_{run_id}_{str(uuid.uuid1().int)[:4]}.json',
     )
 
 def pipeline_run_success_file_path(
