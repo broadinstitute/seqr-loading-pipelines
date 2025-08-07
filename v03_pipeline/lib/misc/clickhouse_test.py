@@ -987,7 +987,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 (4, 1, 0),
             ],
         )
-        annotations_memory= client.execute(
+        annotations_memory = client.execute(
             f"""
            SELECT *
            FROM
