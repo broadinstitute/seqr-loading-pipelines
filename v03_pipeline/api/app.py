@@ -1,4 +1,3 @@
-import json
 import os
 import traceback
 
@@ -8,9 +7,9 @@ from aiohttp import web, web_exceptions
 
 from v03_pipeline.api.model import LoadingPipelineRequest
 from v03_pipeline.lib.logger import get_logger
-from v03_pipeline.lib.paths import loading_pipeline_queue_path
 from v03_pipeline.lib.misc.runs import is_queue_full
 from v03_pipeline.lib.model.environment import Env
+from v03_pipeline.lib.paths import loading_pipeline_queue_path
 
 logger = get_logger(__name__)
 
@@ -34,7 +33,9 @@ async def loading_pipeline_enqueue(request: web.Request) -> web.Response:
 
     if is_queue_full():
         return web.json_response(
-            {f'Loading pipeline queue is full. Please try again later. (limit={Env.LOADING_QUEUE_LIMIT})'},
+            {
+                f'Loading pipeline queue is full. Please try again later. (limit={Env.LOADING_QUEUE_LIMIT})',
+            },
             status=web_exceptions.HTTPConflict.status_code,
         )
 
