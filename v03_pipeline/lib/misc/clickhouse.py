@@ -68,7 +68,7 @@ class ClickHouseTable(StrEnum):
     def insert(self) -> Callable:
         return {
             ClickHouseTable.ANNOTATIONS_MEMORY: direct_insert_annotations,
-            ClickHouseTable.ENTRIES: atomic_entries_insert,
+            ClickHouseTable.ENTRIES: atomic_insert_entries,
             ClickHouseTable.KEY_LOOKUP: functools.partial(
                 direct_insert_all_keys,
                 clickhouse_table=self,
@@ -105,19 +105,19 @@ class ClickHouseTable(StrEnum):
         return []
 
     @classmethod
-    def for_dataset_type_atomic_entries_insert(
+    def for_dataset_type_atomic_insert_entries(
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseTable']:
         return [
-            *cls.for_dataset_type_atomic_entries_insert_project_partitioned(
+            *cls.for_dataset_type_atomic_insert_entries_project_partitioned(
                 dataset_type,
             ),
-            *cls.for_dataset_type_atomic_entries_insert_unpartitioned(dataset_type),
+            *cls.for_dataset_type_atomic_insert_entries_unpartitioned(dataset_type),
         ]
 
     @classmethod
-    def for_dataset_type_atomic_entries_insert_project_partitioned(
+    def for_dataset_type_atomic_insert_entries_project_partitioned(
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseTable']:
@@ -129,7 +129,7 @@ class ClickHouseTable(StrEnum):
         ]
 
     @classmethod
-    def for_dataset_type_atomic_entries_insert_unpartitioned(
+    def for_dataset_type_atomic_insert_entries_unpartitioned(
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseTable']:
@@ -163,7 +163,7 @@ class ClickHouseMaterializedView(StrEnum):
         return []
 
     @classmethod
-    def for_dataset_type_atomic_entries_insert(
+    def for_dataset_type_atomic_insert_entries(
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseMaterializedView']:
@@ -175,7 +175,7 @@ class ClickHouseMaterializedView(StrEnum):
         ]
 
     @classmethod
-    def for_dataset_type_atomic_entries_insert_refreshable(
+    def for_dataset_type_atomic_insert_entries_refreshable(
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseMaterializedView']:
@@ -515,7 +515,10 @@ def exchange_entities(
 
 
 @retry()
-def direct_insert_annotations(table_name_builder: TableNameBuilder) -> None:
+def direct_insert_annotations(
+    table_name_builder: TableNameBuilder,
+    **_,
+) -> None:
     dst_table = table_name_builder.dst_table(ClickHouseTable.ANNOTATIONS_MEMORY)
     src_table = table_name_builder.src_table(ClickHouseTable.ANNOTATIONS_MEMORY)
     drop_staging_db()
@@ -578,7 +581,7 @@ def direct_insert_all_keys(
 
 
 @retry()
-def atomic_entries_insert(
+def atomic_insert_entries(
     table_name_builder: TableNameBuilder,
     project_guids: list[str],
     family_guids: list[str],
@@ -588,12 +591,12 @@ def atomic_entries_insert(
     drop_staging_db()
     create_staging_tables(
         table_name_builder,
-        ClickHouseTable.for_dataset_type_atomic_entries_insert(dataset_type),
+        ClickHouseTable.for_dataset_type_atomic_insert_entries(dataset_type),
     )
     create_staging_non_table_entities(
         table_name_builder,
         [
-            *ClickHouseMaterializedView.for_dataset_type_atomic_entries_insert(
+            *ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries(
                 dataset_type,
             ),
             *ClickHouseDictionary.for_dataset_type(dataset_type),
@@ -602,7 +605,7 @@ def atomic_entries_insert(
     stage_existing_project_partitions(
         table_name_builder,
         project_guids,
-        ClickHouseTable.for_dataset_type_atomic_entries_insert_project_partitioned(
+        ClickHouseTable.for_dataset_type_atomic_insert_entries_project_partitioned(
             dataset_type,
         ),
     )
@@ -623,21 +626,21 @@ def atomic_entries_insert(
     )
     refresh_materialized_views(
         table_name_builder,
-        ClickHouseMaterializedView.for_dataset_type_atomic_entries_insert_refreshable(
+        ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries_refreshable(
             dataset_type,
         ),
         staging=True,
     )
     replace_project_partitions(
         table_name_builder,
-        ClickHouseTable.for_dataset_type_atomic_entries_insert_project_partitioned(
+        ClickHouseTable.for_dataset_type_atomic_insert_entries_project_partitioned(
             dataset_type,
         ),
         project_guids,
     )
     exchange_entities(
         table_name_builder,
-        ClickHouseTable.for_dataset_type_atomic_entries_insert_unpartitioned(
+        ClickHouseTable.for_dataset_type_atomic_insert_entries_unpartitioned(
             dataset_type,
         ),
     )

@@ -462,7 +462,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
 
     def test_entries_insert_flow(self):
-        # Tests individual components of the atomic_entries_insert
+        # Tests individual components of the atomic_insert_entries
         # to validate the state after each step.
         client = get_clickhouse_client()
         client.execute(
@@ -612,14 +612,14 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         create_staging_tables(
             table_name_builder,
-            ClickHouseTable.for_dataset_type_atomic_entries_insert(
+            ClickHouseTable.for_dataset_type_atomic_insert_entries(
                 DatasetType.SNV_INDEL,
             ),
         )
         create_staging_non_table_entities(
             table_name_builder,
             [
-                *ClickHouseMaterializedView.for_dataset_type_atomic_entries_insert(
+                *ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries(
                     DatasetType.SNV_INDEL,
                 ),
                 *ClickHouseDictionary.for_dataset_type(DatasetType.SNV_INDEL),
@@ -647,7 +647,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 'project_b',
                 'project_d',  # Partition does not exist already.
             ],
-            ClickHouseTable.for_dataset_type_atomic_entries_insert_project_partitioned(
+            ClickHouseTable.for_dataset_type_atomic_insert_entries_project_partitioned(
                 DatasetType.SNV_INDEL,
             ),
         )
@@ -743,7 +743,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         refresh_materialized_views(
             table_name_builder,
-            ClickHouseMaterializedView.for_dataset_type_atomic_entries_insert_refreshable(
+            ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries_refreshable(
                 DatasetType.SNV_INDEL,
             ),
             staging=True,
@@ -768,7 +768,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         replace_project_partitions(
             table_name_builder,
-            ClickHouseTable.for_dataset_type_atomic_entries_insert_project_partitioned(
+            ClickHouseTable.for_dataset_type_atomic_insert_entries_project_partitioned(
                 DatasetType.SNV_INDEL,
             ),
             ['project_a', 'project_d'],
@@ -933,7 +933,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         exchange_entities(
             table_name_builder,
-            ClickHouseTable.for_dataset_type_atomic_entries_insert_unpartitioned(
+            ClickHouseTable.for_dataset_type_atomic_insert_entries_unpartitioned(
                 DatasetType.SNV_INDEL,
             ),
         )
