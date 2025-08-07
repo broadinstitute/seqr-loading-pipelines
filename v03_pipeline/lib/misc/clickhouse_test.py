@@ -987,6 +987,22 @@ class ClickhouseTest(MockedDatarootTestCase):
                 (4, 1, 0),
             ],
         )
+        annotations_memory= client.execute(
+            f"""
+           SELECT *
+           FROM
+           {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/annotations_memory`
+           """,
+        )
+        self.assertCountEqual(
+            annotations_memory,
+            [
+                (10, '1-3-A-C'),
+                (11, '2-4-A-T'),
+                (12, 'Y-9-A-C'),
+                (13, 'M-2-C-G'),
+            ],
+        )
         annotations_disk = client.execute(
             f"""
            SELECT *

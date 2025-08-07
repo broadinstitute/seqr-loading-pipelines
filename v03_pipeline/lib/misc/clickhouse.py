@@ -531,13 +531,13 @@ def direct_insert_annotations(
     ) in ClickHouseTable.for_dataset_type_disk_backed_annotations_tables(
         table_name_builder.dataset_type,
     ):
-        dst_table = table_name_builder.dst_table(clickhouse_table)
-        src_table = table_name_builder.src_table(clickhouse_table)
+        disk_backed_dst_table = table_name_builder.dst_table(clickhouse_table)
+        disk_backed_src_table = table_name_builder.src_table(clickhouse_table)
         logged_query(
             f"""
-            INSERT INTO {dst_table}
+            INSERT INTO {disk_backed_dst_table}
             SELECT {clickhouse_table.select_fields}
-            FROM {src_table} WHERE {clickhouse_table.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
+            FROM {disk_backed_src_table} WHERE {clickhouse_table.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
             """,
         )
     logged_query(
