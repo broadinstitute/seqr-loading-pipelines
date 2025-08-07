@@ -24,7 +24,6 @@ logger = get_logger(__name__)
 CLICKHOUSE_SEARCH_NAMED_COLLECTION = 'clickhouse_search_named_collection'
 GOOGLE_XML_API_PATH = 'https://storage.googleapis.com/'
 OPTIMIZE_TABLE_TIMEOUT_S = 99999
-OPTIMIZE_TABLE_WAIT_S = 150
 REDACTED = 'REDACTED'
 STAGING_CLICKHOUSE_DATABASE = 'staging'
 
@@ -405,7 +404,7 @@ def optimize_entries(
                     """,
                     timeout=OPTIMIZE_TABLE_TIMEOUT_S,
                 )
-            time.sleep(OPTIMIZE_TABLE_WAIT_S)
+            time.sleep(Env.CLICKHOUSE_OPTIMIZE_TABLE_WAIT_S)
         else:
             safely_optimized = True
 
@@ -551,8 +550,8 @@ def direct_insert_annotations(
     ) in ClickHouseTable.for_dataset_type_additional_annotations_tables(
         table_name_builder.dataset_type,
     ):
-        src_table = table_name_builder.dst_table(clickhouse_table)
         dst_table = table_name_builder.dst_table(clickhouse_table)
+        src_table = table_name_builder.src_table(clickhouse_table)
         logged_query(
             f"""
             INSERT INTO {dst_table}
