@@ -15,7 +15,7 @@ from v03_pipeline.lib.misc.clickhouse import (
     create_staging_tables,
     delete_existing_families_from_staging_entries,
     direct_insert_all_keys,
-    exchange_entities,
+    exchange_tables,
     get_clickhouse_client,
     insert_new_entries,
     load_complete_run,
@@ -931,15 +931,11 @@ class ClickhouseTest(MockedDatarootTestCase):
             existing_gt_stats,
             [],
         )
-        exchange_entities(
+        exchange_tables(
             table_name_builder,
             ClickHouseTable.for_dataset_type_atomic_insert_entries_unpartitioned(
                 DatasetType.SNV_INDEL,
             ),
-        )
-        reload_dictionaries(
-            table_name_builder,
-            ClickHouseDictionary.for_dataset_type(DatasetType.SNV_INDEL),
         )
         new_gt_stats = client.execute(
             f"""
@@ -949,11 +945,11 @@ class ClickhouseTest(MockedDatarootTestCase):
             """,
         )
         self.assertCountEqual(new_gt_stats, [])
-        exchange_entities(
+        reload_dictionaries(
             table_name_builder,
             ClickHouseDictionary.for_dataset_type(DatasetType.SNV_INDEL),
         )
-        new_gt_stats_post_exchange = client.execute(
+        new_gt_stats_post_reload = client.execute(
             f"""
             SELECT *
             FROM
@@ -961,7 +957,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             """,
         )
         self.assertEqual(
-            new_gt_stats_post_exchange,
+            new_gt_stats_post_reload,
             [
                 (0, 2, 0),
                 (1, 1, 1),

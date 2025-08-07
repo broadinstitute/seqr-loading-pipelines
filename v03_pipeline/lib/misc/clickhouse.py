@@ -478,7 +478,7 @@ def reload_dictionaries(
     for dictionary in dictionaries:
         logged_query(
             f"""
-            SYSTEM RELOAD DICTIONARY {table_name_builder.staging_dst_table(dictionary)}
+            SYSTEM RELOAD DICTIONARY {table_name_builder.dst_table(dictionary)}
             """,
         )
 
@@ -501,15 +501,15 @@ def replace_project_partitions(
 
 
 # Note this is NOT idempotent, as running the swap twice will
-# result in the entities not being swapped.
-def exchange_entities(
+# result in the tables not being swapped.
+def exchange_tables(
     table_name_builder,
-    clickhouse_entities: list[ClickHouseEntity],
+    clickhouse_tables: list[ClickHouseTable],
 ) -> None:
-    for clickhouse_entity in clickhouse_entities:
+    for clickhouse_table in clickhouse_tables:
         logged_query(
             f"""
-            EXCHANGE {'DICTIONARIES' if isinstance(clickhouse_entity, ClickHouseDictionary) else 'TABLES'} {table_name_builder.staging_dst_table(clickhouse_entity)} AND {table_name_builder.dst_table(clickhouse_entity)}
+            EXCHANGE TABLES {table_name_builder.staging_dst_table(clickhouse_table)} AND {table_name_builder.dst_table(clickhouse_table)}
             """,
         )
 
@@ -599,7 +599,6 @@ def atomic_insert_entries(
             *ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries(
                 dataset_type,
             ),
-            *ClickHouseDictionary.for_dataset_type(dataset_type),
         ],
     )
     stage_existing_project_partitions(
@@ -638,28 +637,13 @@ def atomic_insert_entries(
         ),
         project_guids,
     )
-    exchange_entities(
+    exchange_tables(
         table_name_builder,
         ClickHouseTable.for_dataset_type_atomic_insert_entries_unpartitioned(
             dataset_type,
         ),
     )
-    # Very important nuance here... the staged dictionary
-    # source tables are production tables, so the
-    # dictionary reload must happen 'after' the preceeding
-    # exchange entity statement.  I (bpb) made several
-    # attempts to have a staging dictionary source
-    # a staging gt_stats table, but ran into issues with
-    # the dictionary "EXCHANGE" leaving the query source
-    # unmodified.  We ended up with a production dictionary
-    # pointing at a staging source and a staging dictionary
-    # pointing at a production source... which is not desired
-    # behavior.
     reload_dictionaries(
-        table_name_builder,
-        ClickHouseDictionary.for_dataset_type(dataset_type),
-    )
-    exchange_entities(
         table_name_builder,
         ClickHouseDictionary.for_dataset_type(dataset_type),
     )
