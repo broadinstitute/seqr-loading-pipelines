@@ -182,3 +182,15 @@ def join_family_entries_hts(ht: hl.Table, callset_ht: hl.Table) -> hl.Table:
             ht.family_samples.items().extend(ht.family_samples_1.items()),
         ),
     )
+
+
+def deduplicate_by_most_non_ref_calls(ht: hl.Table) -> hl.Table:
+    ht = ht.annotate(
+        non_ref_count=hl.len(
+            hl.flatten(ht.family_entries).filter(lambda s: s.GT.is_non_ref()),
+        ),
+    )
+    return ht.group_by(*ht.key).aggregate(
+        filters=hl.agg.take(ht.filters, 1, ordering=-ht.non_ref_count)[0],
+        family_entries=hl.agg.take(ht.family_entries, 1, ordering=-ht.non_ref_count)[0],
+    )

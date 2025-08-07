@@ -5,6 +5,7 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.misc.family_entries import (
+    deduplicate_by_most_non_ref_calls,
     deglobalize_ids,
 )
 from v03_pipeline.lib.model import SampleType
@@ -13,10 +14,6 @@ from v03_pipeline.lib.paths import (
     new_entries_parquet_path,
     pipeline_run_success_file_path,
     project_table_path,
-)
-from v03_pipeline.lib.reference_datasets.reference_dataset import (
-    BaseReferenceDataset,
-    ReferenceDatasetQuery,
 )
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
@@ -27,13 +24,7 @@ from v03_pipeline.lib.tasks.clickhouse_migration.migrate_project_variants_to_cli
     WriteProjectSubsettedVariantsTask,
 )
 from v03_pipeline.lib.tasks.exports.fields import get_entries_export_fields
-from v03_pipeline.lib.tasks.exports.write_new_entries_parquet import (
-    HIGH_AF_VARIANTS_TABLE_TASK,
-)
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
-from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_query import (
-    UpdatedReferenceDatasetQueryTask,
-)
 
 PROJECT_SUBSETTED_ANNOTATIONS_TABLE_TASK = 'project_subsetted_annotations_table_task'
 PROJECT_TABLE_TASK = 'project_table_task'
@@ -67,20 +58,6 @@ class WriteProjectEntriesParquetTask(BaseWriteParquetTask):
                     self.project_guid,
                 ),
             ),
-            **(
-                {
-                    HIGH_AF_VARIANTS_TABLE_TASK: self.clone(
-                        UpdatedReferenceDatasetQueryTask,
-                        reference_dataset_query=ReferenceDatasetQuery.high_af_variants,
-                    ),
-                }
-                if ReferenceDatasetQuery.high_af_variants
-                in BaseReferenceDataset.for_reference_genome_dataset_type(
-                    self.reference_genome,
-                    self.dataset_type,
-                )
-                else {}
-            ),
         }
 
     def create_table(self) -> None:
@@ -88,17 +65,11 @@ class WriteProjectEntriesParquetTask(BaseWriteParquetTask):
             self.input()[PROJECT_TABLE_TASK].path,
         )
         ht = deglobalize_ids(ht)
-        ht = ht.distinct()
+        ht = deduplicate_by_most_non_ref_calls(ht)
         annotations_ht = hl.read_table(
             self.input()[PROJECT_SUBSETTED_ANNOTATIONS_TABLE_TASK].path,
         )
         ht = ht.join(annotations_ht)
-        if self.input().get(HIGH_AF_VARIANTS_TABLE_TASK):
-            gnomad_high_af_ht = hl.read_table(
-                self.input()[HIGH_AF_VARIANTS_TABLE_TASK].path,
-            )
-            ht = ht.join(gnomad_high_af_ht, 'left')
-
         ht = ht.explode(ht.family_entries)
         ht = ht.filter(hl.is_defined(ht.family_entries))
         ht = ht.key_by()

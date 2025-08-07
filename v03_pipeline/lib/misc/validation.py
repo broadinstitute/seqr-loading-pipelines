@@ -4,6 +4,7 @@ import hail as hl
 
 from v03_pipeline.lib.model import (
     DatasetType,
+    Env,
     ReferenceGenome,
     SampleType,
 )
@@ -151,12 +152,18 @@ def validate_imported_field_types(
 
 def validate_sample_type(
     mt: hl.MatrixTable,
-    coding_and_noncoding_variants_ht: hl.Table,
     reference_genome: ReferenceGenome,
     sample_type: SampleType,
+    project_guids: list[str],
+    coding_and_noncoding_variants_ht: hl.Table,
     sample_type_match_threshold: float = SAMPLE_TYPE_MATCH_THRESHOLD,
     **_: Any,
 ) -> None:
+    if all(
+        project_guid in Env.SAMPLE_TYPE_VALIDATION_EXCLUDED_PROJECTS
+        for project_guid in project_guids
+    ):
+        return
     coding_variants_ht = coding_and_noncoding_variants_ht.filter(
         coding_and_noncoding_variants_ht.coding,
     )
