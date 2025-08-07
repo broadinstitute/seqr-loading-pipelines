@@ -12,6 +12,7 @@ from v03_pipeline.lib.paths import (
     pipeline_run_success_file_path,
     loading_pipeline_queue_dir
 )
+from v03_pipeline.lib.model.environment import Env
 
 def get_oldest_queue_path() -> str|None:
     """
@@ -24,6 +25,12 @@ def get_oldest_queue_path() -> str|None:
         return None
     return queue_dir + '/' + min(queue_files, key=os.path.getctime)
 
+def is_queue_full() -> bool:
+    """
+    Checks if the loading pipeline queue directory is full.
+    Returns True if the number of files exceeds a predefined limit, otherwise False.
+    """
+    return len(os.listdir(loading_pipeline_queue_dir())) >= Env.LOADING_QUEUE_LIMIT
 
 @retry()
 def get_run_ids() -> tuple[defaultdict, defaultdict, defaultdict]:
