@@ -48,18 +48,6 @@ class ClickHouseTable(StrEnum):
             ClickHouseTable.ENTRIES: new_entries_parquet_path,
         }[self]
 
-    def should_load(
-        self,
-        dataset_type: DatasetType,
-    ):
-        if self == ClickHouseTable.TRANSCRIPTS:
-            return dataset_type.should_write_new_transcripts
-        return self in {
-            ClickHouseTable.ANNOTATIONS_MEMORY,
-            ClickHouseTable.KEY_LOOKUP,
-            ClickHouseTable.ENTRIES,
-        }
-
     @property
     def key_field(self):
         return 'variantId' if self == ClickHouseTable.KEY_LOOKUP else 'key'
@@ -90,6 +78,22 @@ class ClickHouseTable(StrEnum):
                 clickhouse_table=self,
             ),
         }[self]
+
+    @classmethod
+    def for_dataset_type(cls, dataset_type: DatasetType) -> list['ClickHouseTable']:
+        tables = [
+            ClickHouseTable.ANNOTATIONS_MEMORY,
+            ClickHouseTable.KEY_LOOKUP,
+        ]
+        if dataset_type.should_write_new_transcripts:
+            tables = [
+                *tables,
+                ClickHouseTable.TRANSCRIPTS,
+            ]
+        return [
+            *tables,
+            ClickHouseTable.ENTRIES,
+        ]
 
     @classmethod
     def for_dataset_type_additional_annotations_tables(
@@ -673,11 +677,7 @@ def load_complete_run(
         dataset_type,
         run_id,
     )
-    for clickhouse_table in ClickHouseTable:
-        if not clickhouse_table.should_load(
-            dataset_type,
-        ):
-            continue
+    for clickhouse_table in ClickHouseTable.for_dataset_type(dataset_type):
         clickhouse_table.insert(
             table_name_builder=table_name_builder,
             project_guids=project_guids,
