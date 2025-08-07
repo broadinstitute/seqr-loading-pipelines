@@ -15,8 +15,7 @@ from v03_pipeline.lib.misc.clickhouse import (
     create_staging_tables,
     delete_existing_families_from_staging_entries,
     direct_insert_all_keys,
-    direct_insert_new_keys,
-    exchange_entities,
+    exchange_tables,
     get_clickhouse_client,
     insert_new_entries,
     load_complete_run,
@@ -231,15 +230,6 @@ class ClickhouseTest(MockedDatarootTestCase):
         client.execute(
             f"""
             CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/annotations_memory` (
-                key UInt32,
-                variantId String,
-            ) ENGINE = EmbeddedRocksDB()
-            PRIMARY KEY `key`
-        """,
-        )
-        client.execute(
-            f"""
-            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/annotations_disk` (
                 key UInt32,
                 variantId String,
             ) ENGINE = EmbeddedRocksDB()
@@ -471,38 +461,8 @@ class ClickhouseTest(MockedDatarootTestCase):
             [(1, 'a'), (2, 'b'), (3, 'c'), (4, 'd'), (7, 'c'), (10, 'b')],
         )
 
-    def test_direct_insert_key_lookup_new_keys(self):
-        client = get_clickhouse_client()
-        client.execute(
-            f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` VALUES',
-            [('1-123-A-C', 1), ('2-234-C-T', 2), ('M-345-C-G', 3)],
-        )
-        direct_insert_new_keys(
-            ClickHouseTable.KEY_LOOKUP,
-            TableNameBuilder(
-                reference_genome=ReferenceGenome.GRCh38,
-                dataset_type=DatasetType.SNV_INDEL,
-                run_id=TEST_RUN_ID,
-            ),
-        )
-        ret = client.execute(
-            f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` ORDER BY variantId ASC',
-        )
-        self.assertEqual(
-            ret,
-            [
-                ('1-123-A-C', 1),
-                ('1-3-A-C', 10),
-                ('2-234-C-T', 2),
-                ('2-4-A-T', 11),
-                ('M-2-C-G', 13),
-                ('M-345-C-G', 3),
-                ('Y-9-A-C', 12),
-            ],
-        )
-
     def test_entries_insert_flow(self):
-        # Tests individual components of the atomic_entries_insert
+        # Tests individual components of the atomic_insert_entries
         # to validate the state after each step.
         client = get_clickhouse_client()
         client.execute(
@@ -652,33 +612,18 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         create_staging_tables(
             table_name_builder,
-            ClickHouseTable.for_dataset_type_atomic_entries_insert(
+            ClickHouseTable.for_dataset_type_atomic_insert_entries(
                 DatasetType.SNV_INDEL,
             ),
         )
         create_staging_non_table_entities(
             table_name_builder,
             [
-                *ClickHouseMaterializedView.for_dataset_type_atomic_entries_insert(
+                *ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries(
                     DatasetType.SNV_INDEL,
                 ),
                 *ClickHouseDictionary.for_dataset_type(DatasetType.SNV_INDEL),
             ],
-        )
-        staging_tables = client.execute(
-            """
-            SELECT create_table_query FROM system.tables
-            WHERE
-            database = %(database)s
-            """,
-            {'database': STAGING_CLICKHOUSE_DATABASE},
-        )
-        self.assertEqual(
-            next(iter([s[0] for s in staging_tables if 'DICTIONARY' in s[0]])).strip(),
-            # important test!  Ensuring that the staging dictionary points to the production gt_stats table.
-            f"""
-            CREATE DICTIONARY staging.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/gt_stats_dict` (`key` UInt32, `ac_wes` UInt16, `ac_wgs` UInt16) PRIMARY KEY key SOURCE(CLICKHOUSE(USER {Env.CLICKHOUSE_WRITER_USER} PASSWORD '[HIDDEN]' DB {Env.CLICKHOUSE_DATABASE} TABLE `GRCh38/SNV_INDEL/gt_stats`)) LIFETIME(MIN 0 MAX 0) LAYOUT(FLAT(MAX_ARRAY_SIZE 10000))
-            """.strip(),
         )
         stage_existing_project_partitions(
             table_name_builder,
@@ -687,7 +632,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 'project_b',
                 'project_d',  # Partition does not exist already.
             ],
-            ClickHouseTable.for_dataset_type_atomic_entries_insert_project_partitioned(
+            ClickHouseTable.for_dataset_type_atomic_insert_entries_project_partitioned(
                 DatasetType.SNV_INDEL,
             ),
         )
@@ -783,32 +728,14 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         refresh_materialized_views(
             table_name_builder,
-            ClickHouseMaterializedView.for_dataset_type_atomic_entries_insert_refreshable(
+            ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries_refreshable(
                 DatasetType.SNV_INDEL,
             ),
             staging=True,
         )
-        staged_gt_stats = client.execute(
-            f"""
-            SELECT * FROM {STAGING_CLICKHOUSE_DATABASE}.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/gt_stats`
-            """,
-        )
-        self.assertEqual(
-            staged_gt_stats,
-            [(0, 2, 0), (1, 1, 1), (2, 0, 2), (3, 2, 0), (4, 5, 0), (5, 2, 0)],
-        )
-        staged_gt_stats_dict = client.execute(
-            f"""
-            SELECT * FROM {STAGING_CLICKHOUSE_DATABASE}.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/gt_stats_dict`
-            """,
-        )
-        self.assertEqual(
-            staged_gt_stats_dict,
-            [],
-        )
         replace_project_partitions(
             table_name_builder,
-            ClickHouseTable.for_dataset_type_atomic_entries_insert_project_partitioned(
+            ClickHouseTable.for_dataset_type_atomic_insert_entries_project_partitioned(
                 DatasetType.SNV_INDEL,
             ),
             ['project_a', 'project_d'],
@@ -971,15 +898,11 @@ class ClickhouseTest(MockedDatarootTestCase):
             existing_gt_stats,
             [],
         )
-        exchange_entities(
+        exchange_tables(
             table_name_builder,
-            ClickHouseTable.for_dataset_type_atomic_entries_insert_unpartitioned(
+            ClickHouseTable.for_dataset_type_atomic_insert_entries_unpartitioned(
                 DatasetType.SNV_INDEL,
             ),
-        )
-        reload_dictionaries(
-            table_name_builder,
-            ClickHouseDictionary.for_dataset_type(DatasetType.SNV_INDEL),
         )
         new_gt_stats = client.execute(
             f"""
@@ -989,11 +912,11 @@ class ClickhouseTest(MockedDatarootTestCase):
             """,
         )
         self.assertCountEqual(new_gt_stats, [])
-        exchange_entities(
+        reload_dictionaries(
             table_name_builder,
             ClickHouseDictionary.for_dataset_type(DatasetType.SNV_INDEL),
         )
-        new_gt_stats_post_exchange = client.execute(
+        new_gt_stats_post_reload = client.execute(
             f"""
             SELECT *
             FROM
@@ -1001,7 +924,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             """,
         )
         self.assertEqual(
-            new_gt_stats_post_exchange,
+            new_gt_stats_post_reload,
             [
                 (0, 2, 0),
                 (1, 1, 1),
@@ -1094,7 +1017,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             f"""
            SELECT COUNT(*)
            FROM
-           {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/annotations_disk`
+           {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/annotations_memory`
            """,
         )[0][0]
         self.assertEqual(annotations_disk_count, 4)

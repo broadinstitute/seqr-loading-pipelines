@@ -24,7 +24,6 @@ logger = get_logger(__name__)
 CLICKHOUSE_SEARCH_NAMED_COLLECTION = 'clickhouse_search_named_collection'
 GOOGLE_XML_API_PATH = 'https://storage.googleapis.com/'
 OPTIMIZE_TABLE_TIMEOUT_S = 99999
-OPTIMIZE_TABLE_WAIT_S = 150
 REDACTED = 'REDACTED'
 STAGING_CLICKHOUSE_DATABASE = 'staging'
 
@@ -48,19 +47,6 @@ class ClickHouseTable(StrEnum):
             ClickHouseTable.ENTRIES: new_entries_parquet_path,
         }[self]
 
-    def should_load(
-        self,
-        dataset_type: DatasetType,
-    ):
-        if self == ClickHouseTable.TRANSCRIPTS:
-            return dataset_type.should_write_new_transcripts
-        return self in {
-            ClickHouseTable.ANNOTATIONS_DISK,
-            ClickHouseTable.ANNOTATIONS_MEMORY,
-            ClickHouseTable.KEY_LOOKUP,
-            ClickHouseTable.ENTRIES,
-        }
-
     @property
     def key_field(self):
         return 'variantId' if self == ClickHouseTable.KEY_LOOKUP else 'key'
@@ -80,18 +66,8 @@ class ClickHouseTable(StrEnum):
     @property
     def insert(self) -> Callable:
         return {
-            ClickHouseTable.ANNOTATIONS_DISK: functools.partial(
-                direct_insert_new_keys,
-                clickhouse_table=self,
-            ),
-            ClickHouseTable.ANNOTATIONS_MEMORY: functools.partial(
-                direct_insert_new_keys,
-                clickhouse_table=self,
-            ),
-            ClickHouseTable.ENTRIES: functools.partial(
-                atomic_entries_insert,
-                _clickhouse_table=self,
-            ),
+            ClickHouseTable.ANNOTATIONS_MEMORY: direct_insert_annotations,
+            ClickHouseTable.ENTRIES: atomic_insert_entries,
             ClickHouseTable.KEY_LOOKUP: functools.partial(
                 direct_insert_all_keys,
                 clickhouse_table=self,
@@ -103,19 +79,44 @@ class ClickHouseTable(StrEnum):
         }[self]
 
     @classmethod
-    def for_dataset_type_atomic_entries_insert(
+    def for_dataset_type(cls, dataset_type: DatasetType) -> list['ClickHouseTable']:
+        tables = [
+            ClickHouseTable.ANNOTATIONS_MEMORY,
+            ClickHouseTable.KEY_LOOKUP,
+        ]
+        if dataset_type.should_write_new_transcripts:
+            tables = [
+                *tables,
+                ClickHouseTable.TRANSCRIPTS,
+            ]
+        return [
+            *tables,
+            ClickHouseTable.ENTRIES,
+        ]
+
+    @classmethod
+    def for_dataset_type_disk_backed_annotations_tables(
+        cls,
+        dataset_type: DatasetType,
+    ) -> list['ClickHouseTable']:
+        if dataset_type == DatasetType.SNV_INDEL:
+            return [ClickHouseTable.ANNOTATIONS_DISK]
+        return []
+
+    @classmethod
+    def for_dataset_type_atomic_insert_entries(
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseTable']:
         return [
-            *cls.for_dataset_type_atomic_entries_insert_project_partitioned(
+            *cls.for_dataset_type_atomic_insert_entries_project_partitioned(
                 dataset_type,
             ),
-            *cls.for_dataset_type_atomic_entries_insert_unpartitioned(dataset_type),
+            *cls.for_dataset_type_atomic_insert_entries_unpartitioned(dataset_type),
         ]
 
     @classmethod
-    def for_dataset_type_atomic_entries_insert_project_partitioned(
+    def for_dataset_type_atomic_insert_entries_project_partitioned(
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseTable']:
@@ -127,7 +128,7 @@ class ClickHouseTable(StrEnum):
         ]
 
     @classmethod
-    def for_dataset_type_atomic_entries_insert_unpartitioned(
+    def for_dataset_type_atomic_insert_entries_unpartitioned(
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseTable']:
@@ -161,7 +162,7 @@ class ClickHouseMaterializedView(StrEnum):
         return []
 
     @classmethod
-    def for_dataset_type_atomic_entries_insert(
+    def for_dataset_type_atomic_insert_entries(
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseMaterializedView']:
@@ -173,7 +174,7 @@ class ClickHouseMaterializedView(StrEnum):
         ]
 
     @classmethod
-    def for_dataset_type_atomic_entries_insert_refreshable(
+    def for_dataset_type_atomic_insert_entries_refreshable(
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseMaterializedView']:
@@ -284,18 +285,6 @@ def create_staging_non_table_entities(
                 .replace('`', ''),
             },
         )[0][0]
-        if isinstance(clickhouse_entity, ClickHouseDictionary):
-            create_entity_statement = create_entity_statement.replace(
-                "PASSWORD '[HIDDEN]'",
-                f'PASSWORD {Env.CLICKHOUSE_WRITER_PASSWORD}',
-            )
-            # Handle inconsistency within ClickHouse where DB is not propagated
-            # within the Create DB query
-            if f'DB {Env.CLICKHOUSE_DATABASE}' not in create_entity_statement:
-                create_entity_statement = create_entity_statement.replace(
-                    'TABLE',
-                    f'DB {Env.CLICKHOUSE_DATABASE} TABLE',
-                )
         create_entity_statement = create_entity_statement.replace(
             table_name_builder.dst_prefix,
             table_name_builder.staging_dst_prefix,
@@ -403,7 +392,7 @@ def optimize_entries(
                     """,
                     timeout=OPTIMIZE_TABLE_TIMEOUT_S,
                 )
-            time.sleep(OPTIMIZE_TABLE_WAIT_S)
+            time.sleep(Env.CLICKHOUSE_OPTIMIZE_TABLE_WAIT_S)
         else:
             safely_optimized = True
 
@@ -476,7 +465,7 @@ def reload_dictionaries(
     for dictionary in dictionaries:
         logged_query(
             f"""
-            SYSTEM RELOAD DICTIONARY {table_name_builder.staging_dst_table(dictionary)}
+            SYSTEM RELOAD DICTIONARY {table_name_builder.dst_table(dictionary)}
             """,
         )
 
@@ -499,27 +488,26 @@ def replace_project_partitions(
 
 
 # Note this is NOT idempotent, as running the swap twice will
-# result in the entities not being swapped.
-def exchange_entities(
+# result in the tables not being swapped.
+def exchange_tables(
     table_name_builder,
-    clickhouse_entities: list[ClickHouseEntity],
+    clickhouse_tables: list[ClickHouseTable],
 ) -> None:
-    for clickhouse_entity in clickhouse_entities:
+    for clickhouse_table in clickhouse_tables:
         logged_query(
             f"""
-            EXCHANGE {'DICTIONARIES' if isinstance(clickhouse_entity, ClickHouseDictionary) else 'TABLES'} {table_name_builder.staging_dst_table(clickhouse_entity)} AND {table_name_builder.dst_table(clickhouse_entity)}
+            EXCHANGE TABLES {table_name_builder.staging_dst_table(clickhouse_table)} AND {table_name_builder.dst_table(clickhouse_table)}
             """,
         )
 
 
 @retry()
-def direct_insert_new_keys(
-    clickhouse_table: ClickHouseTable,
+def direct_insert_annotations(
     table_name_builder: TableNameBuilder,
     **_,
 ) -> None:
-    dst_table = table_name_builder.dst_table(clickhouse_table)
-    src_table = table_name_builder.src_table(clickhouse_table)
+    dst_table = table_name_builder.dst_table(ClickHouseTable.ANNOTATIONS_MEMORY)
+    src_table = table_name_builder.src_table(ClickHouseTable.ANNOTATIONS_MEMORY)
     drop_staging_db()
     logged_query(
         f"""
@@ -531,18 +519,32 @@ def direct_insert_new_keys(
     logged_query(
         f"""
         CREATE TABLE {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys` ENGINE = Set AS (
-            SELECT {clickhouse_table.key_field}
+            SELECT {ClickHouseTable.ANNOTATIONS_MEMORY.key_field}
             FROM {src_table} src
             LEFT ANTI JOIN {dst_table} dst
-            ON {clickhouse_table.join_condition}
+            ON {ClickHouseTable.ANNOTATIONS_MEMORY.join_condition}
         )
         """,
     )
+    for (
+        clickhouse_table
+    ) in ClickHouseTable.for_dataset_type_disk_backed_annotations_tables(
+        table_name_builder.dataset_type,
+    ):
+        dst_table = table_name_builder.dst_table(clickhouse_table)
+        src_table = table_name_builder.src_table(clickhouse_table)
+        logged_query(
+            f"""
+            INSERT INTO {dst_table}
+            SELECT {clickhouse_table.select_fields}
+            FROM {src_table} WHERE {clickhouse_table.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
+            """,
+        )
     logged_query(
         f"""
         INSERT INTO {dst_table}
-        SELECT {clickhouse_table.select_fields}
-        FROM {src_table} WHERE {clickhouse_table.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
+        SELECT {ClickHouseTable.ANNOTATIONS_MEMORY.select_fields}
+        FROM {src_table} WHERE {ClickHouseTable.ANNOTATIONS_MEMORY.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
         """,
     )
     drop_staging_db()
@@ -566,8 +568,7 @@ def direct_insert_all_keys(
 
 
 @retry()
-def atomic_entries_insert(
-    _clickhouse_table: ClickHouseTable,
+def atomic_insert_entries(
     table_name_builder: TableNameBuilder,
     project_guids: list[str],
     family_guids: list[str],
@@ -577,21 +578,20 @@ def atomic_entries_insert(
     drop_staging_db()
     create_staging_tables(
         table_name_builder,
-        ClickHouseTable.for_dataset_type_atomic_entries_insert(dataset_type),
+        ClickHouseTable.for_dataset_type_atomic_insert_entries(dataset_type),
     )
     create_staging_non_table_entities(
         table_name_builder,
         [
-            *ClickHouseMaterializedView.for_dataset_type_atomic_entries_insert(
+            *ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries(
                 dataset_type,
             ),
-            *ClickHouseDictionary.for_dataset_type(dataset_type),
         ],
     )
     stage_existing_project_partitions(
         table_name_builder,
         project_guids,
-        ClickHouseTable.for_dataset_type_atomic_entries_insert_project_partitioned(
+        ClickHouseTable.for_dataset_type_atomic_insert_entries_project_partitioned(
             dataset_type,
         ),
     )
@@ -612,40 +612,25 @@ def atomic_entries_insert(
     )
     refresh_materialized_views(
         table_name_builder,
-        ClickHouseMaterializedView.for_dataset_type_atomic_entries_insert_refreshable(
+        ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries_refreshable(
             dataset_type,
         ),
         staging=True,
     )
     replace_project_partitions(
         table_name_builder,
-        ClickHouseTable.for_dataset_type_atomic_entries_insert_project_partitioned(
+        ClickHouseTable.for_dataset_type_atomic_insert_entries_project_partitioned(
             dataset_type,
         ),
         project_guids,
     )
-    exchange_entities(
+    exchange_tables(
         table_name_builder,
-        ClickHouseTable.for_dataset_type_atomic_entries_insert_unpartitioned(
+        ClickHouseTable.for_dataset_type_atomic_insert_entries_unpartitioned(
             dataset_type,
         ),
     )
-    # Very important nuance here... the staged dictionary
-    # source tables are production tables, so the
-    # dictionary reload must happen 'after' the preceeding
-    # exchange entity statement.  I (bpb) made several
-    # attempts to have a staging dictionary source
-    # a staging gt_stats table, but ran into issues with
-    # the dictionary "EXCHANGE" leaving the query source
-    # unmodified.  We ended up with a production dictionary
-    # pointing at a staging source and a staging dictionary
-    # pointing at a production source... which is not desired
-    # behavior.
     reload_dictionaries(
-        table_name_builder,
-        ClickHouseDictionary.for_dataset_type(dataset_type),
-    )
-    exchange_entities(
         table_name_builder,
         ClickHouseDictionary.for_dataset_type(dataset_type),
     )
@@ -666,11 +651,7 @@ def load_complete_run(
         dataset_type,
         run_id,
     )
-    for clickhouse_table in ClickHouseTable:
-        if not clickhouse_table.should_load(
-            dataset_type,
-        ):
-            continue
+    for clickhouse_table in ClickHouseTable.for_dataset_type(dataset_type):
         clickhouse_table.insert(
             table_name_builder=table_name_builder,
             project_guids=project_guids,
