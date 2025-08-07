@@ -1,20 +1,20 @@
 import os
-
 from collections import defaultdict
 
 import hailtop.fs as hfs
 
 from v03_pipeline.lib.misc.retry import retry
 from v03_pipeline.lib.model.dataset_type import DatasetType
+from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import (
     clickhouse_load_fail_file_path,
     clickhouse_load_success_file_path,
+    loading_pipeline_queue_dir,
     pipeline_run_success_file_path,
-    loading_pipeline_queue_dir
 )
-from v03_pipeline.lib.model.environment import Env
 
-def get_oldest_queue_path() -> str|None:
+
+def get_oldest_queue_path() -> str | None:
     """
     Returns the path of the oldest loading pipeline request file in the queue directory.
     If the directory is empty, returns None.
@@ -25,12 +25,14 @@ def get_oldest_queue_path() -> str|None:
         return None
     return queue_dir + '/' + min(queue_files, key=os.path.getctime)
 
+
 def is_queue_full() -> bool:
     """
     Checks if the loading pipeline queue directory is full.
     Returns True if the number of files exceeds a predefined limit, otherwise False.
     """
     return len(os.listdir(loading_pipeline_queue_dir())) >= Env.LOADING_QUEUE_LIMIT
+
 
 @retry()
 def get_run_ids() -> tuple[defaultdict, defaultdict, defaultdict]:
