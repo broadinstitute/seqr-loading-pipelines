@@ -95,7 +95,7 @@ class ClickHouseTable(StrEnum):
         ]
 
     @classmethod
-    def for_dataset_type_additional_annotations_tables(
+    def for_dataset_type_disk_backed_annotations_tables(
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseTable']:
@@ -538,16 +538,9 @@ def direct_insert_annotations(
         )
         """,
     )
-    logged_query(
-        f"""
-        INSERT INTO {dst_table}
-        SELECT {ClickHouseTable.ANNOTATIONS_MEMORY.select_fields}
-        FROM {src_table} WHERE {ClickHouseTable.ANNOTATIONS_MEMORY.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
-        """,
-    )
     for (
         clickhouse_table
-    ) in ClickHouseTable.for_dataset_type_additional_annotations_tables(
+    ) in ClickHouseTable.for_dataset_type_disk_backed_annotations_tables(
         table_name_builder.dataset_type,
     ):
         dst_table = table_name_builder.dst_table(clickhouse_table)
@@ -559,6 +552,13 @@ def direct_insert_annotations(
             FROM {src_table} WHERE {clickhouse_table.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
             """,
         )
+    logged_query(
+        f"""
+        INSERT INTO {dst_table}
+        SELECT {ClickHouseTable.ANNOTATIONS_MEMORY.select_fields}
+        FROM {src_table} WHERE {ClickHouseTable.ANNOTATIONS_MEMORY.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
+        """,
+    )
     drop_staging_db()
 
 
