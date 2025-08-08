@@ -238,6 +238,15 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         client.execute(
             f"""
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/annotations_disk` (
+                key UInt32,
+                variantId String,
+            ) ENGINE = EmbeddedRocksDB()
+            PRIMARY KEY `key`
+        """,
+        )
+        client.execute(
+            f"""
             CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/key_lookup` (
                 variantId String,
                 key UInt32,
@@ -1034,6 +1043,14 @@ class ClickhouseTest(MockedDatarootTestCase):
            SELECT COUNT(*)
            FROM
            {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/annotations_memory`
+           """,
+        )[0][0]
+        self.assertEqual(annotations_disk_count, 4)
+        annotations_disk_count = client.execute(
+            f"""
+           SELECT COUNT(*)
+           FROM
+           {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/annotations_disk`
            """,
         )[0][0]
         self.assertEqual(annotations_disk_count, 4)
