@@ -514,30 +514,45 @@ def direct_insert_annotations(
         CREATE DATABASE {STAGING_CLICKHOUSE_DATABASE}
         """,
     )
-    # NB: Unfortunately there's a bug(?) or inaccuracy if this is attempted without an intermediate
-    # temporary table, likely due to writing to a table and joining against it at the same time.
-    logged_query(
-        f"""
-        CREATE TABLE {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys` ENGINE = Set AS (
-            SELECT {ClickHouseTable.ANNOTATIONS_MEMORY.key_field}
-            FROM {src_table} src
-            LEFT ANTI JOIN {dst_table} dst
-            ON {ClickHouseTable.ANNOTATIONS_MEMORY.join_condition}
+    disk_backed_annotations_tables = (
+        ClickHouseTable.for_dataset_type_disk_backed_annotations_tables(
+            table_name_builder.dataset_type,
         )
-        """,
     )
-    for (
-        clickhouse_table
-    ) in ClickHouseTable.for_dataset_type_disk_backed_annotations_tables(
-        table_name_builder.dataset_type,
-    ):
-        disk_backed_dst_table = table_name_builder.dst_table(clickhouse_table)
-        disk_backed_src_table = table_name_builder.src_table(clickhouse_table)
+    if disk_backed_annotations_tables:
+        # NB: Unfortunately there's a bug(?) or inaccuracy if this is attempted without an intermediate
+        # temporary table, likely due to writing to a table and joining against it at the same time.
         logged_query(
             f"""
-            INSERT INTO {disk_backed_dst_table}
-            SELECT {clickhouse_table.select_fields}
-            FROM {disk_backed_src_table} WHERE {clickhouse_table.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
+            CREATE TABLE {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys` ENGINE = Set AS (
+                SELECT {ClickHouseTable.ANNOTATIONS_MEMORY.key_field}
+                FROM {src_table} src
+                LEFT ANTI JOIN {dst_table} dst
+                ON {ClickHouseTable.ANNOTATIONS_MEMORY.join_condition}
+            )
+            """,
+        )
+        for clickhouse_table in disk_backed_annotations_tables:
+            disk_backed_dst_table = table_name_builder.dst_table(clickhouse_table)
+            disk_backed_src_table = table_name_builder.src_table(clickhouse_table)
+            logged_query(
+                f"""
+                INSERT INTO {disk_backed_dst_table}
+                SELECT {clickhouse_table.select_fields}
+                FROM {disk_backed_src_table} WHERE {clickhouse_table.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
+                """,
+            )
+    else:
+        key_field = ClickHouseTable.ANNOTATIONS_MEMORY.key_field
+        # NB: Join tables do not support LEFT ANTI JOIN
+        logged_query(
+            f"""
+            CREATE TABLE {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys` ENGINE = Set AS (
+                SELECT {key_field}
+                FROM {src_table} src
+                WHERE {key_field}
+                NOT IN (SELECT {key_field} FROM {dst_table})
+            )
             """,
         )
     logged_query(
