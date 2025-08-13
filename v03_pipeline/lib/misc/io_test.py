@@ -171,3 +171,31 @@ class IOTest(unittest.TestCase):
             False,
             1,
         )
+
+    def test_split_multi_failure_ad_length(self) -> None:
+        self.assertRaisesRegex(
+            SeqrValidationError,
+            'Your callset failed while attempting to split multiallelic sites.  This error can occur if the provided Allele Depth \\(AD\\) field does not match the length of the multiallelic site.',
+            split_multi_hts,
+            hl.MatrixTable.from_parts(
+                rows={
+                    'locus': [
+                        hl.Locus(
+                            contig='chr1',
+                            position=1,
+                            reference_genome='GRCh38',
+                        ),
+                    ],
+                    'alleles': [
+                        ['GAC', 'G', 'GTTTTTTTTTTTTTTTAC'],
+                    ],
+                },
+                cols={'s': ['sample_1']},
+                entries={
+                    'GQ': [[99]],
+                    'AD': [[[0, 1]]],
+                },
+            ).key_rows_by('locus', 'alleles'),
+            False,
+            1,
+        )
