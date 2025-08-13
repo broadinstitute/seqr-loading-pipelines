@@ -31,6 +31,7 @@ STAGING_CLICKHOUSE_DATABASE = 'staging'
 class ClickHouseTable(StrEnum):
     ANNOTATIONS_DISK = 'annotations_disk'
     ANNOTATIONS_MEMORY = 'annotations_memory'
+    GNOMAD_GENOMES = 'gnomad_genomes'
     KEY_LOOKUP = 'key_lookup'
     TRANSCRIPTS = 'transcripts'
     ENTRIES = 'entries'
@@ -42,6 +43,7 @@ class ClickHouseTable(StrEnum):
         return {
             ClickHouseTable.ANNOTATIONS_DISK: new_variants_parquet_path,
             ClickHouseTable.ANNOTATIONS_MEMORY: new_variants_parquet_path,
+            ClickHouseTable.GNOMAD_GENOMES: new_variants_parquet_path,
             ClickHouseTable.KEY_LOOKUP: new_variants_parquet_path,
             ClickHouseTable.TRANSCRIPTS: new_transcripts_parquet_path,
             ClickHouseTable.ENTRIES: new_entries_parquet_path,
@@ -60,14 +62,27 @@ class ClickHouseTable(StrEnum):
         )
 
     @property
-    def select_fields(self):
-        return 'variantId, key' if self == ClickHouseTable.KEY_LOOKUP else '*'
+    def select_fields(self) -> str:
+        return {
+            ClickHouseTable.GNOMAD_GENOMES: 'key, populations.gnomad_genomes.filter_af',
+            ClickHouseTable.KEY_LOOKUP: 'variantId, key',
+        }.get(self, '*')
+
+    @property
+    def insert_condition(self) -> str:
+        return {
+            ClickHouseTable.GNOMAD_GENOMES: 'WHERE populations.gnomad_genomes.filter_af > 0',
+        }.get(self, '')
 
     @property
     def insert(self) -> Callable:
         return {
             ClickHouseTable.ANNOTATIONS_MEMORY: direct_insert_annotations,
             ClickHouseTable.ENTRIES: atomic_insert_entries,
+            ClickHouseTable.GNOMAD_GENOMES: functools.partial(
+                direct_insert_all_keys,
+                clickhouse_table=self,
+            ),
             ClickHouseTable.KEY_LOOKUP: functools.partial(
                 direct_insert_all_keys,
                 clickhouse_table=self,
@@ -88,6 +103,11 @@ class ClickHouseTable(StrEnum):
             tables = [
                 *tables,
                 ClickHouseTable.TRANSCRIPTS,
+            ]
+        if dataset_type == DatasetType.SNV_INDEL:
+            tables = [
+                *tables,
+                ClickHouseTable.GNOMAD_GENOMES,
             ]
         return [
             *tables,
@@ -138,6 +158,7 @@ class ClickHouseTable(StrEnum):
 
 
 class ClickHouseDictionary(StrEnum):
+    GNOMAD_GENOMES_DICT = 'gnomad_genomes_dict'
     GT_STATS_DICT = 'gt_stats_dict'
 
     @classmethod
@@ -145,9 +166,12 @@ class ClickHouseDictionary(StrEnum):
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseDictionary']:
-        if dataset_type == DatasetType.GCNV:
-            return []
-        return list(cls)
+        return {
+            DatasetType.SNV_INDEL: list(cls),
+            DatasetType.MITO: [ClickHouseDictionary.GT_STATS_DICT],
+            DatasetType.SV: [ClickHouseDictionary.GT_STATS_DICT],
+            DatasetType.GCNV: [],
+        }[dataset_type]
 
 
 class ClickHouseMaterializedView(StrEnum):
@@ -563,6 +587,7 @@ def direct_insert_all_keys(
         INSERT INTO {dst_table}
         SELECT {clickhouse_table.select_fields}
         FROM {src_table}
+        {clickhouse_table.insert_condition}
         """,
     )
 
@@ -630,10 +655,6 @@ def atomic_insert_entries(
             dataset_type,
         ),
     )
-    reload_dictionaries(
-        table_name_builder,
-        ClickHouseDictionary.for_dataset_type(dataset_type),
-    )
     drop_staging_db()
 
 
@@ -657,6 +678,10 @@ def load_complete_run(
             project_guids=project_guids,
             family_guids=family_guids,
         )
+    reload_dictionaries(
+        table_name_builder,
+        ClickHouseDictionary.for_dataset_type(dataset_type),
+    )
     refresh_materialized_views(
         table_name_builder,
         ClickHouseMaterializedView.for_dataset_type_refreshable(

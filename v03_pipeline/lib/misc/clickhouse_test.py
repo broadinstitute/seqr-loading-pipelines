@@ -1,3 +1,4 @@
+from decimal import Decimal
 import os
 from unittest.mock import patch
 
@@ -184,7 +185,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             PRIMARY KEY key
             SOURCE(
                 CLICKHOUSE(
-                    USER {Env.CLICKHOUSE_WRITER_USER} PASSWORD {Env.CLICKHOUSE_WRITER_PASSWORD or "''"}
+                    USER {Env.CLICKHOUSE_WRITER_USER} PASSWORD {Env.CLICKHOUSE_WRITER_PASSWORD}
                     DB {Env.CLICKHOUSE_DATABASE} TABLE `GRCh38/SNV_INDEL/gt_stats`
                 )
             )
@@ -198,6 +199,33 @@ class ClickhouseTest(MockedDatarootTestCase):
             REFRESH EVERY 10 YEAR ENGINE = Null
             AS SELECT *
             FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup`
+            """,
+        )
+        client.execute(
+            f"""
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gnomad_genomes` (
+                `key` UInt32,
+                `filter_af` Decimal(9, 5)
+            ) ENGINE = ReplacingMergeTree()
+            PRIMARY KEY `key`
+        """,
+        )
+        client.execute(
+            f"""
+            CREATE DICTIONARY {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gnomad_genomes_dict`
+            (
+                `key` UInt32,
+                `filter_af` Decimal(9, 5)
+            )
+            PRIMARY KEY key
+            SOURCE(
+                CLICKHOUSE(
+                    USER {Env.CLICKHOUSE_WRITER_USER} PASSWORD {Env.CLICKHOUSE_WRITER_PASSWORD}
+                    DB {Env.CLICKHOUSE_DATABASE} TABLE `GRCh38/SNV_INDEL/gnomad_genomes`
+                )
+            )
+            LIFETIME(0)
+            LAYOUT(FLAT(MAX_ARRAY_SIZE 10000))
             """,
         )
         client.execute(
@@ -294,6 +322,12 @@ class ClickhouseTest(MockedDatarootTestCase):
                     '2-4-A-T',
                     'Y-9-A-C',
                     'M-2-C-G',
+                ],
+                'populations': [
+                    {'gnomad_genomes': {'filter_af': None}},
+                    {'gnomad_genomes': {'filter_af': 0.1}},
+                    {'gnomad_genomes': {'filter_af': 0.01}},
+                    {'gnomad_genomes': {'filter_af': 0.001}},
                 ],
             },
         )
@@ -1026,6 +1060,21 @@ class ClickhouseTest(MockedDatarootTestCase):
                 (11, '2-4-A-T'),
                 (12, 'Y-9-A-C'),
                 (13, 'M-2-C-G'),
+            ],
+        )
+        gnomad_genomes_dict = client.execute(
+            f"""
+           SELECT *
+           FROM
+           {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gnomad_genomes_dict`
+           """,
+        )
+        self.assertCountEqual(
+            gnomad_genomes_dict,
+            [
+                (11, Decimal('0.1')),
+                (12, Decimal('0.01')),
+                (13, Decimal('0.001')),
             ],
         )
 
