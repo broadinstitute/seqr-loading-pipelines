@@ -76,6 +76,7 @@ def compute_hail_n_partitions(file_size_b: int) -> int:
 @validated_hl_function(
     {
         'RVD error! Keys found out of order': 'Your callset failed while attempting to split multiallelic sites.  This error can occur if the dataset contains both multiallelic variants and duplicated loci.',
+        'array index out of bounds': 'Your callset failed while attempting to split multiallelic sites.  This error can occur if the provided Allele Depth (AD) field does not match the length of the multiallelic site.',
     },
 )
 def split_multi_hts(
