@@ -1,10 +1,11 @@
-import hail as hl
-import hailtop.fs as hfs
 import gzip
 
+import hail as hl
+import hailtop.fs as hfs
+
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
-from v03_pipeline.lib.tasks.exports.misc import reformat_transcripts_for_export
 from v03_pipeline.lib.model.constants import DB_ID_TO_GENE_ID
+from v03_pipeline.lib.tasks.exports.misc import reformat_transcripts_for_export
 
 DB_ID_OFFSET = 720490
 DB_ID_TO_GENE_ID_LOOKUP = hl.dict(
@@ -12,7 +13,7 @@ DB_ID_TO_GENE_ID_LOOKUP = hl.dict(
         (gene_id, int(db_id) - DB_ID_OFFSET)
         for line in gzip.decompress(hfs.open(DB_ID_TO_GENE_ID, 'rb').read()).split()
         for db_id, gene_id in [line.decode().split(',', 1)]
-    ]
+    ],
 )
 FIVE_PERCENT = 0.05
 STANDARD_CONTIGS = hl.set(
@@ -174,8 +175,8 @@ def get_entries_export_fields(
         **(
             {
                 'geneId_ids': hl.set(ht.sorted_transcript_consequences.gene_id).map(
-                    lambda x: DB_ID_TO_GENE_ID_LOOKUP[x]
-                )
+                    lambda x: DB_ID_TO_GENE_ID_LOOKUP[x],
+                ),
             }
             if dataset_type == DatasetType.SNV_INDEL
             else {}

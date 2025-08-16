@@ -66,6 +66,8 @@ class ClickhouseTest(MockedDatarootTestCase):
                 `family_guid` String,
                 `xpos` UInt64 CODEC(Delta(8), ZSTD(1)),
                 `sample_type` Enum8('WES' = 0, 'WGS' = 1),
+                `is_annotated_in_any_gene` Boolean,
+                `geneId_ids` AggregateFunction(groupBitmap, UInt16),
                 `calls` Array(
                     Tuple(
                         sampleId String,
@@ -76,7 +78,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 PROJECTION xpos_projection
                 (
                     SELECT *
-                    ORDER BY xpos
+                    ORDER BY is_annotated_in_any_gene, xpos
                 )
             )
             ENGINE = CollapsingMergeTree(sign)
@@ -372,6 +374,16 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'WES',
                     'WES',
                 ],
+                'is_annotated_in_any_gene': [
+                    True,
+                    False,
+                    True,
+                ],
+                'geneId_ids': [
+                    [],
+                    [123, 12],
+                    [1],
+                ],
                 'calls': [
                     [('sample_d1', 0), ('sample_d11', 2)],
                     [('sample_d2', 0)],
@@ -391,6 +403,8 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ('family_guid', pa.string()),
                 ('xpos', pa.int64()),
                 ('sample_type', pa.string()),
+                ('is_annotated_in_any_gene', pa.bool_()),
+                ('geneId_ids', pa.list_(pa.int64())),
                 (
                     'calls',
                     pa.list_(
@@ -410,13 +424,13 @@ class ClickhouseTest(MockedDatarootTestCase):
             schema,
         )
         write_test_parquet(
-            df,
+            df.drop('is_annotated_in_any_gene', axis=1).drop('geneId_ids', axis=1),
             new_entries_parquet_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.GCNV,
                 TEST_RUN_ID,
             ),
-            schema,
+            schema.remove(5).remove(5),
         )
 
     def tearDown(self):

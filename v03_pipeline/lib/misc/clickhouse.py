@@ -31,7 +31,6 @@ STAGING_CLICKHOUSE_DATABASE = 'staging'
 class ClickHouseTable(StrEnum):
     ANNOTATIONS_DISK = 'annotations_disk'
     ANNOTATIONS_MEMORY = 'annotations_memory'
-    GNOMAD_GENOMES = 'gnomad_genomes'
     KEY_LOOKUP = 'key_lookup'
     TRANSCRIPTS = 'transcripts'
     ENTRIES = 'entries'
@@ -43,7 +42,6 @@ class ClickHouseTable(StrEnum):
         return {
             ClickHouseTable.ANNOTATIONS_DISK: new_variants_parquet_path,
             ClickHouseTable.ANNOTATIONS_MEMORY: new_variants_parquet_path,
-            ClickHouseTable.GNOMAD_GENOMES: new_variants_parquet_path,
             ClickHouseTable.KEY_LOOKUP: new_variants_parquet_path,
             ClickHouseTable.TRANSCRIPTS: new_transcripts_parquet_path,
             ClickHouseTable.ENTRIES: new_entries_parquet_path,
@@ -64,25 +62,14 @@ class ClickHouseTable(StrEnum):
     @property
     def select_fields(self) -> str:
         return {
-            ClickHouseTable.GNOMAD_GENOMES: 'key, populations.gnomad_genomes.filter_af',
             ClickHouseTable.KEY_LOOKUP: 'variantId, key',
         }.get(self, '*')
-
-    @property
-    def insert_condition(self) -> str:
-        return {
-            ClickHouseTable.GNOMAD_GENOMES: 'WHERE populations.gnomad_genomes.filter_af > 0',
-        }.get(self, '')
 
     @property
     def insert(self) -> Callable:
         return {
             ClickHouseTable.ANNOTATIONS_MEMORY: direct_insert_annotations,
             ClickHouseTable.ENTRIES: atomic_insert_entries,
-            ClickHouseTable.GNOMAD_GENOMES: functools.partial(
-                direct_insert_all_keys,
-                clickhouse_table=self,
-            ),
             ClickHouseTable.KEY_LOOKUP: functools.partial(
                 direct_insert_all_keys,
                 clickhouse_table=self,
@@ -103,11 +90,6 @@ class ClickHouseTable(StrEnum):
             tables = [
                 *tables,
                 ClickHouseTable.TRANSCRIPTS,
-            ]
-        if dataset_type == DatasetType.SNV_INDEL:
-            tables = [
-                *tables,
-                ClickHouseTable.GNOMAD_GENOMES,
             ]
         return [
             *tables,
@@ -158,7 +140,6 @@ class ClickHouseTable(StrEnum):
 
 
 class ClickHouseDictionary(StrEnum):
-    GNOMAD_GENOMES_DICT = 'gnomad_genomes_dict'
     GT_STATS_DICT = 'gt_stats_dict'
 
     @classmethod
@@ -368,7 +349,10 @@ def insert_new_entries(
     logged_query(
         f"""
         INSERT INTO {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)}
-        SELECT *
+        SELECT COLUMNS('.*')
+        REPLACE(
+            bitmapBuild(arrayMap(x -> toUInt16(assumeNotNull(x)), geneId_ids)) AS geneId_ids
+        )
         FROM {table_name_builder.src_table(ClickHouseTable.ENTRIES)}
         """,
     )
@@ -587,7 +571,6 @@ def direct_insert_all_keys(
         INSERT INTO {dst_table}
         SELECT {clickhouse_table.select_fields}
         FROM {src_table}
-        {clickhouse_table.insert_condition}
         """,
     )
 
