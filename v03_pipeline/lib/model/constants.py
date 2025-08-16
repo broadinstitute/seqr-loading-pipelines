@@ -23,3 +23,8 @@ GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = (
     if os.environ.get('HAIL_DATAPROC') == '1'
     else 'v03_pipeline/var/liftover/grch38_to_grch37.over.chain.gz'
 )
+DB_ID_TO_GENE_ID = (
+    'gs://seqr-reference-data/v3.1/db_id_to_gene_id.csv.gz'
+    if os.environ.get('HAIL_DATAPROC') == '1'
+    else 'v03_pipeline/var/db_id_to_gene_id.csv.gz'
+)
