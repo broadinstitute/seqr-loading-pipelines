@@ -7,10 +7,9 @@ from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.model.constants import DB_ID_TO_GENE_ID
 from v03_pipeline.lib.tasks.exports.misc import reformat_transcripts_for_export
 
-DB_ID_OFFSET = 720490
 DB_ID_TO_GENE_ID_LOOKUP = hl.dict(
     [
-        (gene_id, int(db_id) - DB_ID_OFFSET)
+        (gene_id, int(db_id))
         for line in gzip.decompress(hfs.open(DB_ID_TO_GENE_ID, 'rb').read()).split()
         for db_id, gene_id in [line.decode().split(',', 1)]
     ],

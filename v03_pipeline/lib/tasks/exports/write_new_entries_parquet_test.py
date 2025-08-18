@@ -111,7 +111,7 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
                     'xpos': 1000876499,
                     'is_gnomad_gt_5_percent': True,
                     'is_annotated_in_any_gene': True,
-                    'geneId_ids': [58],
+                    'geneId_ids': [720548],
                     'filters': [],
                     'calls': [
                         {
@@ -146,7 +146,7 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
                     'xpos': 1000878314,
                     'is_gnomad_gt_5_percent': False,
                     'is_annotated_in_any_gene': True,
-                    'geneId_ids': [58],
+                    'geneId_ids': [720548],
                     'filters': ['VQSRTrancheSNP99.00to99.90'],
                     'calls': [
                         {

@@ -351,7 +351,7 @@ def insert_new_entries(
         INSERT INTO {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)}
         SELECT COLUMNS('.*')
         REPLACE(
-            bitmapBuild(arrayMap(x -> toUInt16(assumeNotNull(x)), geneId_ids)) AS geneId_ids
+            bitmapBuild(arrayMap(x -> toUInt32(assumeNotNull(x)), geneId_ids)) AS geneId_ids
         )
         FROM {table_name_builder.src_table(ClickHouseTable.ENTRIES)}
         """,
