@@ -1,5 +1,4 @@
 import os
-from decimal import Decimal
 from unittest.mock import patch
 
 import pandas as pd
@@ -66,6 +65,8 @@ class ClickhouseTest(MockedDatarootTestCase):
                 `family_guid` String,
                 `xpos` UInt64 CODEC(Delta(8), ZSTD(1)),
                 `sample_type` Enum8('WES' = 0, 'WGS' = 1),
+                `is_annotated_in_any_gene` Boolean,
+                `geneId_ids` AggregateFunction(groupBitmap, UInt32),
                 `calls` Array(
                     Tuple(
                         sampleId String,
@@ -76,7 +77,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 PROJECTION xpos_projection
                 (
                     SELECT *
-                    ORDER BY xpos
+                    ORDER BY is_annotated_in_any_gene, xpos
                 )
             )
             ENGINE = CollapsingMergeTree(sign)
@@ -199,33 +200,6 @@ class ClickhouseTest(MockedDatarootTestCase):
             REFRESH EVERY 10 YEAR ENGINE = Null
             AS SELECT *
             FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup`
-            """,
-        )
-        client.execute(
-            f"""
-            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gnomad_genomes` (
-                `key` UInt32,
-                `filter_af` Decimal(9, 5)
-            ) ENGINE = ReplacingMergeTree()
-            PRIMARY KEY `key`
-        """,
-        )
-        client.execute(
-            f"""
-            CREATE DICTIONARY {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gnomad_genomes_dict`
-            (
-                `key` UInt32,
-                `filter_af` Decimal(9, 5)
-            )
-            PRIMARY KEY key
-            SOURCE(
-                CLICKHOUSE(
-                    USER {Env.CLICKHOUSE_WRITER_USER} PASSWORD {Env.CLICKHOUSE_WRITER_PASSWORD}
-                    DB {Env.CLICKHOUSE_DATABASE} TABLE `GRCh38/SNV_INDEL/gnomad_genomes`
-                )
-            )
-            LIFETIME(0)
-            LAYOUT(FLAT(MAX_ARRAY_SIZE 10000))
             """,
         )
         client.execute(
@@ -372,6 +346,16 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'WES',
                     'WES',
                 ],
+                'is_annotated_in_any_gene': [
+                    True,
+                    False,
+                    True,
+                ],
+                'geneId_ids': [
+                    [],
+                    [123, 12],
+                    [1],
+                ],
                 'calls': [
                     [('sample_d1', 0), ('sample_d11', 2)],
                     [('sample_d2', 0)],
@@ -391,6 +375,8 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ('family_guid', pa.string()),
                 ('xpos', pa.int64()),
                 ('sample_type', pa.string()),
+                ('is_annotated_in_any_gene', pa.bool_()),
+                ('geneId_ids', pa.list_(pa.int64())),
                 (
                     'calls',
                     pa.list_(
@@ -410,13 +396,13 @@ class ClickhouseTest(MockedDatarootTestCase):
             schema,
         )
         write_test_parquet(
-            df,
+            df.drop('is_annotated_in_any_gene', axis=1).drop('geneId_ids', axis=1),
             new_entries_parquet_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.GCNV,
                 TEST_RUN_ID,
             ),
-            schema,
+            schema.remove(5).remove(5),
         )
 
     def tearDown(self):
@@ -509,144 +495,25 @@ class ClickhouseTest(MockedDatarootTestCase):
         # to validate the state after each step.
         client = get_clickhouse_client()
         client.execute(
-            f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries` VALUES',
-            [
-                (
-                    0,
-                    'project_a',
-                    'family_a1',
-                    123456789,
-                    'WES',
-                    [('sample_a1', 'HOM')],
-                    1,
-                ),
-                (
-                    1,
-                    'project_a',
-                    'family_a2',
-                    123456789,
-                    'WGS',
-                    [('sample_a2', 'HET')],
-                    1,
-                ),
-                (
-                    2,
-                    'project_a',
-                    'family_a3',
-                    133456789,
-                    'WGS',
-                    [('sample_a3', 'HOM')],
-                    1,
-                ),
-                (
-                    3,
-                    'project_a',
-                    'family_a4',
-                    133456789,
-                    'WES',
-                    [('sample_a4', 'REF')],
-                    1,
-                ),
-                (
-                    4,
-                    'project_a',
-                    'family_a5',
-                    133456789,
-                    'WES',
-                    [('sample_a5', 'REF'), ('sample_a6', 'HET'), ('sample_a7', 'REF')],
-                    1,
-                ),
-                (
-                    4,
-                    'project_a',
-                    'family_a6',
-                    133456789,
-                    'WGS',
-                    [('sample_a8', 'HOM')],
-                    1,
-                ),
-                (
-                    0,
-                    'project_b',
-                    'family_b1',
-                    123456789,
-                    'WES',
-                    [('sample_b4', 'REF')],
-                    1,
-                ),
-                (
-                    1,
-                    'project_b',
-                    'family_b2',
-                    123456789,
-                    'WES',
-                    [('sample_b5', 'HET')],
-                    1,
-                ),
-                (
-                    2,
-                    'project_b',
-                    'family_b2',
-                    123456789,
-                    'WES',
-                    [('sample_b5', 'REF')],
-                    1,
-                ),
-                (
-                    3,
-                    'project_b',
-                    'family_b3',
-                    133456789,
-                    'WES',
-                    [('sample_b6', 'HOM')],
-                    1,
-                ),
-                (
-                    4,
-                    'project_b',
-                    'family_b3',
-                    133456789,
-                    'WES',
-                    [('sample_b6', 'HOM')],
-                    1,
-                ),
-                (
-                    0,
-                    'project_c',
-                    'family_c1',
-                    123456789,
-                    'WES',
-                    [('sample_c7', 'REF')],
-                    1,
-                ),
-                (
-                    3,
-                    'project_c',
-                    'family_c2',
-                    123456789,
-                    'WES',
-                    [('sample_c8', 'REF')],
-                    1,
-                ),
-                (
-                    4,
-                    'project_c',
-                    'family_c3',
-                    133456789,
-                    'WES',
-                    [('sample_c9', 'HOM')],
-                    1,
-                ),
-                (
-                    5,
-                    'project_c',
-                    'family_c4',
-                    133456789,
-                    'WES',
-                    [('sample_c9', 'HOM')],
-                    1,
-                ),
-            ],
+            f"""
+            INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries`
+            VALUES
+            (0, 'project_a', 'family_a1', 123456789, 'WES', 0, bitmapBuild(CAST([] AS Array(UInt32))), [('sample_a1','HOM')], 1),
+            (1, 'project_a', 'family_a2', 123456789, 'WGS', 0, bitmapBuild(CAST([] AS Array(UInt32))), [('sample_a2','HET')], 1),
+            (2, 'project_a', 'family_a3', 133456789, 'WGS', 0, bitmapBuild(CAST([] AS Array(UInt32))), [('sample_a3','HOM')], 1),
+            (3, 'project_a', 'family_a4', 133456789, 'WES', 0, bitmapBuild(CAST([] AS Array(UInt32))), [('sample_a4','REF')], 1),
+            (4, 'project_a', 'family_a5', 133456789, 'WES', 1, bitmapBuild(CAST([0] AS Array(UInt32))), [('sample_a5','REF'),('sample_a6','HET'),('sample_a7','REF')], 1),
+            (4, 'project_a', 'family_a6', 133456789, 'WGS', 0, bitmapBuild(CAST([] AS Array(UInt32))), [('sample_a8','HOM')], 1),
+            (0, 'project_b', 'family_b1', 123456789, 'WES', 0, bitmapBuild(CAST([] AS Array(UInt32))), [('sample_b4','REF')], 1),
+            (1, 'project_b', 'family_b2', 123456789, 'WES', 0, bitmapBuild(CAST([] AS Array(UInt32))), [('sample_b5','HET')], 1),
+            (2, 'project_b', 'family_b2', 123456789, 'WES', 0, bitmapBuild(CAST([] AS Array(UInt32))), [('sample_b5','REF')], 1),
+            (3, 'project_b', 'family_b3', 133456789, 'WES', 0, bitmapBuild(CAST([] AS Array(UInt32))), [('sample_b6','HOM')], 1),
+            (4, 'project_b', 'family_b3', 133456789, 'WES', 0, bitmapBuild(CAST([] AS Array(UInt32))), [('sample_b6','HOM')], 1),
+            (0, 'project_c', 'family_c1', 123456789, 'WES', 1, bitmapBuild(CAST([1] AS Array(UInt32))), [('sample_c7','REF')], 1),
+            (3, 'project_c', 'family_c2', 123456789, 'WES', 1, bitmapBuild(CAST([1] AS Array(UInt32))), [('sample_c8','REF')], 1),
+            (4, 'project_c', 'family_c3', 133456789, 'WES', 1, bitmapBuild(CAST([1] AS Array(UInt32))), [('sample_c9','HOM')], 1),
+            (5, 'project_c', 'family_c4', 133456789, 'WES', 1, bitmapBuild(CAST([1] AS Array(UInt32))), [('sample_c9','HOM')], 1)
+            """,
         )
         table_name_builder = TableNameBuilder(
             ReferenceGenome.GRCh38,
@@ -785,11 +652,15 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         new_entries = client.execute(
             f"""
-            SELECT *
+            SELECT COLUMNS('.*') EXCEPT(is_annotated_in_any_gene)
+            REPLACE(
+                bitmapToArray(geneId_ids) AS geneId_ids
+            )
             FROM
             {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries`
             """,
         )
+        self.maxDiff = None
         self.assertCountEqual(
             new_entries,
             [
@@ -799,6 +670,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'family_b1',
                     123456789,
                     'WES',
+                    [],
                     [('sample_b4', 'REF')],
                     1,
                 ),
@@ -808,6 +680,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'family_b2',
                     123456789,
                     'WES',
+                    [],
                     [('sample_b5', 'HET')],
                     1,
                 ),
@@ -817,6 +690,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'family_b2',
                     123456789,
                     'WES',
+                    [],
                     [('sample_b5', 'REF')],
                     1,
                 ),
@@ -826,6 +700,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'family_b3',
                     133456789,
                     'WES',
+                    [],
                     [('sample_b6', 'HOM')],
                     1,
                 ),
@@ -835,6 +710,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'family_b3',
                     133456789,
                     'WES',
+                    [],
                     [('sample_b6', 'HOM')],
                     1,
                 ),
@@ -844,6 +720,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'family_a2',
                     123456789,
                     'WGS',
+                    [],
                     [('sample_a2', 'HET')],
                     1,
                 ),
@@ -853,6 +730,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'family_a3',
                     133456789,
                     'WGS',
+                    [],
                     [('sample_a3', 'HOM')],
                     1,
                 ),
@@ -862,6 +740,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'family_a4',
                     133456789,
                     'WES',
+                    [],
                     [('sample_a4', 'REF')],
                     1,
                 ),
@@ -871,6 +750,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'family_d1',
                     123456789,
                     'WES',
+                    [],
                     [('sample_d1', 'REF'), ('sample_d11', 'HOM')],
                     1,
                 ),
@@ -880,6 +760,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'family_d2',
                     123456789,
                     'WES',
+                    [123, 12],
                     [('sample_d2', 'REF')],
                     1,
                 ),
@@ -889,6 +770,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'family_d3',
                     123456789,
                     'WES',
+                    [1],
                     [('sample_d3', 'HET')],
                     1,
                 ),
@@ -898,6 +780,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'family_c1',
                     123456789,
                     'WES',
+                    [1],
                     [('sample_c7', 'REF')],
                     1,
                 ),
@@ -907,6 +790,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'family_c2',
                     123456789,
                     'WES',
+                    [1],
                     [('sample_c8', 'REF')],
                     1,
                 ),
@@ -916,6 +800,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'family_c3',
                     133456789,
                     'WES',
+                    [1],
                     [('sample_c9', 'HOM')],
                     1,
                 ),
@@ -925,6 +810,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'family_c4',
                     133456789,
                     'WES',
+                    [1],
                     [('sample_c9', 'HOM')],
                     1,
                 ),
@@ -1060,21 +946,6 @@ class ClickhouseTest(MockedDatarootTestCase):
                 (11, '2-4-A-T'),
                 (12, 'Y-9-A-C'),
                 (13, 'M-2-C-G'),
-            ],
-        )
-        gnomad_genomes_dict = client.execute(
-            f"""
-           SELECT *
-           FROM
-           {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gnomad_genomes_dict`
-           """,
-        )
-        self.assertCountEqual(
-            gnomad_genomes_dict,
-            [
-                (11, Decimal('0.1')),
-                (12, Decimal('0.01')),
-                (13, Decimal('0.001')),
             ],
         )
 

@@ -1,8 +1,19 @@
+import gzip
+
 import hail as hl
+import hailtop.fs as hfs
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.model.constants import DB_ID_TO_GENE_ID
 from v03_pipeline.lib.tasks.exports.misc import reformat_transcripts_for_export
 
+DB_ID_TO_GENE_ID_LOOKUP = hl.dict(
+    [
+        (gene_id, int(db_id))
+        for line in gzip.decompress(hfs.open(DB_ID_TO_GENE_ID, 'rb').read()).split()
+        for db_id, gene_id in [line.decode().split(',', 1)]
+    ],
+)
 FIVE_PERCENT = 0.05
 STANDARD_CONTIGS = hl.set(
     [c.replace('MT', 'M') for c in ReferenceGenome.GRCh37.standard_contigs],
@@ -150,6 +161,20 @@ def get_entries_export_fields(
                 'is_gnomad_gt_5_percent': hl.or_else(
                     ht.gnomad_genomes.AF_POPMAX_OR_GLOBAL > FIVE_PERCENT,
                     False,
+                ),
+            }
+            if dataset_type == DatasetType.SNV_INDEL
+            else {}
+        ),
+        **(
+            {'is_annotated_in_any_gene': hl.len(ht.sorted_transcript_consequences) > 0}
+            if dataset_type == DatasetType.SNV_INDEL
+            else {}
+        ),
+        **(
+            {
+                'geneId_ids': hl.set(ht.sorted_transcript_consequences.gene_id).map(
+                    lambda x: DB_ID_TO_GENE_ID_LOOKUP[x],
                 ),
             }
             if dataset_type == DatasetType.SNV_INDEL
