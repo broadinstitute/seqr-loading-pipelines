@@ -173,8 +173,10 @@ def get_entries_export_fields(
         ),
         **(
             {
-                'geneId_ids': hl.set(ht.sorted_transcript_consequences.gene_id).map(
-                    lambda x: DB_ID_TO_GENE_ID_LOOKUP[x],
+                'geneId_ids': hl.set(
+                    ht.sorted_transcript_consequences.gene_id.map(
+                        lambda x: DB_ID_TO_GENE_ID_LOOKUP.get(x),
+                    ).filter(hl.is_defined),
                 ),
             }
             if dataset_type == DatasetType.SNV_INDEL
