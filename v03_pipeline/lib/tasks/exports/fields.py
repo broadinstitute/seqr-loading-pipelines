@@ -183,7 +183,7 @@ def get_entries_export_fields(
             else {}
         ),
         'filters': ht.filters,
-        'calls': ht.family_entries.map(
+        'calls': hl.sorted(ht.family_entries, key=lambda fe: fe.sampleId).map(
             lambda fe: get_calls_export_fields(ht, fe, dataset_type),
         ),
         'sign': 1,
