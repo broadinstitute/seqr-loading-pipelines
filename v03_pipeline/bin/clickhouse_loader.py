@@ -22,7 +22,7 @@ from v03_pipeline.lib.paths import (
 
 logger = get_logger(__name__)
 
-SLEEP_S = 10
+SLEEP_S = 120
 
 
 def signal_handler(*_):
