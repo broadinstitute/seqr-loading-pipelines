@@ -1,12 +1,6 @@
 from v03_pipeline.lib.tasks.clickhouse_migration.migrate_all_projects_to_clickhouse import (
     MigrateAllProjectsToClickHouseTask,
 )
-from v03_pipeline.lib.tasks.delete_family_table import DeleteFamilyTableTask
-from v03_pipeline.lib.tasks.delete_family_tables import DeleteFamilyTablesTask
-from v03_pipeline.lib.tasks.delete_project_family_tables import (
-    DeleteProjectFamilyTablesTask,
-)
-from v03_pipeline.lib.tasks.delete_project_tables import DeleteProjectTablesTask
 from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset import (
     UpdateVariantAnnotationsTableWithUpdatedReferenceDataset,
 )
@@ -14,22 +8,7 @@ from v03_pipeline.lib.tasks.run_pipeline import RunPipelineTask
 from v03_pipeline.lib.tasks.update_lookup_table import (
     UpdateLookupTableTask,
 )
-from v03_pipeline.lib.tasks.update_lookup_table_with_deleted_families import (
-    UpdateLookupTableWithDeletedFamiliesTask,
-)
-from v03_pipeline.lib.tasks.update_lookup_table_with_deleted_project import (
-    UpdateLookupTableWithDeletedProjectTask,
-)
 from v03_pipeline.lib.tasks.update_project_table import UpdateProjectTableTask
-from v03_pipeline.lib.tasks.update_project_tables_with_deleted_families import (
-    UpdateProjectTablesWithDeletedFamiliesTask,
-)
-from v03_pipeline.lib.tasks.update_variant_annotations_table_with_deleted_families import (
-    UpdateVariantAnnotationsTableWithDeletedFamiliesTask,
-)
-from v03_pipeline.lib.tasks.update_variant_annotations_table_with_deleted_project import (
-    UpdateVariantAnnotationsTableWithDeletedProjectTask,
-)
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
@@ -40,19 +19,10 @@ from v03_pipeline.lib.tasks.write_project_family_tables import (
 from v03_pipeline.lib.tasks.write_success_file import WriteSuccessFileTask
 
 __all__ = [
-    'DeleteFamilyTableTask',
-    'DeleteFamilyTablesTask',
-    'DeleteProjectFamilyTablesTask',
-    'DeleteProjectTablesTask',
     'MigrateAllProjectsToClickHouseTask',
     'RunPipelineTask',
     'UpdateLookupTableTask',
-    'UpdateLookupTableWithDeletedFamiliesTask',
-    'UpdateLookupTableWithDeletedProjectTask',
     'UpdateProjectTableTask',
-    'UpdateProjectTablesWithDeletedFamiliesTask',
-    'UpdateVariantAnnotationsTableWithDeletedFamiliesTask',
-    'UpdateVariantAnnotationsTableWithDeletedProjectTask',
     'UpdateVariantAnnotationsTableWithNewSamplesTask',
     'UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     'WriteMetadataForRunTask',
