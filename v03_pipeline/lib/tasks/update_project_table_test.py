@@ -4,6 +4,7 @@ import luigi.worker
 from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.update_project_table import UpdateProjectTableTask
+from v03_pipeline.lib.test.misc import copy_project_pedigree
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
@@ -16,6 +17,15 @@ TEST_RUN_ID = 'manual__2024-04-03'
 
 
 class UpdateProjectTableTaskTest(MockedDatarootTestCase):
+    def setUp(self):
+        copy_project_pedigree(
+            TEST_PEDIGREE_3_REMAP,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            SampleType.WGS,
+            'R0113_test_project',
+        )
+
     def test_update_project_table_task(self) -> None:
         worker = luigi.worker.Worker()
         upt_task = UpdateProjectTableTask(
@@ -25,7 +35,6 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=[TEST_PEDIGREE_3_REMAP],
             project_i=0,
             skip_validation=True,
         )
@@ -133,12 +142,19 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=[TEST_PEDIGREE_3_REMAP],
             project_i=0,
             skip_validation=True,
         )
         worker.add(upt_task)
         worker.run()
+        copy_project_pedigree(
+            TEST_PEDIGREE_3_DIFFERENT_FAMILIES,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            SampleType.WGS,
+            'R0113_test_project',
+        )
+
         upt_task = UpdateProjectTableTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
@@ -146,7 +162,6 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=[TEST_PEDIGREE_3_DIFFERENT_FAMILIES],
             project_i=0,
             skip_validation=True,
         )
