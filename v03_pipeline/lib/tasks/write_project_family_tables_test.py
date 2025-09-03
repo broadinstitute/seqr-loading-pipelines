@@ -9,7 +9,7 @@ from v03_pipeline.lib.paths import (
 from v03_pipeline.lib.tasks.write_project_family_tables import (
     WriteProjectFamilyTablesTask,
 )
-from v03_pipeline.lib.test.misc import copy_test_project_pedigree
+from v03_pipeline.lib.test.misc import copy_project_pedigree_to_mocked_dir
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
@@ -21,7 +21,7 @@ TEST_RUN_ID = 'manual__2024-04-03'
 
 class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
     def test_snv_write_project_family_tables_task(self) -> None:
-        copy_test_project_pedigree(
+        copy_project_pedigree_to_mocked_dir(
             TEST_PEDIGREE_4_REMAP,
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
@@ -93,7 +93,7 @@ class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
             ],
         )
 
-        copy_test_project_pedigree(
+        copy_project_pedigree_to_mocked_dir(
             TEST_PEDIGREE_4_SUBSET,
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,

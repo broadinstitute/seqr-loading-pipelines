@@ -37,7 +37,7 @@ from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
-from v03_pipeline.lib.test.misc import copy_test_project_pedigree
+from v03_pipeline.lib.test.misc import copy_project_pedigree_to_mocked_dir
 from v03_pipeline.lib.test.mock_clinvar_urls import mock_clinvar_urls
 from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
@@ -115,7 +115,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         self,
         mock_update_vat_with_rd_task,
     ) -> None:
-        copy_test_project_pedigree(
+        copy_project_pedigree_to_mocked_dir(
             TEST_PEDIGREE_3_REMAP,
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
@@ -288,7 +288,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 ),
                 overwrite=True,
             )
-            copy_test_project_pedigree(
+            copy_project_pedigree_to_mocked_dir(
                 TEST_PEDIGREE_3_REMAP,
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
@@ -351,7 +351,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 29,
             )
 
-            copy_test_project_pedigree(
+            copy_project_pedigree_to_mocked_dir(
                 TEST_PEDIGREE_4_REMAP,
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
@@ -584,7 +584,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         mock_register_alleles.side_effect = None
 
         with mock_clinvar_urls(ReferenceGenome.GRCh37):
-            copy_test_project_pedigree(
+            copy_project_pedigree_to_mocked_dir(
                 TEST_PEDIGREE_3_REMAP,
                 ReferenceGenome.GRCh37,
                 DatasetType.SNV_INDEL,
@@ -763,7 +763,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         mock_register_alleles.side_effect = None
 
         with mock_clinvar_urls():
-            copy_test_project_pedigree(
+            copy_project_pedigree_to_mocked_dir(
                 TEST_PEDIGREE_3_REMAP,
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
@@ -824,7 +824,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         mock_register_alleles.side_effect = None
 
         with mock_clinvar_urls():
-            copy_test_project_pedigree(
+            copy_project_pedigree_to_mocked_dir(
                 TEST_PEDIGREE_5,
                 ReferenceGenome.GRCh38,
                 DatasetType.MITO,
@@ -942,7 +942,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         mock_load_gencode: Mock,
     ) -> None:
         mock_load_gencode.return_value = GENE_ID_MAPPING
-        copy_test_project_pedigree(
+        copy_project_pedigree_to_mocked_dir(
             TEST_PEDIGREE_5,
             ReferenceGenome.GRCh38,
             DatasetType.SV,
@@ -1459,7 +1459,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 ),
             ],
         )
-        copy_test_project_pedigree(
+        copy_project_pedigree_to_mocked_dir(
             TEST_PEDIGREE_5,
             ReferenceGenome.GRCh38,
             DatasetType.SV,
@@ -1578,14 +1578,14 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         mock_load_gencode: Mock,
     ) -> None:
         mock_load_gencode.return_value = GENE_ID_MAPPING
-        copy_test_project_pedigree(
+        copy_project_pedigree_to_mocked_dir(
             TEST_PEDIGREE_10,
             ReferenceGenome.GRCh38,
             DatasetType.SV,
             SampleType.WGS,
             'R0116_test_project3',
         )
-        copy_test_project_pedigree(
+        copy_project_pedigree_to_mocked_dir(
             TEST_PEDIGREE_11,
             ReferenceGenome.GRCh38,
             DatasetType.SV,
@@ -1626,7 +1626,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
     def test_gcnv_update_vat_multiple(
         self,
     ) -> None:
-        copy_test_project_pedigree(
+        copy_project_pedigree_to_mocked_dir(
             TEST_PEDIGREE_5,
             ReferenceGenome.GRCh38,
             DatasetType.GCNV,
@@ -1766,7 +1766,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 ),
             ],
         )
-        copy_test_project_pedigree(
+        copy_project_pedigree_to_mocked_dir(
             TEST_PEDIGREE_8,
             ReferenceGenome.GRCh38,
             DatasetType.GCNV,

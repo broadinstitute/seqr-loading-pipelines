@@ -14,6 +14,7 @@ class MockedDatarootTestCase(unittest.TestCase):
         self.addCleanup(patcher.stop)  # https://stackoverflow.com/a/37534051
         for field_name in Env.__dataclass_fields__:
             if field_name.endswith('_DIR'):
+                print('mocked', field_name)
                 setattr(self.mock_env, field_name, tempfile.TemporaryDirectory().name)
 
     def tearDown(self) -> None:

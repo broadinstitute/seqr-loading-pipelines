@@ -17,7 +17,7 @@ def convert_ndarray_to_list(obj):
     return obj
 
 
-def copy_test_project_pedigree(
+def copy_project_pedigree_to_mocked_dir(
     pedigree_path: str,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
