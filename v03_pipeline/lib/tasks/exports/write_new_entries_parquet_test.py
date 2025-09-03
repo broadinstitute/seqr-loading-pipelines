@@ -321,6 +321,13 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
         )
 
     def test_gcnv_write_new_entries_parquet(self):
+        copy_project_pedigree(
+            TEST_PEDIGREE_5,
+            ReferenceGenome.GRCh38,
+            DatasetType.GCNV,
+            SampleType.WES,
+            'R0115_test_project2',
+        )
         worker = luigi.worker.Worker()
         task = WriteNewEntriesParquetTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -328,7 +335,6 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
             sample_type=SampleType.WES,
             callset_path=TEST_GCNV_BED_FILE,
             project_guids=['R0115_test_project2'],
-            project_pedigree_paths=[TEST_PEDIGREE_5],
             skip_validation=True,
             run_id=TEST_RUN_ID,
         )
