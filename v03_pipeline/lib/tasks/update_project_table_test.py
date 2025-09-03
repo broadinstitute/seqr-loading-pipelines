@@ -18,6 +18,7 @@ TEST_RUN_ID = 'manual__2024-04-03'
 
 class UpdateProjectTableTaskTest(MockedDatarootTestCase):
     def setUp(self):
+        super().setUp()
         copy_project_pedigree_to_mocked_dir(
             TEST_PEDIGREE_3_REMAP,
             ReferenceGenome.GRCh38,

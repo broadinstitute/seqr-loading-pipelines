@@ -17,6 +17,7 @@ TEST_RUN_ID = 'manual__2024-04-03'
 
 class UpdateLookupTableTest(MockedDatarootTestCase):
     def setUp(self):
+        super().setUp()
         for project_guid in ['R0555_seqr_demo', 'R0113_test_project']:
             copy_project_pedigree_to_mocked_dir(
                 TEST_PEDIGREE_3_REMAP,
