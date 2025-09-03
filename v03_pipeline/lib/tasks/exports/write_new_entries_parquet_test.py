@@ -14,7 +14,7 @@ from v03_pipeline.lib.paths import (
 from v03_pipeline.lib.tasks.exports.write_new_entries_parquet import (
     WriteNewEntriesParquetTask,
 )
-from v03_pipeline.lib.test.misc import convert_ndarray_to_list, copy_project_pedigree
+from v03_pipeline.lib.test.misc import convert_ndarray_to_list, copy_test_project_pedigree
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_PEDIGREE_3_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_3_remap.tsv'
@@ -77,14 +77,14 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
         )
 
     def test_write_new_entries_parquet(self):
-        copy_project_pedigree(
+        copy_test_project_pedigree(
             TEST_PEDIGREE_3_REMAP,
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
             SampleType.WGS,
             'R0113_test_project',
         )
-        copy_project_pedigree(
+        copy_test_project_pedigree(
             TEST_PEDIGREE_4_REMAP,
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
@@ -184,7 +184,7 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
         )
 
     def test_mito_write_new_entries_parquet(self):
-        copy_project_pedigree(
+        copy_test_project_pedigree(
             TEST_MITO_EXPORT_PEDIGREE,
             ReferenceGenome.GRCh38,
             DatasetType.MITO,
@@ -239,7 +239,7 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
         )
 
     def test_sv_write_new_entries_parquet(self):
-        copy_project_pedigree(
+        copy_test_project_pedigree(
             TEST_PEDIGREE_5,
             ReferenceGenome.GRCh38,
             DatasetType.SV,
@@ -321,7 +321,7 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
         )
 
     def test_gcnv_write_new_entries_parquet(self):
-        copy_project_pedigree(
+        copy_test_project_pedigree(
             TEST_PEDIGREE_5,
             ReferenceGenome.GRCh38,
             DatasetType.GCNV,

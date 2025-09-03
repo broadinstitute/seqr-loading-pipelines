@@ -8,7 +8,7 @@ from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.paths import variant_annotations_table_path
 from v03_pipeline.lib.tasks.trigger_hail_backend_reload import TriggerHailBackendReload
-from v03_pipeline.lib.test.misc import copy_project_pedigree
+from v03_pipeline.lib.test.misc import copy_test_project_pedigree
 from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
@@ -48,7 +48,7 @@ class TriggerHailBackendReloadTestCase(MockedDatarootTestCase):
                 DatasetType.SNV_INDEL,
             ),
         )
-        copy_project_pedigree(
+        copy_test_project_pedigree(
             TEST_PEDIGREE_3_REMAP,
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,

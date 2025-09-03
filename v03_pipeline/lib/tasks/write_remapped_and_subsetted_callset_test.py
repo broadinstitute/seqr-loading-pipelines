@@ -17,7 +17,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
     WriteValidationErrorsForRunTask,
 )
-from v03_pipeline.lib.test.misc import copy_project_pedigree
+from v03_pipeline.lib.test.misc import copy_test_project_pedigree
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
@@ -85,7 +85,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
     def test_write_remapped_and_subsetted_callset_task(
         self,
     ) -> None:
-        copy_project_pedigree(
+        copy_test_project_pedigree(
             TEST_PEDIGREE_3_REMAP,
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
@@ -134,7 +134,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
         self,
         mock_ff: Mock,
     ) -> None:
-        copy_project_pedigree(
+        copy_test_project_pedigree(
             TEST_PEDIGREE_4_REMAP,
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
@@ -227,7 +227,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
         self,
         mock_ff: Mock,
     ) -> None:
-        copy_project_pedigree(
+        copy_test_project_pedigree(
             TEST_PEDIGREE_7,
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,

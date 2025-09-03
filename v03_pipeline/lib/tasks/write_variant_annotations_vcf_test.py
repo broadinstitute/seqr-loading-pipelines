@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 import hailtop.fs as hfs
 import luigi.worker
 
-from v03_pipeline.lib.misc.test import copy_project_pedigree
+from v03_pipeline.lib.misc.test import copy_test_project_pedigree
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
@@ -46,7 +46,7 @@ class WriteVariantAnnotationsVCFTest(MockedReferenceDatasetsTestCase):
         self,
         mock_load_gencode: Mock,
     ) -> None:
-        copy_project_pedigree(
+        copy_test_project_pedigree(
             TEST_PEDIGREE_5,
             ReferenceGenome.GRCh38,
             DatasetType.SV,

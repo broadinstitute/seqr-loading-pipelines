@@ -3,7 +3,7 @@ import luigi.worker
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.write_family_table import WriteFamilyTableTask
-from v03_pipeline.lib.test.misc import copy_project_pedigree
+from v03_pipeline.lib.test.misc import copy_test_project_pedigree
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
@@ -17,7 +17,7 @@ TEST_RUN_ID = 'manual__2024-04-03'
 
 class WriteFamilyTableTaskTest(MockedDatarootTestCase):
     def test_snv_write_family_table_task(self) -> None:
-        copy_project_pedigree(
+        copy_test_project_pedigree(
             TEST_PEDIGREE_3_REMAP,
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
@@ -161,7 +161,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
         )
 
     def test_sv_write_family_table_task(self) -> None:
-        copy_project_pedigree(
+        copy_test_project_pedigree(
             TEST_PEDIGREE_5,
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
@@ -420,7 +420,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
         )
 
     def test_gcnv_write_family_table_task(self) -> None:
-        copy_project_pedigree(
+        copy_test_project_pedigree(
             TEST_PEDIGREE_5,
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
