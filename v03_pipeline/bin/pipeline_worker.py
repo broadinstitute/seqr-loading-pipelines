@@ -9,7 +9,6 @@ from v03_pipeline.api.model import LoadingPipelineRequest
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.runs import get_oldest_queue_path
 from v03_pipeline.lib.model import FeatureFlag
-from v03_pipeline.lib.paths import project_pedigree_path
 from v03_pipeline.lib.tasks.trigger_hail_backend_reload import TriggerHailBackendReload
 from v03_pipeline.lib.tasks.write_success_file import WriteSuccessFileTask
 
@@ -24,22 +23,12 @@ def main():
                 continue
             with open(latest_queue_path) as f:
                 lpr = LoadingPipelineRequest.model_validate_json(f.read())
-            project_pedigree_paths = [
-                project_pedigree_path(
-                    lpr.reference_genome,
-                    lpr.dataset_type,
-                    lpr.sample_type,
-                    project_guid,
-                )
-                for project_guid in lpr.projects_to_run
-            ]
             run_id = re.search(
                 r'request_(\d{8}-\d{6}_\d+)\.json',
                 os.path.basename(latest_queue_path),
             ).group(1)
             loading_run_task_params = {
                 'project_guids': lpr.projects_to_run,
-                'project_pedigree_paths': project_pedigree_paths,
                 'run_id': run_id,
                 **{k: v for k, v in lpr.model_dump().items() if k != 'projects_to_run'},
             }
