@@ -14,7 +14,10 @@ from v03_pipeline.lib.paths import (
 from v03_pipeline.lib.tasks.exports.write_new_entries_parquet import (
     WriteNewEntriesParquetTask,
 )
-from v03_pipeline.lib.test.misc import convert_ndarray_to_list, copy_test_project_pedigree
+from v03_pipeline.lib.test.misc import (
+    convert_ndarray_to_list,
+    copy_test_project_pedigree,
+)
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_PEDIGREE_3_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_3_remap.tsv'
