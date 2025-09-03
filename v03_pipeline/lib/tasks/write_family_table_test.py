@@ -164,7 +164,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
         copy_project_pedigree_to_mocked_dir(
             TEST_PEDIGREE_5,
             ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
+            DatasetType.SV,
             SampleType.WGS,
             'R0115_test_project2',
         )
@@ -423,7 +423,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
         copy_project_pedigree_to_mocked_dir(
             TEST_PEDIGREE_5,
             ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
+            DatasetType.GCNV,
             SampleType.WGS,
             'R0115_test_project2',
         )
