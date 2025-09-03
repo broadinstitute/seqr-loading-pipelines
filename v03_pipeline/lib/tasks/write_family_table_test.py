@@ -424,7 +424,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
             TEST_PEDIGREE_5,
             ReferenceGenome.GRCh38,
             DatasetType.GCNV,
-            SampleType.WGS,
+            SampleType.WES,
             'R0115_test_project2',
         )
         worker = luigi.worker.Worker()
