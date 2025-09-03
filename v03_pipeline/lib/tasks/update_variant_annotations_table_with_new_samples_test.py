@@ -98,7 +98,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SNV_INDEL_VCF,
                 project_guids=['R0113_test_project'],
-                project_pedigree_paths=['bad_pedigree'],
                 skip_validation=True,
                 run_id=TEST_RUN_ID,
             )
@@ -115,6 +114,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         self,
         mock_update_vat_with_rd_task,
     ) -> None:
+        copy_project_pedigree(
+            TEST_PEDIGREE_3_REMAP,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            SampleType.WGS,
+            'R0113_test_project',
+        )
         with mock_clinvar_urls():
             mock_update_vat_with_rd_task.return_value = MockCompleteTask()
             shutil.rmtree(
@@ -129,7 +135,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SNV_INDEL_VCF,
                 project_guids=['R0113_test_project'],
-                project_pedigree_paths=[TEST_PEDIGREE_3_REMAP],
                 skip_validation=True,
                 run_id=TEST_RUN_ID,
             )
@@ -282,15 +287,20 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 ),
                 overwrite=True,
             )
+            copy_project_pedigree(
+                TEST_PEDIGREE_3_REMAP,
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                SampleType.WGS,
+                'R0113_test_project',
+            )
             worker = luigi.worker.Worker()
-
             uvatwns_task_3 = UpdateVariantAnnotationsTableWithNewSamplesTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SNV_INDEL,
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SNV_INDEL_VCF,
                 project_guids=['R0113_test_project'],
-                project_pedigree_paths=[TEST_PEDIGREE_3_REMAP],
                 skip_validation=False,
                 run_id=TEST_RUN_ID,
             )
@@ -340,6 +350,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 29,
             )
 
+            copy_project_pedigree(
+                TEST_PEDIGREE_4_REMAP,
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                SampleType.WGS,
+                'R0114_project4',
+            )
             # Ensure that new variants are added correctly to the table.
             uvatwns_task_4 = UpdateVariantAnnotationsTableWithNewSamplesTask(
                 reference_genome=ReferenceGenome.GRCh38,
@@ -347,7 +364,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SNV_INDEL_VCF,
                 project_guids=['R0114_project4'],
-                project_pedigree_paths=[TEST_PEDIGREE_4_REMAP],
                 skip_validation=False,
                 run_id=TEST_RUN_ID + '-another-run',
             )
@@ -567,6 +583,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         mock_register_alleles.side_effect = None
 
         with mock_clinvar_urls(ReferenceGenome.GRCh37):
+            copy_project_pedigree(
+                TEST_PEDIGREE_3_REMAP,
+                ReferenceGenome.GRCh37,
+                DatasetType.SNV_INDEL,
+                SampleType.WGS,
+                'R0113_test_project',
+            )
             worker = luigi.worker.Worker()
             uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
                 reference_genome=ReferenceGenome.GRCh37,
@@ -574,7 +597,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SNV_INDEL_VCF,
                 project_guids=['R0113_test_project'],
-                project_pedigree_paths=[TEST_PEDIGREE_3_REMAP],
                 skip_validation=True,
                 run_id=TEST_RUN_ID,
             )
@@ -740,6 +762,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         mock_register_alleles.side_effect = None
 
         with mock_clinvar_urls():
+            copy_project_pedigree(
+                TEST_PEDIGREE_3_REMAP,
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                SampleType.WGS,
+                'R0113_test_project',
+            )
             worker = luigi.worker.Worker()
             uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
                 reference_genome=ReferenceGenome.GRCh38,
@@ -747,7 +776,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SNV_INDEL_VCF,
                 project_guids=['R0113_test_project'],
-                project_pedigree_paths=[TEST_PEDIGREE_3_REMAP],
                 skip_validation=True,
                 run_id=TEST_RUN_ID,
             )
@@ -795,6 +823,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         mock_register_alleles.side_effect = None
 
         with mock_clinvar_urls():
+            copy_project_pedigree(
+                TEST_PEDIGREE_5,
+                ReferenceGenome.GRCh38,
+                DatasetType.MITO,
+                SampleType.WGS,
+                'R0115_test_project2',
+            )
             worker = luigi.worker.Worker()
             update_variant_annotations_task = (
                 UpdateVariantAnnotationsTableWithNewSamplesTask(
@@ -803,7 +838,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     sample_type=SampleType.WGS,
                     callset_path=TEST_MITO_MT,
                     project_guids=['R0115_test_project2'],
-                    project_pedigree_paths=[TEST_PEDIGREE_5],
                     skip_validation=True,
                     run_id=TEST_RUN_ID,
                 )
@@ -907,6 +941,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         mock_load_gencode: Mock,
     ) -> None:
         mock_load_gencode.return_value = GENE_ID_MAPPING
+        copy_project_pedigree(
+            TEST_PEDIGREE_5,
+            ReferenceGenome.GRCh38,
+            DatasetType.SV,
+            SampleType.WGS,
+            'R0115_test_project2',
+        )
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
@@ -915,7 +956,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SV_VCF,
                 project_guids=['R0115_test_project2'],
-                project_pedigree_paths=[TEST_PEDIGREE_5],
                 skip_validation=True,
                 run_id=TEST_RUN_ID,
             )
@@ -1418,6 +1458,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 ),
             ],
         )
+        copy_project_pedigree(
+            TEST_PEDIGREE_5,
+            ReferenceGenome.GRCh38,
+            DatasetType.SV,
+            SampleType.WGS,
+            'R0115_test_project2',
+        )
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
                 reference_genome=ReferenceGenome.GRCh38,
@@ -1425,7 +1472,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SV_VCF_2,
                 project_guids=['R0115_test_project2'],
-                project_pedigree_paths=[TEST_PEDIGREE_5],
                 skip_validation=True,
                 run_id='second_run_id',
             )
@@ -1531,6 +1577,20 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         mock_load_gencode: Mock,
     ) -> None:
         mock_load_gencode.return_value = GENE_ID_MAPPING
+        copy_project_pedigree(
+            TEST_PEDIGREE_10,
+            ReferenceGenome.GRCh38,
+            DatasetType.SV,
+            SampleType.WGS,
+            'R0116_test_project3',
+        )
+        copy_project_pedigree(
+            TEST_PEDIGREE_11,
+            ReferenceGenome.GRCh38,
+            DatasetType.SV,
+            SampleType.WGS,
+            'R0117_test_project4',
+        )
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
@@ -1539,7 +1599,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SV_VCF_2,
                 project_guids=['R0116_test_project3', 'R0117_test_project4'],
-                project_pedigree_paths=[TEST_PEDIGREE_10, TEST_PEDIGREE_11],
                 skip_validation=True,
                 run_id='run_id',
             )
@@ -1566,6 +1625,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
     def test_gcnv_update_vat_multiple(
         self,
     ) -> None:
+        copy_project_pedigree(
+            TEST_PEDIGREE_5,
+            ReferenceGenome.GRCh38,
+            DatasetType.GCNV,
+            SampleType.WES,
+            'R0115_test_project2',
+        )
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
@@ -1574,7 +1640,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WES,
                 callset_path=TEST_GCNV_BED_FILE,
                 project_guids=['R0115_test_project2'],
-                project_pedigree_paths=[TEST_PEDIGREE_5],
                 skip_validation=True,
                 run_id=TEST_RUN_ID,
             )
@@ -1700,6 +1765,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 ),
             ],
         )
+        copy_project_pedigree(
+            TEST_PEDIGREE_8,
+            ReferenceGenome.GRCh38,
+            DatasetType.GCNV,
+            SampleType.WES,
+            'R0115_test_project2',
+        )
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
                 reference_genome=ReferenceGenome.GRCh38,
@@ -1707,7 +1779,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WES,
                 callset_path=TEST_GCNV_BED_FILE_2,
                 project_guids=['R0115_test_project2'],
-                project_pedigree_paths=[TEST_PEDIGREE_8],
                 skip_validation=True,
                 run_id='second_run_id',
             )
