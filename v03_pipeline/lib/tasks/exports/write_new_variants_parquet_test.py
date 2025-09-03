@@ -107,7 +107,6 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             project_guids=[
                 'fake_project',
             ],
-            project_pedigree_paths=['fake_pedigree'],
             skip_validation=True,
             run_id=TEST_RUN_ID,
         )
@@ -232,7 +231,6 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             project_guids=[
                 'fake_project',
             ],
-            project_pedigree_paths=['fake_pedigree'],
             skip_validation=True,
             run_id=TEST_RUN_ID,
         )
@@ -344,7 +342,6 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             project_guids=[
                 'fake_project',
             ],
-            project_pedigree_paths=['fake_pedigree'],
             skip_validation=True,
             run_id=TEST_RUN_ID,
         )
@@ -439,7 +436,6 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             project_guids=[
                 'fake_project',
             ],
-            project_pedigree_paths=['fake_pedigree'],
             skip_validation=True,
             run_id=TEST_RUN_ID,
         )
@@ -517,7 +513,6 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             project_guids=[
                 'fake_project',
             ],
-            project_pedigree_paths=['fake_pedigree'],
             skip_validation=True,
             run_id=TEST_RUN_ID,
         )

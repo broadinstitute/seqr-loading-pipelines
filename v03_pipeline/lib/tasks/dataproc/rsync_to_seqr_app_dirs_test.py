@@ -34,7 +34,6 @@ class RsyncToSeqrAppDirsTaskTest(unittest.TestCase):
             sample_type=SampleType.WGS,
             callset_path='test_callset',
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=['test_pedigree'],
             run_id='manual__2024-04-01',
         )
         worker.add(task)
@@ -76,7 +75,6 @@ class RsyncToSeqrAppDirsTaskTest(unittest.TestCase):
             sample_type=SampleType.WGS,
             callset_path='test_callset',
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=['test_pedigree'],
             run_id='manual__2024-04-02',
         )
         worker.add(task)

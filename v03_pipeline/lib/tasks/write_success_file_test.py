@@ -24,7 +24,6 @@ class WriteSuccessFileTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path='test_callset',
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=['test_pedigree'],
             run_id='manual__2024-04-03',
         )
         worker.add(write_success_file)
