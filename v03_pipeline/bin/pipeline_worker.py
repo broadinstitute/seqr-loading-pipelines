@@ -8,8 +8,6 @@ import luigi
 from v03_pipeline.api.model import LoadingPipelineRequest
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.runs import get_oldest_queue_path
-from v03_pipeline.lib.model import FeatureFlag
-from v03_pipeline.lib.tasks.trigger_hail_backend_reload import TriggerHailBackendReload
 from v03_pipeline.lib.tasks.write_success_file import WriteSuccessFileTask
 
 logger = get_logger(__name__)
@@ -32,15 +30,11 @@ def main():
                 'run_id': run_id,
                 **{k: v for k, v in lpr.model_dump().items() if k != 'projects_to_run'},
             }
-            if FeatureFlag.SHOULD_TRIGGER_HAIL_BACKEND_RELOAD:
-                tasks = [
-                    TriggerHailBackendReload(**loading_run_task_params),
-                ]
-            else:
-                tasks = [
+            luigi.build(
+                [
                     WriteSuccessFileTask(**loading_run_task_params),
-                ]
-            luigi.build(tasks)
+                ],
+            )
         except Exception:
             logger.exception('Unhandled Exception')
         finally:

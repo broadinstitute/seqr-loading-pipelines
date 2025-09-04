@@ -17,7 +17,6 @@ from v03_pipeline.lib.model import (
 from v03_pipeline.lib.model.constants import LOCAL_DISK_MOUNT_PATH
 from v03_pipeline.lib.reference_datasets.reference_dataset import (
     ReferenceDataset,
-    ReferenceDatasetQuery,
 )
 
 
@@ -313,25 +312,6 @@ def valid_reference_dataset_path(
         ),
         f'{reference_dataset.value}',
         f'{reference_dataset.version(reference_genome)}.ht',
-    )
-
-
-def valid_reference_dataset_query_path(
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    reference_dataset_query: ReferenceDatasetQuery,
-    root=None,
-) -> str | None:
-    if not root:
-        root = Env.REFERENCE_DATASETS_DIR
-    return os.path.join(
-        _v03_reference_dataset_prefix(
-            root,
-            reference_dataset_query.access_control,
-            reference_genome,
-        ),
-        dataset_type.value,
-        f'{reference_dataset_query.value}.ht',
     )
 
 

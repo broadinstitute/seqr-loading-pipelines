@@ -6,8 +6,6 @@ from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceGenome,
 )
-from v03_pipeline.lib.paths import valid_reference_dataset_query_path
-from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDatasetQuery
 from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
     BaseUpdateVariantAnnotationsTableTask,
 )
@@ -41,15 +39,3 @@ class BaseVariantAnnotationsTableTest(MockedReferenceDatasetsTestCase):
             ht = hl.read_table(vat_task.output().path)
             self.assertEqual(ht.count(), 0)
             self.assertEqual(list(ht.key.keys()), ['locus', 'alleles'])
-            self.assertEqual(
-                hl.eval(
-                    hl.read_table(
-                        valid_reference_dataset_query_path(
-                            ReferenceGenome.GRCh38,
-                            DatasetType.SNV_INDEL,
-                            ReferenceDatasetQuery.clinvar_path_variants,
-                        ),
-                    ).globals.version,
-                ),
-                '2024-11-11',
-            )
