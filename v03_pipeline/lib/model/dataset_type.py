@@ -178,10 +178,6 @@ class DatasetType(StrEnum):
         )
 
     @property
-    def has_lookup_table(self) -> bool:
-        return self in {DatasetType.SNV_INDEL, DatasetType.MITO}
-
-    @property
     def gt_stats_from_hl_call_stats(self) -> bool:
         return self == DatasetType.SV
 

@@ -83,23 +83,6 @@ def _callset_path_hash(callset_path: str) -> str:
     ).hexdigest()
 
 
-def family_table_path(
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    sample_type: SampleType,
-    family_guid: str,
-) -> str:
-    return os.path.join(
-        pipeline_prefix(
-            Env.HAIL_SEARCH_DATA_DIR,
-            reference_genome,
-            dataset_type,
-        ),
-        'families',
-        sample_type.value,
-        f'{family_guid}.ht',
-    )
-
 
 def tdr_metrics_dir(
     reference_genome: ReferenceGenome,
@@ -256,20 +239,6 @@ def remapped_and_subsetted_callset_path(
     )
 
 
-def lookup_table_path(
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-) -> str:
-    return os.path.join(
-        pipeline_prefix(
-            Env.HAIL_SEARCH_DATA_DIR,
-            reference_genome,
-            dataset_type,
-        ),
-        'lookup.ht',
-    )
-
-
 def runs_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
@@ -400,13 +369,6 @@ def new_variants_table_path(
         ),
         run_id,
         'new_variants.ht',
-    )
-
-
-def clinvar_dataset_path(reference_genome: ReferenceGenome, etag: str) -> str:
-    return os.path.join(
-        Env.HAIL_TMP_DIR,
-        f'clinvar-{reference_genome.value}-{etag}.ht',
     )
 
 

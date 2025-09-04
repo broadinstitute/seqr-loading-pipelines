@@ -9,9 +9,7 @@ from v03_pipeline.lib.model import (
     SampleType,
 )
 from v03_pipeline.lib.paths import (
-    family_table_path,
     imported_callset_path,
-    lookup_table_path,
     metadata_for_run_path,
     new_variants_table_path,
     project_pedigree_path,
@@ -28,43 +26,6 @@ TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30varia*.vcf'
 
 
 class TestPaths(unittest.TestCase):
-    def test_family_table_path(self) -> None:
-        self.assertEqual(
-            family_table_path(
-                ReferenceGenome.GRCh37,
-                DatasetType.SNV_INDEL,
-                SampleType.WES,
-                'franklin',
-            ),
-            '/var/seqr/seqr-hail-search-data/v3.1/GRCh37/SNV_INDEL/families/WES/franklin.ht',
-        )
-        with (
-            patch('v03_pipeline.lib.paths.Env') as mock_env,
-            patch(
-                'v03_pipeline.lib.paths.FeatureFlag',
-            ) as mock_ff,
-        ):
-            mock_env.HAIL_SEARCH_DATA_DIR = '/var/bucket/'
-            self.assertEqual(
-                family_table_path(
-                    ReferenceGenome.GRCh37,
-                    DatasetType.SNV_INDEL,
-                    SampleType.WES,
-                    'franklin',
-                ),
-                '/var/bucket/v3.1/GRCh37/SNV_INDEL/families/WES/franklin.ht',
-            )
-            mock_ff.INCLUDE_PIPELINE_VERSION_IN_PREFIX = False
-            self.assertEqual(
-                family_table_path(
-                    ReferenceGenome.GRCh37,
-                    DatasetType.SNV_INDEL,
-                    SampleType.WES,
-                    'franklin',
-                ),
-                '/var/bucket/GRCh37/SNV_INDEL/families/WES/franklin.ht',
-            )
-
     def test_project_table_path(self) -> None:
         self.assertEqual(
             project_table_path(
@@ -74,15 +35,6 @@ class TestPaths(unittest.TestCase):
                 'R0652_pipeline_test',
             ),
             '/var/seqr/seqr-hail-search-data/v3.1/GRCh38/MITO/projects/WES/R0652_pipeline_test.ht',
-        )
-
-    def test_lookup_table_path(self) -> None:
-        self.assertEqual(
-            lookup_table_path(
-                ReferenceGenome.GRCh37,
-                DatasetType.SV,
-            ),
-            '/var/seqr/seqr-hail-search-data/v3.1/GRCh37/SV/lookup.ht',
         )
 
     def test_sex_check_table_path(self) -> None:

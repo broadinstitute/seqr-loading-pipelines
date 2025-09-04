@@ -5,27 +5,17 @@ from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with
     UpdateVariantAnnotationsTableWithUpdatedReferenceDataset,
 )
 from v03_pipeline.lib.tasks.run_pipeline import RunPipelineTask
-from v03_pipeline.lib.tasks.update_lookup_table import (
-    UpdateLookupTableTask,
-)
-from v03_pipeline.lib.tasks.update_project_table import UpdateProjectTableTask
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
 from v03_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRunTask
-from v03_pipeline.lib.tasks.write_project_family_tables import (
-    WriteProjectFamilyTablesTask,
-)
 from v03_pipeline.lib.tasks.write_success_file import WriteSuccessFileTask
 
 __all__ = [
     'MigrateAllProjectsToClickHouseTask',
     'RunPipelineTask',
-    'UpdateLookupTableTask',
-    'UpdateProjectTableTask',
     'UpdateVariantAnnotationsTableWithNewSamplesTask',
     'UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     'WriteMetadataForRunTask',
-    'WriteProjectFamilyTablesTask',
     'WriteSuccessFileTask',
 ]

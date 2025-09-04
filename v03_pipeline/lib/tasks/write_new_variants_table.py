@@ -31,9 +31,6 @@ from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset import (
     UpdateVariantAnnotationsTableWithUpdatedReferenceDataset,
 )
-from v03_pipeline.lib.tasks.update_lookup_table import (
-    UpdateLookupTableTask,
-)
 from v03_pipeline.lib.tasks.write_metadata_for_run import (
     WriteMetadataForRunTask,
 )
@@ -84,11 +81,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         requirements = [
             self.clone(UpdateVariantAnnotationsTableWithUpdatedReferenceDataset),
         ]
-        if self.dataset_type.has_lookup_table:
-            requirements = [
-                *requirements,
-                self.clone(UpdateLookupTableTask),
-            ]
         return [
             *requirements,
             self.clone(WriteMetadataForRunTask),
