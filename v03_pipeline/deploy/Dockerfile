@@ -23,7 +23,6 @@ COPY v03_pipeline/bin bin
 COPY v03_pipeline/lib lib
 COPY v03_pipeline/var/db_id_to_gene_id.csv.gz var/db_id_to_gene_id.csv.gz
 COPY v03_pipeline/var/liftover var/liftover
-COPY v03_pipeline/migrations migrations
 
 # Special paths
 COPY v03_pipeline/var/spark_config/spark-defaults.conf /usr/local/lib/python3.10/dist-packages/pyspark/conf/spark-defaults.conf
