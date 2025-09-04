@@ -45,7 +45,6 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
             sample_type=SampleType.WGS,
             callset_path='test_callset',
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=['test_pedigree'],
             run_id='manual__2024-04-03',
         )
         worker.add(task)
@@ -78,7 +77,6 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
             sample_type=SampleType.WGS,
             callset_path='test_callset',
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=['test_pedigree'],
             run_id='manual__2024-04-04',
         )
         worker.add(task)
@@ -109,7 +107,6 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
             sample_type=SampleType.WGS,
             callset_path='test_callset',
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=['test_pedigree'],
             run_id='manual__2024-04-05',
         )
         worker.add(task)
@@ -149,7 +146,6 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
             sample_type=SampleType.WGS,
             callset_path='test_callset',
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=['test_pedigree'],
             run_id='manual__2024-04-06',
         )
         worker.add(task)

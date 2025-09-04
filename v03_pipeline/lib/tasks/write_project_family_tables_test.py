@@ -9,6 +9,7 @@ from v03_pipeline.lib.paths import (
 from v03_pipeline.lib.tasks.write_project_family_tables import (
     WriteProjectFamilyTablesTask,
 )
+from v03_pipeline.lib.test.misc import copy_project_pedigree_to_mocked_dir
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
@@ -20,6 +21,13 @@ TEST_RUN_ID = 'manual__2024-04-03'
 
 class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
     def test_snv_write_project_family_tables_task(self) -> None:
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_4_REMAP,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            SampleType.WGS,
+            'R0113_test_project',
+        )
         worker = luigi.worker.Worker()
         write_project_family_tables = WriteProjectFamilyTablesTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -28,7 +36,6 @@ class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=[TEST_PEDIGREE_4_REMAP],
             project_i=0,
             skip_validation=True,
             skip_check_sex_and_relatedness=True,
@@ -86,14 +93,20 @@ class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
             ],
         )
 
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_4_SUBSET,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            SampleType.WGS,
+            'R0113_test_project',
+        )
         write_project_family_tables_subset = WriteProjectFamilyTablesTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
-            run_id=TEST_RUN_ID,
+            run_id=TEST_RUN_ID + '-a',  # cache bust
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=[TEST_PEDIGREE_4_SUBSET],
             project_i=0,
             skip_validation=True,
             skip_check_sex_and_relatedness=True,

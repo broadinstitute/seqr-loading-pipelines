@@ -7,6 +7,7 @@ import luigi.worker
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.paths import relatedness_check_tsv_path
 from v03_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRunTask
+from v03_pipeline.lib.test.misc import copy_project_pedigree_to_mocked_dir
 from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
@@ -30,6 +31,20 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
         write_tdr_metrics_task: Mock,
         mock_ff: Mock,
     ) -> None:
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_3_REMAP,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            SampleType.WGS,
+            'R0113_test_project',
+        )
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_4_REMAP_2,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            SampleType.WGS,
+            'R0114_project4',
+        )
         mock_ff.EXPECT_TDR_METRICS = True
         write_tdr_metrics_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
@@ -39,7 +54,6 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guids=['R0113_test_project', 'R0114_project4'],
-            project_pedigree_paths=[TEST_PEDIGREE_3_REMAP, TEST_PEDIGREE_4_REMAP_2],
             skip_validation=True,
             run_id='run_123456',
         )

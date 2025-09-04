@@ -9,7 +9,10 @@ from v03_pipeline.lib.misc.lookup import (
     remove_family_guids,
 )
 from v03_pipeline.lib.model.constants import PROJECTS_EXCLUDED_FROM_LOOKUP
-from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
+from v03_pipeline.lib.paths import (
+    project_pedigree_path,
+    remapped_and_subsetted_callset_path,
+)
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )
@@ -33,11 +36,16 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
                                 callset=self.callset_path,
                                 project_guid=project_guid,
                                 remap_pedigree_hash=remap_pedigree_hash(
-                                    self.project_pedigree_paths[i],
+                                    project_pedigree_path(
+                                        self.reference_genome,
+                                        self.dataset_type,
+                                        self.sample_type,
+                                        project_guid,
+                                    ),
                                 ),
                             ),
                         )
-                        for i, project_guid in enumerate(self.project_guids)
+                        for project_guid in self.project_guids
                     ],
                 ),
                 hl.read_table(self.output().path).updates,
@@ -54,7 +62,7 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
     def update_table(self, ht: hl.Table) -> hl.Table:
         # NB: there's a chance this many hail operations blows the DAG compute stack
         # in an unfortunate way.  Please keep an eye out!
-        for i, project_guid in enumerate(self.project_guids):
+        for project_guid in self.project_guids:
             if project_guid in PROJECTS_EXCLUDED_FROM_LOOKUP:
                 ht = ht.annotate_globals(
                     updates=ht.updates.add(
@@ -62,7 +70,12 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
                             callset=self.callset_path,
                             project_guid=project_guid,
                             remap_pedigree_hash=remap_pedigree_hash(
-                                self.project_pedigree_paths[i],
+                                project_pedigree_path(
+                                    self.reference_genome,
+                                    self.dataset_type,
+                                    self.sample_type,
+                                    project_guid,
+                                ),
                             ),
                         ),
                     ),
@@ -100,7 +113,12 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
                         callset=self.callset_path,
                         project_guid=project_guid,
                         remap_pedigree_hash=remap_pedigree_hash(
-                            self.project_pedigree_paths[i],
+                            project_pedigree_path(
+                                self.reference_genome,
+                                self.dataset_type,
+                                self.sample_type,
+                                project_guid,
+                            ),
                         ),
                     ),
                 ),

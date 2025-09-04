@@ -14,6 +14,7 @@ from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.misc.math import constrain
 from v03_pipeline.lib.paths import (
     new_variants_table_path,
+    project_pedigree_path,
     valid_reference_dataset_path,
     variant_annotations_table_path,
 )
@@ -107,11 +108,16 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                                 callset=self.callset_path,
                                 project_guid=project_guid,
                                 remap_pedigree_hash=remap_pedigree_hash(
-                                    self.project_pedigree_paths[i],
+                                    project_pedigree_path(
+                                        self.reference_genome,
+                                        self.dataset_type,
+                                        self.sample_type,
+                                        project_guid,
+                                    ),
                                 ),
                             ),
                         )
-                        for i, project_guid in enumerate(self.project_guids)
+                        for project_guid in self.project_guids
                     ],
                 ),
                 hl.read_table(self.output().path).updates,
@@ -237,9 +243,14 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                     callset=self.callset_path,
                     project_guid=project_guid,
                     remap_pedigree_hash=remap_pedigree_hash(
-                        self.project_pedigree_paths[i],
+                        project_pedigree_path(
+                            self.reference_genome,
+                            self.dataset_type,
+                            self.sample_type,
+                            project_guid,
+                        ),
                     ),
                 )
-                for i, project_guid in enumerate(self.project_guids)
+                for project_guid in self.project_guids
             },
         )

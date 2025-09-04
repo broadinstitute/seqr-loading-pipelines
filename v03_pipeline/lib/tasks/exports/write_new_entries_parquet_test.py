@@ -14,7 +14,10 @@ from v03_pipeline.lib.paths import (
 from v03_pipeline.lib.tasks.exports.write_new_entries_parquet import (
     WriteNewEntriesParquetTask,
 )
-from v03_pipeline.lib.test.misc import convert_ndarray_to_list
+from v03_pipeline.lib.test.misc import (
+    convert_ndarray_to_list,
+    copy_project_pedigree_to_mocked_dir,
+)
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_PEDIGREE_3_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_3_remap.tsv'
@@ -77,6 +80,20 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
         )
 
     def test_write_new_entries_parquet(self):
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_3_REMAP,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            SampleType.WGS,
+            'R0113_test_project',
+        )
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_4_REMAP,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            SampleType.WGS,
+            'R0114_project4',
+        )
         worker = luigi.worker.Worker()
         task = WriteNewEntriesParquetTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -84,7 +101,6 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project', 'R0114_project4'],
-            project_pedigree_paths=[TEST_PEDIGREE_3_REMAP, TEST_PEDIGREE_4_REMAP],
             skip_validation=True,
             run_id=TEST_RUN_ID,
         )
@@ -171,6 +187,13 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
         )
 
     def test_mito_write_new_entries_parquet(self):
+        copy_project_pedigree_to_mocked_dir(
+            TEST_MITO_EXPORT_PEDIGREE,
+            ReferenceGenome.GRCh38,
+            DatasetType.MITO,
+            SampleType.WGS,
+            'R0116_test_project3',
+        )
         worker = luigi.worker.Worker()
         task = WriteNewEntriesParquetTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -178,7 +201,6 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_MITO_CALLSET,
             project_guids=['R0116_test_project3'],
-            project_pedigree_paths=[TEST_MITO_EXPORT_PEDIGREE],
             skip_validation=True,
             run_id=TEST_RUN_ID,
         )
@@ -220,6 +242,13 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
         )
 
     def test_sv_write_new_entries_parquet(self):
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_5,
+            ReferenceGenome.GRCh38,
+            DatasetType.SV,
+            SampleType.WGS,
+            'R0115_test_project2',
+        )
         worker = luigi.worker.Worker()
         task = WriteNewEntriesParquetTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -227,7 +256,6 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_SV_VCF_2,
             project_guids=['R0115_test_project2'],
-            project_pedigree_paths=[TEST_PEDIGREE_5],
             skip_validation=True,
             run_id=TEST_RUN_ID,
         )
@@ -296,6 +324,13 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
         )
 
     def test_gcnv_write_new_entries_parquet(self):
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_5,
+            ReferenceGenome.GRCh38,
+            DatasetType.GCNV,
+            SampleType.WES,
+            'R0115_test_project2',
+        )
         worker = luigi.worker.Worker()
         task = WriteNewEntriesParquetTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -303,7 +338,6 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
             sample_type=SampleType.WES,
             callset_path=TEST_GCNV_BED_FILE,
             project_guids=['R0115_test_project2'],
-            project_pedigree_paths=[TEST_PEDIGREE_5],
             skip_validation=True,
             run_id=TEST_RUN_ID,
         )

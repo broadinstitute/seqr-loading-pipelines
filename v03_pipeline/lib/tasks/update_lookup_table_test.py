@@ -6,6 +6,7 @@ from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.update_lookup_table import (
     UpdateLookupTableTask,
 )
+from v03_pipeline.lib.test.misc import copy_project_pedigree_to_mocked_dir
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
@@ -15,6 +16,17 @@ TEST_RUN_ID = 'manual__2024-04-03'
 
 
 class UpdateLookupTableTest(MockedDatarootTestCase):
+    def setUp(self):
+        super().setUp()
+        for project_guid in ['R0555_seqr_demo', 'R0113_test_project']:
+            copy_project_pedigree_to_mocked_dir(
+                TEST_PEDIGREE_3_REMAP,
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                SampleType.WGS,
+                project_guid,
+            )
+
     def test_skip_update_lookup_table_task(self) -> None:
         worker = luigi.worker.Worker()
         uslt_task = UpdateLookupTableTask(
@@ -25,7 +37,6 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
             project_guids=[
                 'R0555_seqr_demo',
             ],  # a project excluded from the lookup table
-            project_pedigree_paths=[TEST_PEDIGREE_3_REMAP],
             skip_validation=True,
             run_id=TEST_RUN_ID,
         )
@@ -63,7 +74,6 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=[TEST_PEDIGREE_3_REMAP],
             skip_validation=True,
             run_id=TEST_RUN_ID,
         )

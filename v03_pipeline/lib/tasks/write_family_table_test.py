@@ -3,6 +3,7 @@ import luigi.worker
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.write_family_table import WriteFamilyTableTask
+from v03_pipeline.lib.test.misc import copy_project_pedigree_to_mocked_dir
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
@@ -16,6 +17,13 @@ TEST_RUN_ID = 'manual__2024-04-03'
 
 class WriteFamilyTableTaskTest(MockedDatarootTestCase):
     def test_snv_write_family_table_task(self) -> None:
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_3_REMAP,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            SampleType.WGS,
+            'R0113_test_project',
+        )
         worker = luigi.worker.Worker()
         wft_task = WriteFamilyTableTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -24,7 +32,6 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=[TEST_PEDIGREE_3_REMAP],
             project_i=0,
             family_guid='abc_1',
             skip_validation=True,
@@ -154,6 +161,13 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
         )
 
     def test_sv_write_family_table_task(self) -> None:
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_5,
+            ReferenceGenome.GRCh38,
+            DatasetType.SV,
+            SampleType.WGS,
+            'R0115_test_project2',
+        )
         worker = luigi.worker.Worker()
         write_family_table_task = WriteFamilyTableTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -162,7 +176,6 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_SV_VCF,
             project_guids=['R0115_test_project2'],
-            project_pedigree_paths=[TEST_PEDIGREE_5],
             project_i=0,
             family_guid='family_2_1',
             skip_validation=True,
@@ -407,6 +420,13 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
         )
 
     def test_gcnv_write_family_table_task(self) -> None:
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_5,
+            ReferenceGenome.GRCh38,
+            DatasetType.GCNV,
+            SampleType.WES,
+            'R0115_test_project2',
+        )
         worker = luigi.worker.Worker()
         write_family_table_task = WriteFamilyTableTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -415,7 +435,6 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WES,
             callset_path=TEST_GCNV_BED_FILE,
             project_guids=['R0115_test_project2'],
-            project_pedigree_paths=[TEST_PEDIGREE_5],
             project_i=0,
             family_guid='family_2_1',
             skip_validation=True,
