@@ -21,9 +21,11 @@ def get_oldest_queue_path() -> str | None:
     """
     queue_dir = loading_pipeline_queue_dir()
     queue_files = os.listdir(queue_dir)
+
     if len(queue_files) == 0:
         return None
-    return queue_dir + '/' + min(queue_files, key=os.path.getctime)
+    queue_files = [os.path.join(queue_dir, queue_file) for queue_file in queue_files]
+    return min(queue_files, key=os.path.getctime)
 
 
 def is_queue_full() -> bool:
