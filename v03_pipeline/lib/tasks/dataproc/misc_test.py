@@ -19,7 +19,6 @@ class MiscTest(unittest.TestCase):
             sample_type=SampleType.WGS,
             callset_path='test_callset',
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=['test_pedigree'],
             run_id='a_misc_run',
         )
         self.assertListEqual(
@@ -37,8 +36,6 @@ class MiscTest(unittest.TestCase):
                 'test_callset',
                 '--project-guids',
                 '["R0113_test_project"]',
-                '--project-pedigree-paths',
-                '["test_pedigree"]',
                 '--skip-check-sex-and-relatedness',
                 'False',
                 '--skip-expect-tdr-metrics',

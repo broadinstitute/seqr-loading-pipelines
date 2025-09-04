@@ -8,7 +8,6 @@ from v03_pipeline.lib.methods.sex_check import compute_sex_check_ht
 TEST_SEX_AND_RELATEDNESS_CALLSET_MT = (
     'v03_pipeline/var/test/callsets/sex_and_relatedness_1.mt'
 )
-TEST_PEDIGREE = 'v03_pipeline/var/test/pedigrees/test_pedigree_6.tsv'
 
 
 class SexCheckTest(unittest.TestCase):

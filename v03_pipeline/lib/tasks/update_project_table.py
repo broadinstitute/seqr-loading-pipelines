@@ -10,7 +10,7 @@ from v03_pipeline.lib.misc.family_entries import (
     remove_family_guids,
 )
 from v03_pipeline.lib.misc.io import remap_pedigree_hash
-from v03_pipeline.lib.paths import project_table_path
+from v03_pipeline.lib.paths import project_pedigree_path, project_table_path
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_update import (
     BaseUpdateTask,
@@ -41,7 +41,12 @@ class UpdateProjectTableTask(BaseUpdateTask):
                 hl.Struct(
                     callset=self.callset_path,
                     remap_pedigree_hash=remap_pedigree_hash(
-                        self.project_pedigree_paths[self.project_i],
+                        project_pedigree_path(
+                            self.reference_genome,
+                            self.dataset_type,
+                            self.sample_type,
+                            self.project_guids[self.project_i],
+                        ),
                     ),
                 ),
             ),
@@ -86,7 +91,12 @@ class UpdateProjectTableTask(BaseUpdateTask):
                 hl.Struct(
                     callset=self.callset_path,
                     remap_pedigree_hash=remap_pedigree_hash(
-                        self.project_pedigree_paths[self.project_i],
+                        project_pedigree_path(
+                            self.reference_genome,
+                            self.dataset_type,
+                            self.sample_type,
+                            self.project_guids[self.project_i],
+                        ),
                     ),
                 ),
             ),
