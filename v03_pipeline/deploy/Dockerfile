@@ -21,6 +21,7 @@ RUN python3 -m pip install --no-dependencies --no-cache-dir -r ./requirements.tx
 COPY v03_pipeline/api api
 COPY v03_pipeline/bin bin
 COPY v03_pipeline/lib lib
+COPY v03_pipeline/var/db_id_to_gene_id.csv.gz var/db_id_to_gene_id.csv.gz
 COPY v03_pipeline/var/liftover var/liftover
 COPY v03_pipeline/migrations migrations
 
