@@ -472,7 +472,7 @@ def loading_pipeline_queue_path() -> str:
 
 
 def db_id_to_gene_id_path() -> str:
-    if FeatureFlag.STATIC_DB_ID_TO_GENE_ID and os.environ.get('HAIL_DATAPROC') == '1':
+    if FeatureFlag.STATIC_DB_ID_TO_GENE_ID and FeatureFlag.RUN_PIPELINE_ON_DATAPROC:
         return 'gs://seqr-reference-data/v3.1/db_id_to_gene_id.csv.gz'
     if FeatureFlag.STATIC_DB_ID_TO_GENE_ID:
         return 'v03_pipeline/var/db_id_to_gene_id.csv.gz'

@@ -6,7 +6,6 @@ import hail as hl
 import hailtop.fs as hfs
 
 from v03_pipeline.lib.misc.clickhouse import get_clickhouse_client
-from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import db_id_to_gene_id_path
 
 SEQR_POSTGRES_NAMED_COLLECTION = 'seqr_postgres_named_collection'
@@ -32,7 +31,7 @@ def write_db_id_to_gene_ids():
     client = get_clickhouse_client()
     res = client.execute(
         f"""
-        SELECT db_id, gene_id FROM postgresql({CLICKHOUSE_SEARCH_NAMED_COLLECTION}, database='reference_data_db', table='reference_data_geneinfo')
+        SELECT db_id, gene_id FROM postgresql({SEQR_POSTGRES_NAMED_COLLECTION}, database='reference_data_db', table='reference_data_geneinfo')
         """,  # noqa: S608
     )
     buffer = io.StringIO()
