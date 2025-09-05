@@ -7,6 +7,10 @@ import luigi
 
 from v03_pipeline.api.model import LoadingPipelineRequest
 from v03_pipeline.lib.logger import get_logger
+from v03_pipeline.lib.misc.db_id_to_gene_ids import (
+    db_id_to_gene_ids_exists,
+    write_db_id_to_gene_ids,
+)
 from v03_pipeline.lib.misc.runs import get_oldest_queue_path
 from v03_pipeline.lib.model import FeatureFlag
 from v03_pipeline.lib.tasks.trigger_hail_backend_reload import TriggerHailBackendReload
@@ -21,6 +25,10 @@ def main():
             latest_queue_path = get_oldest_queue_path()
             if latest_queue_path is None:
                 continue
+
+            if not db_id_to_gene_ids_exists():
+                write_db_id_to_gene_ids()
+
             with open(latest_queue_path) as f:
                 lpr = LoadingPipelineRequest.model_validate_json(f.read())
             run_id = re.search(

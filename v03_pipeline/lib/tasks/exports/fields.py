@@ -1,19 +1,10 @@
-import gzip
-
 import hail as hl
-import hailtop.fs as hfs
 
+from v03_pipeline.lib.misc.db_id_to_gene_ids import load_db_id_to_gene_ids
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
-from v03_pipeline.lib.model.constants import DB_ID_TO_GENE_ID
 from v03_pipeline.lib.tasks.exports.misc import reformat_transcripts_for_export
 
-DB_ID_TO_GENE_ID_LOOKUP = hl.dict(
-    [
-        (gene_id, int(db_id))
-        for line in gzip.decompress(hfs.open(DB_ID_TO_GENE_ID, 'rb').read()).split()
-        for db_id, gene_id in [line.decode().split(',', 1)]
-    ],
-)
+DB_ID_TO_GENE_ID_LOOKUP = load_db_id_to_gene_ids()
 FIVE_PERCENT = 0.05
 STANDARD_CONTIGS = hl.set(
     [c.replace('MT', 'M') for c in ReferenceGenome.GRCh37.standard_contigs],
