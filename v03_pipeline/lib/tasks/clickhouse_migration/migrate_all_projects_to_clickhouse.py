@@ -14,7 +14,7 @@ from v03_pipeline.lib.tasks.clickhouse_migration.migrate_project_to_clickhouse i
     MigrateProjectToClickHouseTask,
 )
 from v03_pipeline.lib.tasks.clickhouse_migration.migrate_project_to_clickhouse_on_dataproc import (
-    MigrateProjectToClickHouseOnDataproc,
+    MigrateProjectToClickHouseOnDataprocTask,
 )
 
 MIGRATION_RUN_ID = 'hail_search_to_clickhouse_migration'
@@ -45,7 +45,7 @@ class MigrateAllProjectsToClickHouseTask(luigi.WrapperTask):
                 project_guid = p.path.split('/')[-1].replace('.ht', '')
                 self.dynamic_parquet_tasks.add(
                     self.clone(
-                        MigrateProjectToClickHouseOnDataproc,
+                        MigrateProjectToClickHouseOnDataprocTask,
                         run_id=f'{MIGRATION_RUN_ID}_{sample_type.value}_{project_guid}',
                         sample_type=sample_type,
                         project_guid=project_guid,
