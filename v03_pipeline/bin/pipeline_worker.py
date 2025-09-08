@@ -24,7 +24,7 @@ def main():
             with open(latest_queue_path) as f:
                 lpr = LoadingPipelineRequest.model_validate_json(f.read())
             run_id = re.search(
-                r'request_(\d{8}-\d{6}_\d+)\.json',
+                r'request_(\d{8}-\d{6})_\d+\.json',
                 os.path.basename(latest_queue_path),
             ).group(1)
             loading_run_task_params = {
