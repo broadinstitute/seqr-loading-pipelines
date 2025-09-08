@@ -3,6 +3,7 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.model import SampleType
+from v03_pipeline.lib.model.feature_flag import FeatureFlag
 from v03_pipeline.lib.paths import (
     project_table_path,
 )
@@ -11,6 +12,9 @@ from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
 )
 from v03_pipeline.lib.tasks.clickhouse_migration.migrate_project_to_clickhouse import (
     MigrateProjectToClickHouseTask,
+)
+from v03_pipeline.lib.tasks.clickhouse_migration.migrate_project_to_clickhouse_on_dataproc import (
+    MigrateProjectToClickHouseOnDataproc,
 )
 
 MIGRATION_RUN_ID = 'hail_search_to_clickhouse_migration'
@@ -41,6 +45,13 @@ class MigrateAllProjectsToClickHouseTask(luigi.WrapperTask):
                 project_guid = p.path.split('/')[-1].replace('.ht', '')
                 self.dynamic_parquet_tasks.add(
                     self.clone(
+                        MigrateProjectToClickHouseOnDataproc,
+                        run_id=f'{MIGRATION_RUN_ID}_{sample_type.value}_{project_guid}',
+                        sample_type=sample_type,
+                        project_guid=project_guid,
+                    )
+                    if FeatureFlag.RUN_PIPELINE_ON_DATAPROC
+                    else self.clone(
                         MigrateProjectToClickHouseTask,
                         run_id=f'{MIGRATION_RUN_ID}_{sample_type.value}_{project_guid}',
                         sample_type=sample_type,
