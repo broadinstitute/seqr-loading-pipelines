@@ -36,7 +36,7 @@ class TestPaths(unittest.TestCase):
                 SampleType.WES,
                 'franklin',
             ),
-            '/var/seqr/seqr-hail-search-data/v3.1/GRCh37/SNV_INDEL/families/WES/franklin.ht',
+            '/var/seqr/pipeline-data/v3.1/GRCh37/SNV_INDEL/families/WES/franklin.ht',
         )
         with (
             patch('v03_pipeline.lib.paths.Env') as mock_env,
@@ -73,7 +73,7 @@ class TestPaths(unittest.TestCase):
                 SampleType.WES,
                 'R0652_pipeline_test',
             ),
-            '/var/seqr/seqr-hail-search-data/v3.1/GRCh38/MITO/projects/WES/R0652_pipeline_test.ht',
+            '/var/seqr/pipeline-data/v3.1/GRCh38/MITO/projects/WES/R0652_pipeline_test.ht',
         )
 
     def test_lookup_table_path(self) -> None:
@@ -82,7 +82,7 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh37,
                 DatasetType.SV,
             ),
-            '/var/seqr/seqr-hail-search-data/v3.1/GRCh37/SV/lookup.ht',
+            '/var/seqr/pipeline-data/v3.1/GRCh37/SV/lookup.ht',
         )
 
     def test_sex_check_table_path(self) -> None:
@@ -112,7 +112,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 'manual__2023-06-26T18:30:09.349671+00:00',
             ),
-            '/var/seqr/seqr-hail-search-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/validation_errors.json',
+            '/var/seqr/pipeline-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/validation_errors.json',
         )
 
     def test_metadata_for_run_path(self) -> None:
@@ -122,7 +122,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 'manual__2023-06-26T18:30:09.349671+00:00',
             ),
-            '/var/seqr/seqr-hail-search-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/metadata.json',
+            '/var/seqr/pipeline-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/metadata.json',
         )
 
     def test_variant_annotations_table_path(self) -> None:
@@ -131,7 +131,7 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh38,
                 DatasetType.GCNV,
             ),
-            '/var/seqr/seqr-hail-search-data/v3.1/GRCh38/GCNV/annotations.ht',
+            '/var/seqr/pipeline-data/v3.1/GRCh38/GCNV/annotations.ht',
         )
 
     def test_remapped_and_subsetted_callset_path(self) -> None:
@@ -200,7 +200,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 'manual__2023-06-26T18:30:09.349671+00:00',
             ),
-            '/var/seqr/seqr-hail-search-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/new_variants.ht',
+            '/var/seqr/pipeline-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/new_variants.ht',
         )
 
     def test_project_pedigree_path(self) -> None:
