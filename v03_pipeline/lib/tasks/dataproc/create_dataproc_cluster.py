@@ -105,7 +105,7 @@ def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
                     'spark-env:EXPECT_TDR_METRICS': '1'
                     if FeatureFlag.EXPECT_TDR_METRICS
                     else '0',
-                    'spark-env:HAIL_SEARCH_DATA_DIR': Env.HAIL_SEARCH_DATA_DIR,
+                    'spark-env:PIPELINE_DATA_DIR': Env.PIPELINE_DATA_DIR,
                     'spark-env:HAIL_TMP_DIR': Env.HAIL_TMP_DIR,
                     'spark-env:INCLUDE_PIPELINE_VERSION_IN_PREFIX': '1'
                     if FeatureFlag.INCLUDE_PIPELINE_VERSION_IN_PREFIX

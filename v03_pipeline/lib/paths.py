@@ -92,7 +92,7 @@ def family_table_path(
 ) -> str:
     return os.path.join(
         pipeline_prefix(
-            Env.HAIL_SEARCH_DATA_DIR,
+            Env.PIPELINE_DATA_DIR,
             reference_genome,
             dataset_type,
         ),
@@ -181,7 +181,7 @@ def project_table_path(
 ) -> str:
     return os.path.join(
         pipeline_prefix(
-            Env.HAIL_SEARCH_DATA_DIR,
+            Env.PIPELINE_DATA_DIR,
             reference_genome,
             dataset_type,
         ),
@@ -263,7 +263,7 @@ def lookup_table_path(
 ) -> str:
     return os.path.join(
         pipeline_prefix(
-            Env.HAIL_SEARCH_DATA_DIR,
+            Env.PIPELINE_DATA_DIR,
             reference_genome,
             dataset_type,
         ),
@@ -277,7 +277,7 @@ def runs_path(
 ) -> str:
     return os.path.join(
         pipeline_prefix(
-            Env.HAIL_SEARCH_DATA_DIR,
+            Env.PIPELINE_DATA_DIR,
             reference_genome,
             dataset_type,
         ),
@@ -341,7 +341,7 @@ def variant_annotations_table_path(
 ) -> str:
     return os.path.join(
         pipeline_prefix(
-            Env.HAIL_SEARCH_DATA_DIR,
+            Env.PIPELINE_DATA_DIR,
             reference_genome,
             dataset_type,
         ),
@@ -355,7 +355,7 @@ def variant_annotations_vcf_path(
 ) -> str:
     return os.path.join(
         pipeline_prefix(
-            Env.HAIL_SEARCH_DATA_DIR,
+            Env.PIPELINE_DATA_DIR,
             reference_genome,
             dataset_type,
         ),

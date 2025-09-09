@@ -3,8 +3,8 @@ from unittest.mock import Mock, patch
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.dataproc.misc import to_kebab_str_args
-from v03_pipeline.lib.tasks.dataproc.rsync_to_seqr_app_dirs import (
-    RsyncToSeqrAppDirsTask,
+from v03_pipeline.lib.tasks.dataproc.run_pipeline_on_dataproc import (
+    RunPipelineOnDataprocTask,
 )
 
 
@@ -13,7 +13,7 @@ from v03_pipeline.lib.tasks.dataproc.rsync_to_seqr_app_dirs import (
 )
 class MiscTest(unittest.TestCase):
     def test_to_kebab_str_args(self, _: Mock):
-        t = RsyncToSeqrAppDirsTask(
+        t = RunPipelineOnDataprocTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,

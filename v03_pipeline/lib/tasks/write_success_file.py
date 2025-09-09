@@ -6,8 +6,8 @@ from v03_pipeline.lib.paths import pipeline_run_success_file_path
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )
-from v03_pipeline.lib.tasks.dataproc.rsync_to_seqr_app_dirs import (
-    RsyncToSeqrAppDirsTask,
+from v03_pipeline.lib.tasks.dataproc.run_pipeline_on_dataproc import (
+    RunPipelineOnDataprocTask,
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.run_pipeline import RunPipelineTask
@@ -26,7 +26,7 @@ class WriteSuccessFileTask(luigi.Task):
 
     def requires(self) -> luigi.Task:
         return (
-            self.clone(RsyncToSeqrAppDirsTask)
+            self.clone(RunPipelineOnDataprocTask)
             if FeatureFlag.RUN_PIPELINE_ON_DATAPROC
             else self.clone(RunPipelineTask)
         )
