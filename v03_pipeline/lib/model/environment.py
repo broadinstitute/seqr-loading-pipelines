@@ -6,7 +6,7 @@ from typing import Literal
 HAIL_TMP_DIR = os.environ.get('HAIL_TMP_DIR', '/tmp')  # noqa: S108
 PIPELINE_DATA_DIR = os.environ.get(
     'PIPELINE_DATA_DIR',
-    '/var/seqr/seqr-hail-search-data',
+    '/var/seqr/pipeline-data',
 )
 LOADING_DATASETS_DIR = os.environ.get(
     'LOADING_DATASETS_DIR',
