@@ -443,7 +443,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             f"file('{runs_path(ReferenceGenome.GRCh38, DatasetType.SNV_INDEL)}/manual__2025-05-07T17-20-59.702114+00-00/new_entries.parquet/*.parquet', 'Parquet')",
         )
         with patch('v03_pipeline.lib.paths.Env') as mock_env:
-            mock_env.HAIL_SEARCH_DATA_DIR = 'gs://mock_bucket'
+            mock_env.PIPELINE_DATA_DIR = 'gs://mock_bucket'
             self.assertEqual(
                 table_name_builder.src_table(
                     ClickHouseTable.ENTRIES,

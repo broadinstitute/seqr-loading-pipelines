@@ -44,7 +44,7 @@ class TestPaths(unittest.TestCase):
                 'v03_pipeline.lib.paths.FeatureFlag',
             ) as mock_ff,
         ):
-            mock_env.HAIL_SEARCH_DATA_DIR = '/var/bucket/'
+            mock_env.PIPELINE_DATA_DIR = '/var/bucket/'
             self.assertEqual(
                 family_table_path(
                     ReferenceGenome.GRCh37,
