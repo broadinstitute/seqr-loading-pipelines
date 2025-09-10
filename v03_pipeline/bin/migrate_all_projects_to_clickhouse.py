@@ -9,10 +9,12 @@ if __name__ == '__main__':
     worker = luigi.worker.Worker()
     worker.add(
         MigrateAllProjectsToClickHouseTask(
-            ReferenceGenome.GRCh37, DatasetType.SNV_INDEL,
+            ReferenceGenome.GRCh37,
+            DatasetType.SNV_INDEL,
         ),
         MigrateAllProjectsToClickHouseTask(
-            ReferenceGenome.GRCh38, DatasetType.SNV_INDEL,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
         ),
     )
     worker.run()
