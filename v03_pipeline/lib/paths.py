@@ -514,3 +514,7 @@ def clickhouse_load_fail_file_path(
         run_id,
         '_CLICKHOUSE_LOAD_FAIL',
     )
+
+
+def db_id_to_gene_id_path() -> str:
+    return os.path.join(Env.LOADING_DATASETS_DIR, 'db_id_to_gene_id.csv.gz')

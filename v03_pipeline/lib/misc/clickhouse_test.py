@@ -448,7 +448,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 table_name_builder.src_table(
                     ClickHouseTable.ENTRIES,
                 ),
-                "gcs(clickhouse_search_named_collection, url='https://storage.googleapis.com/mock_bucket/v3.1/GRCh38/SNV_INDEL/runs/manual__2025-05-07T17-20-59.702114+00-00/new_entries.parquet/*.parquet')",
+                "gcs(pipeline_data_access, url='https://storage.googleapis.com/mock_bucket/v3.1/GRCh38/SNV_INDEL/runs/manual__2025-05-07T17-20-59.702114+00-00/new_entries.parquet/*.parquet')",
             )
 
     def test_direct_insert_all_keys(self):

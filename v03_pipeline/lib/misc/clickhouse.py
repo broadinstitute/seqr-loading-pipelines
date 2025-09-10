@@ -21,7 +21,7 @@ from v03_pipeline.lib.paths import (
 
 logger = get_logger(__name__)
 
-CLICKHOUSE_SEARCH_NAMED_COLLECTION = 'clickhouse_search_named_collection'
+GCS_NAMED_COLLECTION = 'pipeline_data_access'
 GOOGLE_XML_API_PATH = 'https://storage.googleapis.com/'
 OPTIMIZE_TABLE_TIMEOUT_S = 99999
 REDACTED = 'REDACTED'
@@ -231,7 +231,7 @@ class TableNameBuilder:
             '*.parquet',
         )
         if path.startswith('gs://'):
-            return f"gcs({CLICKHOUSE_SEARCH_NAMED_COLLECTION}, url='{path.replace('gs://', GOOGLE_XML_API_PATH)}')"
+            return f"gcs({GCS_NAMED_COLLECTION}, url='{path.replace('gs://', GOOGLE_XML_API_PATH)}')"
         return f"file('{path}', 'Parquet')"
 
 
