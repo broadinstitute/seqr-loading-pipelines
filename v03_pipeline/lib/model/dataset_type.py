@@ -181,10 +181,6 @@ class DatasetType(StrEnum):
     def has_lookup_table(self) -> bool:
         return self in {DatasetType.SNV_INDEL, DatasetType.MITO}
 
-    @property
-    def gt_stats_from_hl_call_stats(self) -> bool:
-        return self == DatasetType.SV
-
     def has_gencode_ensembl_to_refseq_id_mapping(
         self,
         reference_genome: ReferenceGenome,
@@ -361,19 +357,10 @@ class DatasetType(StrEnum):
     @property
     def variant_frequency_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
         return {
-            DatasetType.SNV_INDEL: [
-                snv_indel.gt_stats,
-            ],
-            DatasetType.MITO: [
-                mito.gt_stats,
-            ],
             DatasetType.GCNV: [
                 gcnv.gt_stats,
             ],
-            DatasetType.SV: [
-                sv.gt_stats,
-            ],
-        }[self]
+        }.get(self, [])
 
     @property
     def should_send_to_allele_registry(self):
