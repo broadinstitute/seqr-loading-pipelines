@@ -17,9 +17,6 @@ from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples im
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
 from v03_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRunTask
-from v03_pipeline.lib.tasks.write_project_family_tables import (
-    WriteProjectFamilyTablesTask,
-)
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
