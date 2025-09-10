@@ -9,7 +9,6 @@ from v03_pipeline.lib.model import (
     SampleType,
 )
 from v03_pipeline.lib.paths import (
-    family_table_path,
     imported_callset_path,
     lookup_table_path,
     metadata_for_run_path,
@@ -28,43 +27,6 @@ TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30varia*.vcf'
 
 
 class TestPaths(unittest.TestCase):
-    def test_family_table_path(self) -> None:
-        self.assertEqual(
-            family_table_path(
-                ReferenceGenome.GRCh37,
-                DatasetType.SNV_INDEL,
-                SampleType.WES,
-                'franklin',
-            ),
-            '/var/seqr/pipeline-data/v3.1/GRCh37/SNV_INDEL/families/WES/franklin.ht',
-        )
-        with (
-            patch('v03_pipeline.lib.paths.Env') as mock_env,
-            patch(
-                'v03_pipeline.lib.paths.FeatureFlag',
-            ) as mock_ff,
-        ):
-            mock_env.PIPELINE_DATA_DIR = '/var/bucket/'
-            self.assertEqual(
-                family_table_path(
-                    ReferenceGenome.GRCh37,
-                    DatasetType.SNV_INDEL,
-                    SampleType.WES,
-                    'franklin',
-                ),
-                '/var/bucket/v3.1/GRCh37/SNV_INDEL/families/WES/franklin.ht',
-            )
-            mock_ff.INCLUDE_PIPELINE_VERSION_IN_PREFIX = False
-            self.assertEqual(
-                family_table_path(
-                    ReferenceGenome.GRCh37,
-                    DatasetType.SNV_INDEL,
-                    SampleType.WES,
-                    'franklin',
-                ),
-                '/var/bucket/GRCh37/SNV_INDEL/families/WES/franklin.ht',
-            )
-
     def test_project_table_path(self) -> None:
         self.assertEqual(
             project_table_path(
@@ -75,6 +37,32 @@ class TestPaths(unittest.TestCase):
             ),
             '/var/seqr/pipeline-data/v3.1/GRCh38/MITO/projects/WES/R0652_pipeline_test.ht',
         )
+        with (
+            patch('v03_pipeline.lib.paths.Env') as mock_env,
+            patch(
+                'v03_pipeline.lib.paths.FeatureFlag',
+            ) as mock_ff,
+        ):
+            mock_env.PIPELINE_DATA_DIR = '/var/bucket/'
+            self.assertEqual(
+                project_table_path(
+                    ReferenceGenome.GRCh37,
+                    DatasetType.SNV_INDEL,
+                    SampleType.WES,
+                    'R0652_pipeline_test',
+                ),
+                '/var/bucket/v3.1/GRCh37/SNV_INDEL/projects/WES/R0652_pipeline_test.ht',
+            )
+            mock_ff.INCLUDE_PIPELINE_VERSION_IN_PREFIX = False
+            self.assertEqual(
+                project_table_path(
+                    ReferenceGenome.GRCh37,
+                    DatasetType.SNV_INDEL,
+                    SampleType.WES,
+                    'R0652_pipeline_test',
+                ),
+                '/var/bucket/GRCh37/SNV_INDEL/projects/WES/R0652_pipeline_test.ht',
+            )
 
     def test_lookup_table_path(self) -> None:
         self.assertEqual(
