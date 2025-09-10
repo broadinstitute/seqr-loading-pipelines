@@ -10,7 +10,6 @@ from v03_pipeline.lib.model import (
 )
 from v03_pipeline.lib.paths import (
     imported_callset_path,
-    lookup_table_path,
     metadata_for_run_path,
     new_variants_table_path,
     project_pedigree_path,
@@ -63,15 +62,6 @@ class TestPaths(unittest.TestCase):
                 ),
                 '/var/bucket/GRCh37/SNV_INDEL/projects/WES/R0652_pipeline_test.ht',
             )
-
-    def test_lookup_table_path(self) -> None:
-        self.assertEqual(
-            lookup_table_path(
-                ReferenceGenome.GRCh37,
-                DatasetType.SV,
-            ),
-            '/var/seqr/pipeline-data/v3.1/GRCh37/SV/lookup.ht',
-        )
 
     def test_sex_check_table_path(self) -> None:
         self.assertEqual(

@@ -59,4 +59,3 @@ def mitotip(ht: hl.Table, **_: Any) -> hl.Expression:
 
 def rsid(ht: hl.Table, **_: Any) -> hl.Expression:
     return ht.rsid.find(lambda x: hl.is_defined(x))
-

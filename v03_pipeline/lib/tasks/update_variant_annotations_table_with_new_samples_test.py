@@ -913,7 +913,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     hmtvar=None,
                     mitomap=None,
                     mitimpact=None,
-
                     local_constraint_mito=None,
                     key_=0,
                 ),

@@ -177,10 +177,6 @@ class DatasetType(StrEnum):
             ),
         )
 
-    @property
-    def has_lookup_table(self) -> bool:
-        return self in {DatasetType.SNV_INDEL, DatasetType.MITO}
-
     def has_gencode_ensembl_to_refseq_id_mapping(
         self,
         reference_genome: ReferenceGenome,
@@ -222,25 +218,6 @@ class DatasetType(StrEnum):
     @property
     def veppable(self) -> bool:
         return self == DatasetType.SNV_INDEL
-
-    @property
-    def lookup_table_fields_and_genotype_filter_fns(
-        self,
-    ) -> dict[str, Callable[[hl.StructExpression], hl.Expression]]:
-        return {
-            DatasetType.SNV_INDEL: {
-                'ref_samples': lambda s: s.GT.is_hom_ref(),
-                'het_samples': lambda s: s.GT.is_het(),
-                'hom_samples': lambda s: s.GT.is_hom_var(),
-            },
-            DatasetType.MITO: {
-                'ref_samples': lambda s: hl.is_defined(s.HL) & (s.HL == ZERO),
-                'heteroplasmic_samples': lambda s: (
-                    (s.HL < MITO_MIN_HOM_THRESHOLD) & (s.HL > ZERO)
-                ),
-                'homoplasmic_samples': lambda s: s.HL >= MITO_MIN_HOM_THRESHOLD,
-            },
-        }[self]
 
     def formatting_annotation_fns(
         self,
