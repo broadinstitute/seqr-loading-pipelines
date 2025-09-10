@@ -28,13 +28,6 @@ class RunPipelineTask(luigi.WrapperTask):
         return [
             self.clone(WriteMetadataForRunTask),
             self.clone(UpdateVariantAnnotationsTableWithNewSamplesTask),
-            *[
-                self.clone(
-                    WriteProjectFamilyTablesTask,
-                    project_i=i,
-                )
-                for i in range(len(self.project_guids))
-            ],
             self.clone(WriteNewEntriesParquetTask),
             self.clone(WriteNewVariantsParquetTask),
             *(
