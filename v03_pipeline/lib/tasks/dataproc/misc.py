@@ -3,7 +3,7 @@ import re
 import luigi
 
 from v03_pipeline.lib.model import ReferenceGenome
-from v03_pipeline.lib.tasks.clickhouse_migration.migrate_all_projects_to_clickhouse import (
+from v03_pipeline.lib.model.constants import (
     MIGRATION_RUN_ID,
 )
 

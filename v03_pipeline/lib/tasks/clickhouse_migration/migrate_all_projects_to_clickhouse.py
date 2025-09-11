@@ -3,6 +3,7 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.model import SampleType
+from v03_pipeline.lib.model.constants import MIGRATION_RUN_ID
 from v03_pipeline.lib.model.feature_flag import FeatureFlag
 from v03_pipeline.lib.paths import (
     project_table_path,
@@ -19,8 +20,6 @@ from v03_pipeline.lib.tasks.clickhouse_migration.migrate_project_to_clickhouse_o
 from v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster import (
     CreateDataprocClusterTask,
 )
-
-MIGRATION_RUN_ID = 'hail_search_to_clickhouse_migration'
 
 
 @luigi.util.inherits(BaseLoadingPipelineParams)

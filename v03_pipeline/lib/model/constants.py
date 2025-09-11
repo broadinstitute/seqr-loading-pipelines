@@ -1,6 +1,7 @@
 import os
 
 LOCAL_DISK_MOUNT_PATH = '/var/seqr'
+MIGRATION_RUN_ID = 'hail_search_to_clickhouse_migration'
 PROJECTS_EXCLUDED_FROM_LOOKUP = {
     'R0555_seqr_demo',
     'R0607_gregor_training_project_',
