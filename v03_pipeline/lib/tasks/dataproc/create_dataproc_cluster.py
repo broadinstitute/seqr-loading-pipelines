@@ -16,6 +16,7 @@ from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
 from v03_pipeline.lib.tasks.dataproc.misc import get_cluster_name
 
 DEBIAN_IMAGE = '2.2.5-debian12'
+DISK_SIZE_GB = 400
 HAIL_VERSION = hl.version().split('-')[0]
 INSTANCE_TYPE = 'n1-highmem-8'
 PKGS = '|'.join(
@@ -55,7 +56,7 @@ def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
                 'machine_type_uri': INSTANCE_TYPE,
                 'disk_config': {
                     'boot_disk_type': 'pd-standard',
-                    'boot_disk_size_gb': 100,
+                    'boot_disk_size_gb': DISK_SIZE_GB,
                 },
             },
             'worker_config': {
@@ -63,7 +64,7 @@ def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
                 'machine_type_uri': INSTANCE_TYPE,
                 'disk_config': {
                     'boot_disk_type': 'pd-standard',
-                    'boot_disk_size_gb': 100,
+                    'boot_disk_size_gb': DISK_SIZE_GB,
                 },
             },
             'secondary_worker_config': {
@@ -71,7 +72,7 @@ def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
                 'machine_type_uri': INSTANCE_TYPE,
                 'disk_config': {
                     'boot_disk_type': 'pd-standard',
-                    'boot_disk_size_gb': 100,
+                    'boot_disk_size_gb': DISK_SIZE_GB,
                 },
                 'is_preemptible': True,
                 'preemptibility': 'PREEMPTIBLE',
