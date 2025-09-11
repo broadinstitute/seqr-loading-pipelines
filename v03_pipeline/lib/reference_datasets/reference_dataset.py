@@ -2,7 +2,6 @@ import importlib
 import types
 from collections.abc import Callable
 from enum import StrEnum
-from typing import Union
 
 import hail as hl
 
@@ -17,7 +16,7 @@ from v03_pipeline.lib.model import (
     FeatureFlag,
     ReferenceGenome,
 )
-from v03_pipeline.lib.reference_datasets import clinvar, dbnsfp
+from v03_pipeline.lib.reference_datasets import dbnsfp
 from v03_pipeline.lib.reference_datasets.misc import (
     compress_floats,
     filter_contigs,
@@ -42,7 +41,7 @@ class BaseReferenceDataset:
         cls,
         reference_genome: ReferenceGenome,
         dataset_type: DatasetType,
-    ) -> set[Union['ReferenceDataset', 'ReferenceDatasetQuery']]:
+    ) -> set['ReferenceDataset']:
         reference_datasets = [
             dataset
             for dataset, config in CONFIG.items()
@@ -166,7 +165,6 @@ class BaseReferenceDataset:
 
 
 class ReferenceDataset(BaseReferenceDataset, StrEnum):
-    clinvar = 'clinvar'
     dbnsfp = 'dbnsfp'
     exac = 'exac'
     eigen = 'eigen'
@@ -186,49 +184,6 @@ class ReferenceDataset(BaseReferenceDataset, StrEnum):
     screen = 'screen'
     local_constraint_mito = 'local_constraint_mito'
     mitomap = 'mitomap'
-
-
-class ReferenceDatasetQuery(BaseReferenceDataset, StrEnum):
-    clinvar_path_variants = 'clinvar_path_variants'
-    high_af_variants = 'high_af_variants'
-
-    @classmethod
-    def for_reference_genome_dataset_type(
-        cls,
-        reference_genome: ReferenceGenome,
-        dataset_type: DatasetType,
-    ) -> set['ReferenceDatasetQuery']:
-        return {
-            dataset
-            for dataset in super().for_reference_genome_dataset_type(
-                reference_genome,
-                dataset_type,
-            )
-            if isinstance(dataset, cls)
-        }
-
-    @property
-    def requires(self) -> ReferenceDataset:
-        return {
-            self.clinvar_path_variants: ReferenceDataset.clinvar,
-            self.high_af_variants: ReferenceDataset.gnomad_genomes,
-        }[self]
-
-    def get_ht(
-        self,
-        reference_genome: ReferenceGenome,
-        dataset_type: DatasetType,
-        reference_dataset_ht: hl.Table,
-    ) -> hl.Table:
-        module = importlib.import_module(
-            f'v03_pipeline.lib.reference_datasets.{self.name}',
-        )
-        ht = module.get_ht(reference_dataset_ht)
-        if self.filter:
-            ht = self.filter(reference_genome, dataset_type, ht)
-        return ht.annotate_globals(
-            version=self.version(reference_genome),
-        )
 
 
 CONFIG = {
@@ -261,20 +216,6 @@ CONFIG = {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.1',
             PATH: 'gs://seqr-reference-data/GRCh38/eigen/EIGEN_coding_noncoding.liftover_grch38.ht',
-        },
-    },
-    ReferenceDataset.clinvar: {
-        ENUMS: clinvar.ENUMS,
-        FILTER: filter_mito_contigs,
-        ReferenceGenome.GRCh37: {
-            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: clinvar.parse_clinvar_release_date,
-            PATH: 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
-        },
-        ReferenceGenome.GRCh38: {
-            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
-            VERSION: clinvar.parse_clinvar_release_date,
-            PATH: 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
         },
     },
     ReferenceDataset.exac: {
@@ -464,15 +405,7 @@ CONFIG = {
         },
     },
 }
-CONFIG[ReferenceDatasetQuery.clinvar_path_variants] = {
-    EXCLUDE_FROM_ANNOTATIONS: True,
-    **CONFIG[ReferenceDataset.clinvar],
-}
 CONFIG[ReferenceDataset.gnomad_coding_and_noncoding] = {
-    EXCLUDE_FROM_ANNOTATIONS: True,
-    **CONFIG[ReferenceDataset.gnomad_genomes],
-}
-CONFIG[ReferenceDatasetQuery.high_af_variants] = {
     EXCLUDE_FROM_ANNOTATIONS: True,
     **CONFIG[ReferenceDataset.gnomad_genomes],
 }

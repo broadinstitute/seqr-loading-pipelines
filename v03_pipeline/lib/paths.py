@@ -423,13 +423,6 @@ def new_variants_table_path(
     )
 
 
-def clinvar_dataset_path(reference_genome: ReferenceGenome, etag: str) -> str:
-    return os.path.join(
-        Env.HAIL_TMP_DIR,
-        f'clinvar-{reference_genome.value}-{etag}.ht',
-    )
-
-
 def project_pedigree_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,

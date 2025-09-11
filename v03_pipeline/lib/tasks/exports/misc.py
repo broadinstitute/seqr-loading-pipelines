@@ -87,15 +87,6 @@ def export_parquet_filterable_transcripts_fields(
     return OrderedDict(sorted(fields.items()))
 
 
-def drop_unexported_fields(ht: hl.Table) -> hl.Table:
-    if hasattr(ht, ReferenceDataset.clinvar.value):
-        ht = ht.drop(ReferenceDataset.clinvar.value)
-        ht = ht.annotate_globals(
-            enums=ht.globals.enums.drop(ReferenceDataset.clinvar.value),
-        )
-    return ht
-
-
 def subset_sorted_transcript_consequences_fields(
     ht: hl.Table,
     reference_genome: ReferenceGenome,

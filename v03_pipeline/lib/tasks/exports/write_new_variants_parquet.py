@@ -15,7 +15,6 @@ from v03_pipeline.lib.tasks.base.base_write_parquet import BaseWriteParquetTask
 from v03_pipeline.lib.tasks.exports.fields import get_variants_export_fields
 from v03_pipeline.lib.tasks.exports.misc import (
     camelcase_array_structexpression_fields,
-    drop_unexported_fields,
     subset_sorted_transcript_consequences_fields,
     unmap_formatting_annotation_enums,
     unmap_reference_dataset_annotation_enums,
@@ -83,7 +82,6 @@ class WriteNewVariantsParquetTask(BaseWriteParquetTask):
                     self.run_id,
                 ),
             )
-        ht = drop_unexported_fields(ht)
         ht = unmap_formatting_annotation_enums(
             ht,
             self.reference_genome,
