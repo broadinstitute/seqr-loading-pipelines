@@ -3,7 +3,6 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.model import SampleType
-from v03_pipeline.lib.model.constants import MIGRATION_RUN_ID
 from v03_pipeline.lib.paths import (
     project_table_path,
 )
@@ -17,7 +16,7 @@ from v03_pipeline.lib.tasks.clickhouse_migration.migrate_project_to_clickhouse i
 
 @luigi.util.inherits(BaseLoadingPipelineParams)
 class MigrateAllProjectsToClickHouseTask(luigi.WrapperTask):
-    run_id = luigi.Parameter(default=MIGRATION_RUN_ID)
+    run_id = luigi.Parameter()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

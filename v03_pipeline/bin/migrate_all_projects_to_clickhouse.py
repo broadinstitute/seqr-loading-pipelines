@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
+import uuid
 
 import luigi
 
+from v03_pipeline.lib.constants import MIGRATION_RUN_ID
 from v03_pipeline.lib.model import DatasetType, FeatureFlag, ReferenceGenome
 from v03_pipeline.lib.tasks import (
     MigrateAllProjectsToClickHouseOnDataprocTask,
@@ -16,7 +18,11 @@ if __name__ == '__main__':
     )
     luigi.build(
         [
-            task_cls(reference_genome, DatasetType.SNV_INDEL)
+            task_cls(
+                reference_genome,
+                DatasetType.SNV_INDEL,
+                run_id=MIGRATION_RUN_ID + '-' + str(uuid.uuid1().int)[:4],
+            )
             for reference_genome in ReferenceGenome
         ],
     )
