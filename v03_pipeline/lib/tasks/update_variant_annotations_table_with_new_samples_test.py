@@ -1034,13 +1034,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         position=789481,
                         reference_genome='GRCh38',
                     ),
-                    gt_stats=hl.Struct(
-                        AF=0.875,
-                        AC=7,
-                        AN=8,
-                        Hom=3,
-                        Het=1,
-                    ),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
                         contig=1,
@@ -1089,13 +1082,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         position=6559723,
                         reference_genome='GRCh38',
                     ),
-                    gt_stats=hl.Struct(
-                        AF=0.25,
-                        AC=2,
-                        AN=8,
-                        Hom=0,
-                        Het=2,
-                    ),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
                         contig=1,
@@ -1142,13 +1128,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         contig='chr1',
                         position=181074952,
                         reference_genome='GRCh38',
-                    ),
-                    gt_stats=hl.Struct(
-                        AF=0.375,
-                        AC=3,
-                        AN=8,
-                        Hom=1,
-                        Het=1,
                     ),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
@@ -1199,13 +1178,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         contig='chr1',
                         position=16089601,
                         reference_genome='GRCh38',
-                    ),
-                    gt_stats=hl.Struct(
-                        AF=0.25,
-                        AC=2,
-                        AN=8,
-                        Hom=0,
-                        Het=2,
                     ),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
@@ -1258,13 +1230,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         contig='chr1',
                         position=21480419,
                         reference_genome='GRCh38',
-                    ),
-                    gt_stats=hl.Struct(
-                        AF=0.5,
-                        AC=4,
-                        AN=8,
-                        Hom=0,
-                        Het=4,
                     ),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
@@ -1329,13 +1294,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         position=2781000,
                         reference_genome='GRCh38',
                     ),
-                    gt_stats=hl.Struct(
-                        AF=0.375,
-                        AC=3,
-                        AN=8,
-                        Hom=1,
-                        Het=1,
-                    ),
                     gnomad_svs=None,
                     sorted_gene_consequences=[
                         hl.Struct(gene_id='ENSG00000135835', major_consequence_id=0),
@@ -1397,13 +1355,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         contig='chrX',
                         position=2781900,
                         reference_genome='GRCh38',
-                    ),
-                    gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.4285714328289032)),
-                        AC=3,
-                        AN=7,
-                        Hom=1,
-                        Het=1,
                     ),
                     gnomad_svs=None,
                     sorted_gene_consequences=[
@@ -1510,13 +1461,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         position=20404,
                         reference_genome='GRCh38',
                     ),
-                    gt_stats=hl.Struct(
-                        AF=0.125,
-                        AC=2,
-                        AN=16,
-                        Hom=0,
-                        Het=2,
-                    ),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
                         contig=1,
@@ -1590,15 +1534,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             len(ht.globals.updates.collect()[0]),
             2,
         )
-        self.assertEqual(
-            ht.gt_stats.collect(),
-            [
-                hl.Struct(AF=0.25, AC=1, AN=4, Hom=0, Het=1),
-                # Note the call stats computed
-                # from the two included samples.
-                hl.Struct(AF=0.0, AC=0, AN=4, Hom=0, Het=0),
-            ],
-        )
 
     def test_gcnv_update_vat_multiple(
         self,
@@ -1669,13 +1604,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         position=100023213,
                         reference_genome='GRCh38',
                     ),
-                    gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(4.401408e-05)),
-                        AC=1,
-                        AN=22720,
-                        Hom=None,
-                        Het=None,
-                    ),
                     num_exon=3,
                     rg37_locus=hl.Locus(
                         contig=1,
@@ -1708,13 +1636,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         contig='chr1',
                         position=100023212,
                         reference_genome='GRCh38',
-                    ),
-                    gt_stats=hl.Struct(
-                        AF=8.802817319519818e-05,
-                        AC=2,
-                        AN=22719,
-                        Hom=None,
-                        Het=None,
                     ),
                     num_exon=2,
                     rg37_locus=hl.Locus(
