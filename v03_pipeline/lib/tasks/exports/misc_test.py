@@ -32,6 +32,7 @@ class MiscTest(unittest.TestCase):
         self.assertCountEqual(
             list(ht.globals.enums.collect()[0].keys()),
             [
+                'clinvar',
                 'screen',
                 'dbnsfp',
                 'gnomad_exomes',
@@ -63,6 +64,7 @@ class MiscTest(unittest.TestCase):
                     reference_genome='GRCh37',
                 ),
                 rsid=None,
+                clinvar=hl.Struct(alleleId=929885, conflictingPathogenicities=None, goldStars=1, submitters=['Labcorp Genetics (formerly Invitae), Labcorp'], conditions=['not provided'], assertion_ids=[], pathogenicity_id=12),
                 sorted_transcript_consequences=[
                     hl.Struct(
                         amino_acids='S/L',
@@ -191,6 +193,7 @@ class MiscTest(unittest.TestCase):
         self.assertCountEqual(
             list(ht.globals.enums.collect()[0].keys()),
             [
+                'clinvar',
                 'dbnsfp',
                 'gnomad_exomes',
                 'splice_ai',
@@ -225,6 +228,7 @@ class MiscTest(unittest.TestCase):
                         lof_filters=None,
                     ),
                 ],
+                clinvar=hl.Struct(alleleId=2193183, conflictingPathogenicities=None, goldStars=1, submitters=['Ambry Genetics'], conditions=['not specified'], assertion_ids=[], pathogenicity_id=14),
                 variant_id='1-69134-A-G',
                 xpos=1000069134,
                 gt_stats=hl.Struct(AC=25, AN=1246, AF=0.020064204931259155, hom=10),
@@ -300,6 +304,7 @@ class MiscTest(unittest.TestCase):
         self.assertListEqual(
             list(ht.globals.enums.collect()[0].keys()),
             [
+                'clinvar',
                 'sorted_motif_feature_consequences',
                 'sorted_regulatory_feature_consequences',
                 'sorted_transcript_consequences',
@@ -307,9 +312,10 @@ class MiscTest(unittest.TestCase):
         )
         self.assertEqual(
             ht.drop(
-                'sorted_transcript_consequences',
-                'sorted_regulatory_feature_consequences',
+                'clinvar',
                 'sorted_motif_feature_consequences',
+                'sorted_regulatory_feature_consequences',
+                'sorted_transcript_consequences',
             ).collect()[0],
             hl.Struct(
                 key_=0,
@@ -389,6 +395,7 @@ class MiscTest(unittest.TestCase):
 
     def test_camelcase_array_structexpression_fields(self) -> None:
         ht = hl.read_table(TEST_SNV_INDEL_ANNOTATIONS)
+        ht = ht.drop('clinvar')
         ht = unmap_formatting_annotation_enums(
             ht,
             ReferenceGenome.GRCh38,
