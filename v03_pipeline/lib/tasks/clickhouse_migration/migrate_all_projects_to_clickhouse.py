@@ -31,7 +31,7 @@ class MigrateAllProjectsToClickHouseTask(luigi.WrapperTask):
 
     def requires(self) -> [luigi.Task]:
         return (
-            [self.clone(CreateDataprocClusterTask)]
+            [self.clone(CreateDataprocClusterTask, run_id=MIGRATION_RUN_ID)]
             if FeatureFlag.RUN_PIPELINE_ON_DATAPROC
             else []
         )
