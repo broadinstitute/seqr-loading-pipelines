@@ -12,7 +12,7 @@ CLUSTER_NAME_PREFIX = 'pipeline-runner'
 
 def get_cluster_name(reference_genome: ReferenceGenome, run_id: str):
     if MIGRATION_RUN_ID in run_id:
-        return f'{CLUSTER_NAME_PREFIX}-{reference_genome.value.lower()}-hs-to-clckhouse'
+        return f'{CLUSTER_NAME_PREFIX}-{reference_genome.value.lower()}-hs-to-clckhse-mgrtn'
     return f'{CLUSTER_NAME_PREFIX}-{reference_genome.value.lower()}-{run_id}'
 
 
