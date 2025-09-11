@@ -16,6 +16,9 @@ from v03_pipeline.lib.tasks.clickhouse_migration.migrate_project_to_clickhouse i
 from v03_pipeline.lib.tasks.clickhouse_migration.migrate_project_to_clickhouse_on_dataproc import (
     MigrateProjectToClickHouseOnDataprocTask,
 )
+from v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster import (
+    CreateDataprocClusterTask,
+)
 
 MIGRATION_RUN_ID = 'hail_search_to_clickhouse_migration'
 
@@ -25,6 +28,13 @@ class MigrateAllProjectsToClickHouseTask(luigi.WrapperTask):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.dynamic_parquet_tasks = set()
+
+    def requires(self) -> [luigi.Task]:
+        return (
+            [self.clone(CreateDataprocClusterTask)]
+            if FeatureFlag.RUN_PIPELINE_ON_DATAPROC
+            else []
+        )
 
     def complete(self):
         return len(self.dynamic_parquet_tasks) >= 1 and all(
