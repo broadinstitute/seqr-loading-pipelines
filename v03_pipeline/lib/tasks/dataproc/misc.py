@@ -3,11 +3,16 @@ import re
 import luigi
 
 from v03_pipeline.lib.model import ReferenceGenome
+from v03_pipeline.lib.model.constants import (
+    MIGRATION_RUN_ID,
+)
 
 CLUSTER_NAME_PREFIX = 'pipeline-runner'
 
 
 def get_cluster_name(reference_genome: ReferenceGenome, run_id: str):
+    if MIGRATION_RUN_ID in run_id:
+        return f'{CLUSTER_NAME_PREFIX}-{reference_genome.value.lower()}-hs-to-clckhse-mgrtn'
     return f'{CLUSTER_NAME_PREFIX}-{reference_genome.value.lower()}-{run_id}'
 
 

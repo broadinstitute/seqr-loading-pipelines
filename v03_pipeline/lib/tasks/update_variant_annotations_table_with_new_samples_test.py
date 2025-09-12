@@ -1604,6 +1604,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         position=100023213,
                         reference_genome='GRCh38',
                     ),
+                    gt_stats=hl.Struct(
+                        AF=hl.eval(hl.float32(4.401408e-05)),
+                        AC=1,
+                        AN=22720,
+                        Hom=None,
+                        Het=None,
+                    ),
                     num_exon=3,
                     rg37_locus=hl.Locus(
                         contig=1,
@@ -1636,6 +1643,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         contig='chr1',
                         position=100023212,
                         reference_genome='GRCh38',
+                    ),
+                    gt_stats=hl.Struct(
+                        AF=8.802817319519818e-05,
+                        AC=2,
+                        AN=22719,
+                        Hom=None,
+                        Het=None,
                     ),
                     num_exon=2,
                     rg37_locus=hl.Locus(
