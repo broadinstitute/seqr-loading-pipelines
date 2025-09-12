@@ -30,16 +30,12 @@ from v03_pipeline.lib.paths import (
     valid_reference_dataset_path,
 )
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
-from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
-    BaseUpdateVariantAnnotationsTableTask,
-)
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
 from v03_pipeline.lib.test.misc import copy_project_pedigree_to_mocked_dir
 from v03_pipeline.lib.test.mock_clinvar_urls import mock_clinvar_urls
-from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
     MockedReferenceDatasetsTestCase,
 )
