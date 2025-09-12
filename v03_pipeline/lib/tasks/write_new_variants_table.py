@@ -28,9 +28,6 @@ from v03_pipeline.lib.tasks.base.base_loading_run_params import (
 )
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
-from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset import (
-    UpdateVariantAnnotationsTableWithUpdatedReferenceDataset,
-)
 from v03_pipeline.lib.tasks.write_metadata_for_run import (
     WriteMetadataForRunTask,
 )
@@ -79,7 +76,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
 
     def requires(self) -> list[luigi.Task]:
         return [
-            self.clone(UpdateVariantAnnotationsTableWithUpdatedReferenceDataset),
             self.clone(WriteMetadataForRunTask),
         ]
 
