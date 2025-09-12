@@ -28,9 +28,6 @@ from v03_pipeline.lib.tasks.base.base_loading_run_params import (
 )
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
-from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset import (
-    UpdateVariantAnnotationsTableWithUpdatedReferenceDataset,
-)
 from v03_pipeline.lib.tasks.update_lookup_table import (
     UpdateLookupTableTask,
 )
@@ -81,9 +78,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         )
 
     def requires(self) -> list[luigi.Task]:
-        requirements = [
-            self.clone(UpdateVariantAnnotationsTableWithUpdatedReferenceDataset),
-        ]
+        requirements = []
         if self.dataset_type.has_lookup_table:
             requirements = [
                 *requirements,

@@ -64,7 +64,15 @@ class MiscTest(unittest.TestCase):
                     reference_genome='GRCh37',
                 ),
                 rsid=None,
-                clinvar=hl.Struct(alleleId=929885, conflictingPathogenicities=None, goldStars=1, submitters=['Labcorp Genetics (formerly Invitae), Labcorp'], conditions=['not provided'], assertion_ids=[], pathogenicity_id=12),
+                clinvar=hl.Struct(
+                    alleleId=929885,
+                    conflictingPathogenicities=None,
+                    goldStars=1,
+                    submitters=['Labcorp Genetics (formerly Invitae), Labcorp'],
+                    conditions=['not provided'],
+                    assertion_ids=[],
+                    pathogenicity_id=12,
+                ),
                 sorted_transcript_consequences=[
                     hl.Struct(
                         amino_acids='S/L',
@@ -228,7 +236,15 @@ class MiscTest(unittest.TestCase):
                         lof_filters=None,
                     ),
                 ],
-                clinvar=hl.Struct(alleleId=2193183, conflictingPathogenicities=None, goldStars=1, submitters=['Ambry Genetics'], conditions=['not specified'], assertion_ids=[], pathogenicity_id=14),
+                clinvar=hl.Struct(
+                    alleleId=2193183,
+                    conflictingPathogenicities=None,
+                    goldStars=1,
+                    submitters=['Ambry Genetics'],
+                    conditions=['not specified'],
+                    assertion_ids=[],
+                    pathogenicity_id=14,
+                ),
                 variant_id='1-69134-A-G',
                 xpos=1000069134,
                 gt_stats=hl.Struct(AC=25, AN=1246, AF=0.020064204931259155, hom=10),
