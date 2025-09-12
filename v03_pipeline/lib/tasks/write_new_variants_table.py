@@ -22,7 +22,7 @@ from v03_pipeline.lib.reference_datasets.gencode.mapping_gene_ids import (
     load_gencode_ensembl_to_refseq_id,
     load_gencode_gene_symbol_to_gene_id,
 )
-from v03_pipeline.lib.reference_datasets.reference_dataset import BaseReferenceDataset
+from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )
@@ -48,7 +48,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         deps = {}
         for (
             reference_dataset
-        ) in BaseReferenceDataset.for_reference_genome_dataset_type_annotations(
+        ) in ReferenceDataset.for_reference_genome_dataset_type_annotations(
             self.reference_genome,
             self.dataset_type,
         ):
@@ -171,7 +171,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         # Join new variants against the reference datasets that are not "annotated".
         for (
             reference_dataset
-        ) in BaseReferenceDataset.for_reference_genome_dataset_type_annotations(
+        ) in ReferenceDataset.for_reference_genome_dataset_type_annotations(
             self.reference_genome,
             self.dataset_type,
         ):
