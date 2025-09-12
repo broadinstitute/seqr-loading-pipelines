@@ -22,7 +22,6 @@ from v03_pipeline.lib.model import (
 )
 from v03_pipeline.lib.reference_datasets.reference_dataset import (
     ReferenceDataset,
-    ReferenceDataset,
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset import (

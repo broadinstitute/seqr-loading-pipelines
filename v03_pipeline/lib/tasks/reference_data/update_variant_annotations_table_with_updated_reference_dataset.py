@@ -10,7 +10,6 @@ from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.paths import valid_reference_dataset_path
 from v03_pipeline.lib.reference_datasets.reference_dataset import (
     ReferenceDataset,
-    ReferenceDataset,
 )
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,

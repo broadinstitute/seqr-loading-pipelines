@@ -186,7 +186,6 @@ class ReferenceDataset(StrEnum):
         )
 
 
-    
 CONFIG = {
     ReferenceDataset.dbnsfp: {
         ENUMS: {
