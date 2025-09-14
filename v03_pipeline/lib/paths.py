@@ -10,7 +10,6 @@ from v03_pipeline.lib.model import (
     DatasetType,
     Env,
     FeatureFlag,
-    PipelineVersion,
     ReferenceGenome,
     SampleType,
 )
@@ -26,13 +25,6 @@ def pipeline_prefix(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> str:
-    if FeatureFlag.INCLUDE_PIPELINE_VERSION_IN_PREFIX:
-        return os.path.join(
-            root,
-            PipelineVersion.V3_1.value,
-            reference_genome.value,
-            dataset_type.value,
-        )
     return os.path.join(
         root,
         reference_genome.value,
@@ -50,12 +42,6 @@ def _v03_reference_dataset_prefix(
         if access_control == AccessControl.PRIVATE
         else root
     )
-    if FeatureFlag.INCLUDE_PIPELINE_VERSION_IN_PREFIX:
-        return os.path.join(
-            root,
-            PipelineVersion.V3_1.value,
-            reference_genome.value,
-        )
     return os.path.join(
         root,
         reference_genome.value,

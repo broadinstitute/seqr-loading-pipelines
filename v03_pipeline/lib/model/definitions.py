@@ -26,11 +26,6 @@ class Sex(StrEnum):
         }.get(self, [self.name])
 
 
-class PipelineVersion(StrEnum):
-    V02 = 'v02'
-    V03 = 'v03'
-    V3_1 = 'v3.1'
-
 
 class ReferenceGenome(StrEnum):
     GRCh37 = 'GRCh37'
