@@ -118,21 +118,28 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         )
 
         # 1) Identify new variants.
-        annotations_ht = hl.read_table(
+        if hfs.exists(
             variant_annotations_table_path(
                 self.reference_genome,
                 self.dataset_type,
-            ),
-        )
-        # Gracefully handle case for on-premises uses
-        # where key_ field is not present and migration was not run.
-        if not hasattr(annotations_ht, 'key_'):
-            annotations_ht = annotations_ht.add_index(name='key_')
-            annotations_ht = annotations_ht.annotate_globals(
-                max_key_=(annotations_ht.count() - 1),
             )
-
-        new_variants_ht = callset_ht.anti_join(annotations_ht)
+        ):
+            annotations_ht = hl.read_table(
+                variant_annotations_table_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                )
+            )
+            # Gracefully handle case for on-premises uses
+            # where key_ field is not present and migration was not run.
+            if not hasattr(annotations_ht, 'key_'):
+                annotations_ht = annotations_ht.add_index(name='key_')
+                annotations_ht = annotations_ht.annotate_globals(
+                    max_key_=(annotations_ht.count() - 1),
+                )
+            new_variants_ht = callset_ht.anti_join(annotations_ht)
+        else:
+            new_variants_ht = callset_ht
 
         # Annotate new variants with VEP.
         # Note about the repartition: our work here is cpu/memory bound and

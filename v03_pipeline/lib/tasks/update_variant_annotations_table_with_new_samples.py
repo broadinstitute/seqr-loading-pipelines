@@ -12,8 +12,8 @@ from v03_pipeline.lib.paths import (
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )
-from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
-    BaseUpdateVariantAnnotationsTableTask,
+from v03_pipeline.lib.tasks.base.base_update import (
+    BaseUpdateTask,
 )
 from v03_pipeline.lib.tasks.update_new_variants_with_caids import (
     UpdateNewVariantsWithCAIDsTask,
@@ -23,7 +23,7 @@ from v03_pipeline.lib.tasks.write_new_variants_table import WriteNewVariantsTabl
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class UpdateVariantAnnotationsTableWithNewSamplesTask(
-    BaseUpdateVariantAnnotationsTableTask,
+    BaseUpdateTask,
 ):
     def requires(self) -> list[luigi.Task]:
         return [
@@ -56,6 +56,27 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
                     ],
                 ),
                 hl.read_table(self.output().path).updates,
+            ),
+        )
+
+    def initialize_table(self) -> hl.Table:
+        key_type = self.dataset_type.table_key_type(self.reference_genome)
+        return hl.Table.parallelize(
+            [],
+            key_type,
+            key=key_type.fields,
+            globals=hl.Struct(
+                versions=hl.Struct(),
+                enums=hl.Struct(),
+                updates=hl.empty_set(
+                    hl.tstruct(
+                        callset=hl.tstr,
+                        project_guid=hl.tstr,
+                        remap_pedigree_hash=hl.tint32,
+                    ),
+                ),
+                migrations=hl.empty_array(hl.tstr),
+                max_key_=hl.int64(-1),
             ),
         )
 
