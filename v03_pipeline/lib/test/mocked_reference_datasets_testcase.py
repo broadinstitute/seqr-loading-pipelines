@@ -1,7 +1,6 @@
 import os
 import shutil
 
-import responses
 
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 from v03_pipeline.lib.paths import valid_reference_dataset_path
@@ -14,7 +13,6 @@ REFERENCE_DATASETS_PATH = 'v03_pipeline/var/test/reference_datasets'
 class MockedReferenceDatasetsTestCase(MockedDatarootTestCase):
     def setUp(self) -> None:
         super().setUp()
-        responses.start()
         for reference_genome in ReferenceGenome:
             path = os.path.join(
                 REFERENCE_DATASETS_PATH,
@@ -39,5 +37,3 @@ class MockedReferenceDatasetsTestCase(MockedDatarootTestCase):
 
     def tearDown(self):
         super().tearDown()
-        responses.stop()
-        responses.reset()

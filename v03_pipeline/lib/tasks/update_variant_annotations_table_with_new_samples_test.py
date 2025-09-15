@@ -4,7 +4,6 @@ from unittest.mock import Mock, PropertyMock, patch
 
 import hail as hl
 import luigi.worker
-import responses
 
 from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
@@ -78,7 +77,6 @@ TEST_RUN_ID = 'manual__2024-04-03'
 class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
     MockedReferenceDatasetsTestCase,
 ):
-    @responses.activate
     def test_missing_pedigree(
         self,
     ) -> None:
@@ -96,7 +94,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         worker.run()
         self.assertFalse(uvatwns_task.complete())
 
-    @responses.activate
     def test_missing_interval_reference_dataset(
         self,
     ) -> None:
@@ -127,7 +124,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         worker.run()
         self.assertFalse(uvatwns_task.complete())
 
-    @responses.activate
     @patch(
         'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
     )
@@ -508,7 +504,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ],
         )
 
-    @responses.activate
     @patch(
         'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
     )
@@ -649,7 +644,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ),
         )
 
-    @responses.activate
     @patch(
         'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
     )
@@ -716,7 +710,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ],
         )
 
-    @responses.activate
     @patch(
         'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
     )
