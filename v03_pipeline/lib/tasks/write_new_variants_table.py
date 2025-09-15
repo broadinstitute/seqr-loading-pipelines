@@ -1,6 +1,7 @@
 import math
 
 import hail as hl
+import hailtop.fs as hfs
 import luigi
 import luigi.util
 
@@ -122,13 +123,13 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             variant_annotations_table_path(
                 self.reference_genome,
                 self.dataset_type,
-            )
+            ),
         ):
             annotations_ht = hl.read_table(
                 variant_annotations_table_path(
                     self.reference_genome,
                     self.dataset_type,
-                )
+                ),
             )
             # Gracefully handle case for on-premises uses
             # where key_ field is not present and migration was not run.
