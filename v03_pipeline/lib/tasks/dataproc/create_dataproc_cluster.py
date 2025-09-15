@@ -108,9 +108,6 @@ def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
                     else '0',
                     'spark-env:PIPELINE_DATA_DIR': Env.PIPELINE_DATA_DIR,
                     'spark-env:HAIL_TMP_DIR': Env.HAIL_TMP_DIR,
-                    'spark-env:INCLUDE_PIPELINE_VERSION_IN_PREFIX': '1'
-                    if FeatureFlag.INCLUDE_PIPELINE_VERSION_IN_PREFIX
-                    else '0',
                     'spark-env:LOADING_DATASETS_DIR': Env.LOADING_DATASETS_DIR,
                     'spark-env:PRIVATE_REFERENCE_DATASETS_DIR': Env.PRIVATE_REFERENCE_DATASETS_DIR,
                     'spark-env:REFERENCE_DATASETS_DIR': Env.REFERENCE_DATASETS_DIR,
