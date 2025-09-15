@@ -17,7 +17,7 @@ from v03_pipeline.lib.model import (
     FeatureFlag,
     ReferenceGenome,
 )
-from v03_pipeline.lib.reference_datasets import dbnsfp
+from v03_pipeline.lib.reference_datasets import clinvar, dbnsfp
 from v03_pipeline.lib.reference_datasets.misc import (
     compress_floats,
     filter_contigs,
@@ -37,6 +37,7 @@ PATH = 'path'
 
 
 class ReferenceDataset(StrEnum):
+    clinvar = 'clinvar'
     dbnsfp = 'dbnsfp'
     exac = 'exac'
     eigen = 'eigen'
@@ -215,6 +216,20 @@ CONFIG = {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.1',
             PATH: 'gs://seqr-reference-data/GRCh38/eigen/EIGEN_coding_noncoding.liftover_grch38.ht',
+        },
+    },
+    ReferenceDataset.clinvar: {
+        ENUMS: clinvar.ENUMS,
+        FILTER: filter_mito_contigs,
+        ReferenceGenome.GRCh37: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
+            VERSION: clinvar.parse_clinvar_release_date,
+            PATH: 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+        },
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
+            VERSION: clinvar.parse_clinvar_release_date,
+            PATH: 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
         },
     },
     ReferenceDataset.exac: {
