@@ -346,7 +346,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             [
                 x
                 for x in ht.select(
-                    'clinvar',
                     'hgmd',
                     'variant_id',
                     'xpos',
@@ -363,15 +362,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     alleles=['A', 'C'],
-                    clinvar=hl.Struct(
-                        alleleId=None,
-                        conflictingPathogenicities=None,
-                        goldStars=None,
-                        pathogenicity_id=None,
-                        assertion_ids=None,
-                        submitters=None,
-                        conditions=None,
-                    ),
                     hgmd=hl.Struct(
                         accession='abcdefg',
                         class_id=3,
@@ -388,7 +378,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     alleles=['C', 'T'],
-                    clinvar=None,
                     hgmd=None,
                     variant_id='1-874734-C-T',
                     xpos=1000874734,
@@ -402,7 +391,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     alleles=['A', 'G'],
-                    clinvar=None,
                     hgmd=None,
                     variant_id='1-876499-A-G',
                     xpos=1000876499,
@@ -416,7 +404,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     alleles=['G', 'C'],
-                    clinvar=None,
                     hgmd=None,
                     variant_id='1-878314-G-C',
                     xpos=1000878314,
@@ -430,7 +417,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     alleles=['C', 'T'],
-                    clinvar=None,
                     hgmd=None,
                     variant_id='1-878809-C-T',
                     xpos=1000878809,
@@ -476,7 +462,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         ),
                     },
                     versions=hl.Struct(
-                        clinvar='2024-11-11',
                         dbnsfp='1.0',
                         eigen='1.1',
                         exac='1.1',
@@ -491,7 +476,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     migrations=[],
                     max_key_=29,
                     enums=hl.Struct(
-                        clinvar=ReferenceDataset.clinvar.enum_globals,
                         dbnsfp=ReferenceDataset.dbnsfp.enum_globals,
                         eigen=hl.Struct(),
                         exac=hl.Struct(),
@@ -617,15 +601,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     position=935889,
                     reference_genome='GRCh38',
                 ),
-                clinvar=hl.Struct(
-                    alleleId=None,
-                    conflictingPathogenicities=None,
-                    goldStars=None,
-                    pathogenicity_id=None,
-                    assertion_ids=None,
-                    submitters=None,
-                    conditions=None,
-                ),
                 eigen=hl.Struct(Eigen_phred=1.5880000591278076),
                 exac=hl.Struct(
                     AF_POPMAX=0.0004100881633348763,
@@ -728,7 +703,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ht.globals.versions.collect(),
             [
                 hl.Struct(
-                    clinvar='2024-11-11',
                     dbnsfp='1.0',
                     eigen='1.1',
                     exac='1.1',
@@ -780,7 +754,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             [
                 hl.Struct(
                     versions=hl.Struct(
-                        clinvar='2024-11-11',
                         dbnsfp='1.0',
                         gnomad_mito='1.1',
                         helix_mito='1.0',
@@ -791,7 +764,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     ),
                     enums=hl.Struct(
                         local_constraint_mito=hl.Struct(),
-                        clinvar=ReferenceDataset.clinvar.enum_globals,
                         dbnsfp=ReferenceDataset.dbnsfp.enum_globals,
                         gnomad_mito=hl.Struct(),
                         helix_mito=hl.Struct(),
@@ -842,7 +814,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sorted_transcript_consequences=None,
                 variant_id='M-3-T-C',
                 xpos=25000000003,
-                clinvar=None,
                 dbnsfp=None,
                 gnomad_mito=None,
                 helix_mito=None,
