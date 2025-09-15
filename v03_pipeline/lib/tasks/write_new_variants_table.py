@@ -138,8 +138,10 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                 annotations_ht = annotations_ht.annotate_globals(
                     max_key_=(annotations_ht.count() - 1),
                 )
+            curr_max_key_ = annotations_ht.index_globals().max_key_
             new_variants_ht = callset_ht.anti_join(annotations_ht)
         else:
+            curr_max_key_ = -1
             new_variants_ht = callset_ht
 
         # Annotate new variants with VEP.
@@ -218,7 +220,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         # Add serial integer index
         new_variants_ht = new_variants_ht.add_index(name='key_')
         new_variants_ht = new_variants_ht.transmute(
-            key_=new_variants_ht.key_ + annotations_ht.index_globals().max_key_ + 1,
+            key_=new_variants_ht.key_ + curr_max_key_ + 1,
         )
         new_variants_ht = annotate_formatting_annotation_enum_globals(
             new_variants_ht,
