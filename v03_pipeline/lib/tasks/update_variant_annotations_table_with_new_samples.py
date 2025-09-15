@@ -8,6 +8,7 @@ from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.paths import (
     new_variants_table_path,
     project_pedigree_path,
+    variant_annotations_table_path,
 )
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
@@ -15,6 +16,7 @@ from v03_pipeline.lib.tasks.base.base_loading_run_params import (
 from v03_pipeline.lib.tasks.base.base_update import (
     BaseUpdateTask,
 )
+from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.update_new_variants_with_caids import (
     UpdateNewVariantsWithCAIDsTask,
 )
@@ -25,6 +27,14 @@ from v03_pipeline.lib.tasks.write_new_variants_table import WriteNewVariantsTabl
 class UpdateVariantAnnotationsTableWithNewSamplesTask(
     BaseUpdateTask,
 ):
+    def output(self) -> luigi.Target:
+        return GCSorLocalTarget(
+            variant_annotations_table_path(
+                self.reference_genome,
+                self.dataset_type,
+            ),
+        )
+
     def requires(self) -> list[luigi.Task]:
         return [
             *super().requires(),
