@@ -9,7 +9,6 @@ from v03_pipeline.lib.model import (
     AccessControl,
     DatasetType,
     Env,
-    FeatureFlag,
     ReferenceGenome,
     SampleType,
 )

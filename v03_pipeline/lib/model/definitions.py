@@ -26,7 +26,6 @@ class Sex(StrEnum):
         }.get(self, [self.name])
 
 
-
 class ReferenceGenome(StrEnum):
     GRCh37 = 'GRCh37'
     GRCh38 = 'GRCh38'
