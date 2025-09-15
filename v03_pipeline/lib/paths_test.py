@@ -34,25 +34,12 @@ class TestPaths(unittest.TestCase):
                 SampleType.WES,
                 'R0652_pipeline_test',
             ),
-            '/var/seqr/pipeline-data/v3.1/GRCh38/MITO/projects/WES/R0652_pipeline_test.ht',
+            '/var/seqr/pipeline-data/GRCh38/MITO/projects/WES/R0652_pipeline_test.ht',
         )
         with (
             patch('v03_pipeline.lib.paths.Env') as mock_env,
-            patch(
-                'v03_pipeline.lib.paths.FeatureFlag',
-            ) as mock_ff,
         ):
             mock_env.PIPELINE_DATA_DIR = '/var/bucket/'
-            self.assertEqual(
-                project_table_path(
-                    ReferenceGenome.GRCh37,
-                    DatasetType.SNV_INDEL,
-                    SampleType.WES,
-                    'R0652_pipeline_test',
-                ),
-                '/var/bucket/v3.1/GRCh37/SNV_INDEL/projects/WES/R0652_pipeline_test.ht',
-            )
-            mock_ff.INCLUDE_PIPELINE_VERSION_IN_PREFIX = False
             self.assertEqual(
                 project_table_path(
                     ReferenceGenome.GRCh37,
@@ -70,7 +57,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 '/var/abc.efg/callset.vcf.gz',
             ),
-            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/sex_check/f92b8ab6b5b8c41fa20d7d49a5626b96dcd2ba79fa6f61eab7ffb80d550d951c.ht',
+            '/var/seqr/seqr-loading-temp/GRCh38/SNV_INDEL/sex_check/f92b8ab6b5b8c41fa20d7d49a5626b96dcd2ba79fa6f61eab7ffb80d550d951c.ht',
         )
 
     def test_relatedness_check_table_path(self) -> None:
@@ -80,7 +67,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 '/var/abc.efg/callset.vcf.gz',
             ),
-            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/relatedness_check/f92b8ab6b5b8c41fa20d7d49a5626b96dcd2ba79fa6f61eab7ffb80d550d951c.ht',
+            '/var/seqr/seqr-loading-temp/GRCh38/SNV_INDEL/relatedness_check/f92b8ab6b5b8c41fa20d7d49a5626b96dcd2ba79fa6f61eab7ffb80d550d951c.ht',
         )
 
     def test_validation_errors_for_run_path(self) -> None:
@@ -90,7 +77,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 'manual__2023-06-26T18:30:09.349671+00:00',
             ),
-            '/var/seqr/pipeline-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/validation_errors.json',
+            '/var/seqr/pipeline-data/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/validation_errors.json',
         )
 
     def test_metadata_for_run_path(self) -> None:
@@ -100,7 +87,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 'manual__2023-06-26T18:30:09.349671+00:00',
             ),
-            '/var/seqr/pipeline-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/metadata.json',
+            '/var/seqr/pipeline-data/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/metadata.json',
         )
 
     def test_variant_annotations_table_path(self) -> None:
@@ -109,7 +96,7 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh38,
                 DatasetType.GCNV,
             ),
-            '/var/seqr/pipeline-data/v3.1/GRCh38/GCNV/annotations.ht',
+            '/var/seqr/pipeline-data/GRCh38/GCNV/annotations.ht',
         )
 
     def test_remapped_and_subsetted_callset_path(self) -> None:
@@ -120,7 +107,7 @@ class TestPaths(unittest.TestCase):
                 '/var/abc.efg/callset.vcf.gz',
                 'R0111_tgg_bblanken_wes',
             ),
-            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/GCNV/remapped_and_subsetted_callsets/R0111_tgg_bblanken_wes/f92b8ab6b5b8c41fa20d7d49a5626b96dcd2ba79fa6f61eab7ffb80d550d951c.mt',
+            '/var/seqr/seqr-loading-temp/GRCh38/GCNV/remapped_and_subsetted_callsets/R0111_tgg_bblanken_wes/f92b8ab6b5b8c41fa20d7d49a5626b96dcd2ba79fa6f61eab7ffb80d550d951c.mt',
         )
         self.assertEqual(
             remapped_and_subsetted_callset_path(
@@ -129,7 +116,7 @@ class TestPaths(unittest.TestCase):
                 '/var/abc.efg/callset/*.vcf.gz',
                 'R0111_tgg_bblanken_wes',
             ),
-            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/GCNV/remapped_and_subsetted_callsets/R0111_tgg_bblanken_wes/26f481b386721f9889250c6549905660728ec9f77be4b8f7eeb6c4facc76282e.mt',
+            '/var/seqr/seqr-loading-temp/GRCh38/GCNV/remapped_and_subsetted_callsets/R0111_tgg_bblanken_wes/26f481b386721f9889250c6549905660728ec9f77be4b8f7eeb6c4facc76282e.mt',
         )
 
     def test_imported_callset_path(self) -> None:
@@ -139,7 +126,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 '/var/abc.efg/callset.vcf.gz',
             ),
-            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/imported_callsets/f92b8ab6b5b8c41fa20d7d49a5626b96dcd2ba79fa6f61eab7ffb80d550d951c.mt',
+            '/var/seqr/seqr-loading-temp/GRCh38/SNV_INDEL/imported_callsets/f92b8ab6b5b8c41fa20d7d49a5626b96dcd2ba79fa6f61eab7ffb80d550d951c.mt',
         )
 
         with patch('v03_pipeline.lib.paths.hfs.ls') as mock_ls:
@@ -158,7 +145,7 @@ class TestPaths(unittest.TestCase):
                     DatasetType.SNV_INDEL,
                     TEST_VCF,
                 ),
-                '/var/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/imported_callsets/42f2c9e2025c4b61106b3fecfd30443f882a1849b73c6f6903a7e421c20117e0.mt',
+                '/var/seqr/seqr-loading-temp/GRCh38/SNV_INDEL/imported_callsets/42f2c9e2025c4b61106b3fecfd30443f882a1849b73c6f6903a7e421c20117e0.mt',
             )
 
     def test_tdr_metrics_path(self) -> None:
@@ -168,7 +155,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 'datarepo-7242affb.datarepo_RP_3053',
             ),
-            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/tdr_metrics/datarepo-7242affb.datarepo_RP_3053.tsv',
+            '/var/seqr/seqr-loading-temp/GRCh38/SNV_INDEL/tdr_metrics/datarepo-7242affb.datarepo_RP_3053.tsv',
         )
 
     def test_new_variants_table_path(self) -> None:
@@ -178,7 +165,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 'manual__2023-06-26T18:30:09.349671+00:00',
             ),
-            '/var/seqr/pipeline-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/new_variants.ht',
+            '/var/seqr/pipeline-data/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/new_variants.ht',
         )
 
     def test_project_pedigree_path(self) -> None:
@@ -189,5 +176,5 @@ class TestPaths(unittest.TestCase):
                 SampleType.WES,
                 'R0652_pipeline_test',
             ),
-            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/GCNV/pedigrees/WES/R0652_pipeline_test_pedigree.tsv',
+            '/var/seqr/seqr-loading-temp/GRCh38/GCNV/pedigrees/WES/R0652_pipeline_test_pedigree.tsv',
         )
