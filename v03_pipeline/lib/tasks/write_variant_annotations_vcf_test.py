@@ -14,6 +14,7 @@ from v03_pipeline.lib.test.misc import copy_project_pedigree_to_mocked_dir
 from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
     MockedReferenceDatasetsTestCase,
 )
+import gzip
 
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
@@ -84,3 +85,6 @@ class WriteVariantAnnotationsVCFTest(MockedReferenceDatasetsTestCase):
                 write_variant_annotations_vcf_task.output().path,
             ),
         )
+        with hfs.open(write_variant_annotations_vcf_task.output().path, 'rb') as f:
+            buf = f.read()
+            self.assertTrue(gzip.decompress(buf).startswith('##fileformat=VCFv4.2'))
