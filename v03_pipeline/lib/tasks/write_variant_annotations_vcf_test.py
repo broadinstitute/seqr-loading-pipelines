@@ -1,3 +1,4 @@
+import gzip
 from unittest.mock import Mock, patch
 
 import hailtop.fs as hfs
@@ -14,7 +15,6 @@ from v03_pipeline.lib.test.misc import copy_project_pedigree_to_mocked_dir
 from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
     MockedReferenceDatasetsTestCase,
 )
-import gzip
 
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
