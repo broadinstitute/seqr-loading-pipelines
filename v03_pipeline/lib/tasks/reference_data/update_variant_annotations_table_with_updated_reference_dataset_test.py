@@ -21,7 +21,6 @@ from v03_pipeline.lib.model import (
     ReferenceGenome,
 )
 from v03_pipeline.lib.reference_datasets.reference_dataset import (
-    BaseReferenceDataset,
     ReferenceDataset,
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
@@ -61,7 +60,7 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDatasetsTestCase):
     def test_create_empty_annotations_table(self):
         with (
             patch.object(
-                BaseReferenceDataset,
+                ReferenceDataset,
                 'for_reference_genome_dataset_type_annotations',
                 return_value=[ReferenceDataset.clinvar],
             ),

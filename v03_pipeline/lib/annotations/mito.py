@@ -59,26 +59,3 @@ def mitotip(ht: hl.Table, **_: Any) -> hl.Expression:
 
 def rsid(ht: hl.Table, **_: Any) -> hl.Expression:
     return ht.rsid.find(lambda x: hl.is_defined(x))
-
-
-def gt_stats(
-    ht: hl.Table,
-    lookup_ht: hl.Table,
-    **_: Any,
-) -> hl.Expression:
-    row = lookup_ht[ht.key]
-    ref_samples = hl.sum(hl.flatten(row.project_stats.ref_samples))
-    heteroplasmic_samples = hl.sum(hl.flatten(row.project_stats.heteroplasmic_samples))
-    homoplasmic_samples = hl.sum(hl.flatten(row.project_stats.homoplasmic_samples))
-    AC_het = heteroplasmic_samples  # noqa: N806
-    AC_hom = homoplasmic_samples  # noqa: N806
-    AN = (  # noqa: N806
-        ref_samples + heteroplasmic_samples + homoplasmic_samples
-    )
-    return hl.Struct(
-        AC_het=AC_het,
-        AF_het=hl.float32(AC_het / AN),
-        AC_hom=AC_hom,
-        AF_hom=hl.float32(AC_hom / AN),
-        AN=AN,
-    )
