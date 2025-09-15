@@ -87,4 +87,4 @@ class WriteVariantAnnotationsVCFTest(MockedReferenceDatasetsTestCase):
         )
         with hfs.open(write_variant_annotations_vcf_task.output().path, 'rb') as f:
             buf = f.read()
-            self.assertTrue(gzip.decompress(buf).startswith('##fileformat=VCFv4.2'))
+            self.assertTrue(gzip.decompress(buf).startswith(b'##fileformat=VCFv4.2'))
