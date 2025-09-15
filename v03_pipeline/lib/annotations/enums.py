@@ -1,5 +1,3 @@
-import hail as hl
-
 BIOTYPES = [
     'IG_C_gene',
     'IG_D_gene',
