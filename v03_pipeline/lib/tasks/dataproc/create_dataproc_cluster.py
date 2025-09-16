@@ -31,7 +31,7 @@ TIMEOUT_S = 1200
 logger = get_logger(__name__)
 
 
-def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
+def get_cluster_config(reference_genome: ReferenceGenome, dataset_type: DatasetType, run_id: str):
     service_account_credentials = get_service_account_credentials()
     return {
         'project_id': Env.GCLOUD_PROJECT,
@@ -68,7 +68,7 @@ def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
                 },
             },
             'secondary_worker_config': {
-                'num_instances': Env.GCLOUD_DATAPROC_SECONDARY_WORKERS,
+                'num_instances': dataset_type.dataproc_preemptibles,
                 'machine_type_uri': INSTANCE_TYPE,
                 'disk_config': {
                     'boot_disk_type': 'pd-standard',
@@ -184,7 +184,7 @@ class CreateDataprocClusterTask(luigi.Task):
             request={
                 'project_id': Env.GCLOUD_PROJECT,
                 'region': Env.GCLOUD_REGION,
-                'cluster': get_cluster_config(self.reference_genome, self.run_id),
+                'cluster': get_cluster_config(self.reference_genome, self.dataset_type, self.run_id),
             },
         )
         wait_s = 0
