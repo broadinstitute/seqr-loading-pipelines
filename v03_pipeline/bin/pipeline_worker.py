@@ -16,11 +16,12 @@ from v03_pipeline.lib.tasks.write_success_file import WriteSuccessFileTask
 
 logger = get_logger(__name__)
 
+
 def process_queue(local_scheduler=False):
     try:
         latest_queue_path = get_oldest_queue_path()
         if latest_queue_path is None:
-            continue
+            return
         with open(latest_queue_path) as f:
             lpr = LoadingPipelineRequest.model_validate_json(f.read())
         run_id = re.search(
@@ -52,6 +53,7 @@ def process_queue(local_scheduler=False):
             os.remove(latest_queue_path)
         logger.info('Looking for more work')
         time.sleep(1)
+
 
 def main():
     while True:
