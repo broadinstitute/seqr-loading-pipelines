@@ -150,9 +150,6 @@ class CreateDataprocClusterTask(luigi.Task):
         )
 
     def complete(self) -> bool:
-        if not self.dataset_type.requires_dataproc:
-            msg = f'{self.dataset_type} should not require a dataproc cluster'
-            raise RuntimeError(msg)
         try:
             cluster = self.client.get_cluster(
                 request={

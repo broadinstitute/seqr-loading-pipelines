@@ -14,6 +14,7 @@ class LoadingPipelineRequest(BaseModel):
     dataset_type: DatasetType
     skip_validation: bool = False
     skip_check_sex_and_relatedness: bool = False
+    skip_expect_tdr_metrics: bool = False
 
     @field_validator('callset_path')
     @classmethod
@@ -25,3 +26,17 @@ class LoadingPipelineRequest(BaseModel):
             msg = 'callset_path must point to a file that exists'
             raise ValueError(msg)
         return callset_path
+
+    def __str__(self) -> str:
+        return '\n'.join(
+            [
+                f'Callset Path: {self.callset_path}',
+                f'Projects To Run: {",".join(self.projects_to_run)}',
+                f'Reference Genome: {self.reference_genome.value}',
+                f'Dataset Type: {self.dataset_type.value}',
+                f'Sample Type: {self.sample_type.value}',
+                f'Skip Validation: {self.skip_validation}',
+                f'Skip Sex & Relatedness: {self.skip_check_sex_and_relatedness}',
+                f'Skip Expect TDR Metrics: {self.skip_expect_tdr_metrics}',
+            ],
+        )

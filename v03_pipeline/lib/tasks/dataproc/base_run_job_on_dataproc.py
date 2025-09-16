@@ -43,9 +43,6 @@ class BaseRunJobOnDataprocTask(luigi.Task):
         return [self.clone(CreateDataprocClusterTask)]
 
     def complete(self) -> bool:
-        if not self.dataset_type.requires_dataproc:
-            msg = f'{self.dataset_type} should not require a dataproc job'
-            raise RuntimeError(msg)
         try:
             job = self.client.get_job(
                 request={

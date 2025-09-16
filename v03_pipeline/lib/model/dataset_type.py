@@ -344,10 +344,6 @@ class DatasetType(StrEnum):
         return self == DatasetType.SNV_INDEL
 
     @property
-    def requires_dataproc(self):
-        return self == DatasetType.SNV_INDEL
-
-    @property
     def filter_invalid_sites(self):
         return self == DatasetType.SNV_INDEL
 

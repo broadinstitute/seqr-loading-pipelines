@@ -30,18 +30,6 @@ from v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster import (
     'v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster.dataproc.ClusterControllerClient',
 )
 class CreateDataprocClusterTaskTest(unittest.TestCase):
-    def test_dataset_type_unsupported(
-        self,
-        mock_cluster_controller: Mock,
-        *_: Mock,
-    ) -> None:
-        task = CreateDataprocClusterTask(
-            reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.MITO,
-            run_id='1',
-        )
-        self.assertRaises(RuntimeError, task.complete)
-
     def test_spinup_cluster_already_exists_failed(
         self,
         mock_cluster_controller: Mock,
