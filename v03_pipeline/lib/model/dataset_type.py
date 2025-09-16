@@ -383,4 +383,3 @@ class DatasetType(StrEnum):
         if self == DatasetType.SNV_INDEL:
             return Env.GCLOUD_DATAPROC_SECONDARY_WORKERS
         return 1
-

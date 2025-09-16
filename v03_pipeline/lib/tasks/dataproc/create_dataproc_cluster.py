@@ -9,7 +9,7 @@ from pip._internal.operations import freeze as pip_freeze
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.gcp import get_service_account_credentials
-from v03_pipeline.lib.model import Env, FeatureFlag, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, Env, FeatureFlag, ReferenceGenome
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )
@@ -31,7 +31,11 @@ TIMEOUT_S = 1200
 logger = get_logger(__name__)
 
 
-def get_cluster_config(reference_genome: ReferenceGenome, dataset_type: DatasetType, run_id: str):
+def get_cluster_config(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+):
     service_account_credentials = get_service_account_credentials()
     return {
         'project_id': Env.GCLOUD_PROJECT,
@@ -184,7 +188,11 @@ class CreateDataprocClusterTask(luigi.Task):
             request={
                 'project_id': Env.GCLOUD_PROJECT,
                 'region': Env.GCLOUD_REGION,
-                'cluster': get_cluster_config(self.reference_genome, self.dataset_type, self.run_id),
+                'cluster': get_cluster_config(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.run_id,
+                ),
             },
         )
         wait_s = 0
