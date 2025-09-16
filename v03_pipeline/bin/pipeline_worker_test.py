@@ -21,7 +21,6 @@ class PipelineWorkerTest(MockedDatarootTestCase):
         mock_logger,
         mock_write_success_file_task,
         mock_safe_post_to_slack,
-        _mock_local_disk_mount_path,
     ):
         run_id = '20250916-200704'
         raw_request = {
