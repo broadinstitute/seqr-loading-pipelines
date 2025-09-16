@@ -12,6 +12,7 @@ TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 
 
 class PipelineWorkerTest(MockedDatarootTestCase):
+    @patch('v03_pipeline.lib.paths.LOCAL_DISK_MOUNT_PATH', './var/seqr')
     @patch('v03_pipeline.lib.misc.slack._safe_post_to_slack')
     @patch('v03_pipeline.bin.pipeline_worker.WriteSuccessFileTask')
     @patch('v03_pipeline.bin.pipeline_worker.logger')
@@ -20,6 +21,7 @@ class PipelineWorkerTest(MockedDatarootTestCase):
         mock_logger,
         mock_write_success_file_task,
         mock_safe_post_to_slack,
+        _mock_local_disk_mount_path,
     ):
         run_id = '20250916-200704'
         raw_request = {
