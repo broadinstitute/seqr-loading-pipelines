@@ -15,16 +15,15 @@ def safe_post_to_slack(message) -> None:
     try:
         if not Env.SLACK_TOKEN:
             logger.info(message)
-            return None
+            return
         slack = Slacker(Env.SLACK_TOKEN)
-        response = slack.chat.post_message(
+        slack.chat.post_message(
             Env.SLACK_NOTIFICATION_CHANNEL,
             message,
             as_user=False,
             icon_emoji=':beaker:',
             username='Beaker (engineering-minion)',
         )
-        return response.raw
     except Exception:
         logger.exception(
             f'Slack error:  Original message in channel ({Env.SLACK_NOTIFICATION_CHANNEL}) - {message}',
