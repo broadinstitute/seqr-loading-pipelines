@@ -1,5 +1,5 @@
 import hailtop.fs as hfs
-from pydantic import BaseModel, Field, field_validator
+from pydantic import AliasChoices, BaseModel, Field, field_validator
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 
@@ -8,8 +8,11 @@ VALID_FILE_TYPES = ['vcf', 'vcf.gz', 'vcf.bgz', 'mt']
 
 class LoadingPipelineRequest(BaseModel):
     callset_path: str
-    projects_to_run: list[str] = Field(min_length=0, frozen=True, default_factory=list)
-    project_guids: list[str] = Field(min_length=0, frozen=True, default_factory=list)
+    project_guids: list[str] = Field(
+        min_length=1,
+        frozen=True,
+        validation_alias=AliasChoices('project_guids', 'projects_to_run'),
+    )
     sample_type: SampleType
     reference_genome: ReferenceGenome
     dataset_type: DatasetType
@@ -32,7 +35,7 @@ class LoadingPipelineRequest(BaseModel):
         return '\n'.join(
             [
                 f'Callset Path: {self.callset_path}',
-                f'Projects Guids: {",".join(self.projects_to_run) if self.projects_to_run else ",".join(self.project_guids)}',
+                f'Projects Guids: {",".join(self.project_guids)}',
                 f'Reference Genome: {self.reference_genome.value}',
                 f'Dataset Type: {self.dataset_type.value}',
                 f'Sample Type: {self.sample_type.value}',

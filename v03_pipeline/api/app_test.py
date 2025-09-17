@@ -46,7 +46,7 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
 
         body = {
             'callset_path': 'missing.vcf',
-            'projects_to_run': ['project_a'],
+            'project_guids': ['project_a'],
             'sample_type': SampleType.WGS.value,
             'reference_genome': ReferenceGenome.GRCh38.value,
             'dataset_type': DatasetType.SNV_INDEL.value,
@@ -68,7 +68,7 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
     async def test_loading_pipeline_enqueue(self):
         body = {
             'callset_path': CALLSET_PATH,
-            'projects_to_run': ['project_a'],
+            'project_guids': ['project_a'],
             'sample_type': SampleType.WGS.value,
             'reference_genome': ReferenceGenome.GRCh38.value,
             'dataset_type': DatasetType.SNV_INDEL.value,
@@ -89,7 +89,7 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
                 'Successfully queued': {
                     'callset_path': 'v03_pipeline/var/test/callsets/1kg_30variants.vcf',
                     'dataset_type': 'SNV_INDEL',
-                    'projects_to_run': ['project_a'],
+                    'project_guids': ['project_a'],
                     'reference_genome': 'GRCh38',
                     'sample_type': 'WGS',
                     'skip_check_sex_and_relatedness': False,
@@ -100,7 +100,7 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
         )
 
         # Second request
-        body['projects_to_run'] = ['project_b', 'project_c']
+        body['project_guids'] = ['project_b', 'project_c']
         async with self.client.request(
             'POST',
             '/loading_pipeline_enqueue',
