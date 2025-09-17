@@ -29,9 +29,7 @@ def process_queue(local_scheduler=False):
             os.path.basename(latest_queue_path),
         ).group(1)
         loading_run_task_params = {
-            'project_guids': lpr.projects_to_run
-            if lpr.projects_to_run
-            else lpr.project_guids,
+            'project_guids': lpr.project_guids,
             'run_id': run_id,
             **{k: v for k, v in lpr.model_dump().items() if k != 'projects_to_run'},
         }
