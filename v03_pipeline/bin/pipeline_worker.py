@@ -38,7 +38,9 @@ def process_queue(local_scheduler=False):
             WriteSuccessFileTask(**loading_run_task_params),
         ]
         luigi_task_result = luigi.build(
-            tasks, detailed_summary=True, local_scheduler=local_scheduler,
+            tasks,
+            detailed_summary=True,
+            local_scheduler=local_scheduler,
         )
         if luigi_task_result.status not in {
             luigi.execution_summary.LuigiStatusCode.SUCCESS,
