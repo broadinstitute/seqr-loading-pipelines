@@ -35,7 +35,7 @@ class LoadingPipelineRequest(BaseModel):
         return '\n'.join(
             [
                 f'Callset Path: {self.callset_path}',
-                f'Projects Guids: {",".join(self.project_guids)}',
+                f'Project Guids: {",".join(self.project_guids)}',
                 f'Reference Genome: {self.reference_genome.value}',
                 f'Dataset Type: {self.dataset_type.value}',
                 f'Sample Type: {self.sample_type.value}',
