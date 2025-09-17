@@ -40,7 +40,7 @@ def safe_post_to_slack_failure(
             SLACK_FAILURE_MESSAGE_PREFIX,
             f'Run ID: {run_id}',
             str(lpr),
-            str(e),
+            f'Reason: {e!s}',
         ],
     )
     _safe_post_to_slack(message)
