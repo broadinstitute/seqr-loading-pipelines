@@ -1,6 +1,7 @@
 import math
 
 import hail as hl
+import hailtop.fs as hfs
 import luigi
 import luigi.util
 
@@ -28,9 +29,6 @@ from v03_pipeline.lib.tasks.base.base_loading_run_params import (
 )
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
-from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset import (
-    UpdateVariantAnnotationsTableWithUpdatedReferenceDataset,
-)
 from v03_pipeline.lib.tasks.write_metadata_for_run import (
     WriteMetadataForRunTask,
 )
@@ -79,7 +77,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
 
     def requires(self) -> list[luigi.Task]:
         return [
-            self.clone(UpdateVariantAnnotationsTableWithUpdatedReferenceDataset),
             self.clone(WriteMetadataForRunTask),
         ]
 
@@ -122,21 +119,30 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         )
 
         # 1) Identify new variants.
-        annotations_ht = hl.read_table(
+        if hfs.exists(
             variant_annotations_table_path(
                 self.reference_genome,
                 self.dataset_type,
             ),
-        )
-        # Gracefully handle case for on-premises uses
-        # where key_ field is not present and migration was not run.
-        if not hasattr(annotations_ht, 'key_'):
-            annotations_ht = annotations_ht.add_index(name='key_')
-            annotations_ht = annotations_ht.annotate_globals(
-                max_key_=(annotations_ht.count() - 1),
+        ):
+            annotations_ht = hl.read_table(
+                variant_annotations_table_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                ),
             )
-
-        new_variants_ht = callset_ht.anti_join(annotations_ht)
+            # Gracefully handle case for on-premises uses
+            # where key_ field is not present and migration was not run.
+            if not hasattr(annotations_ht, 'key_'):
+                annotations_ht = annotations_ht.add_index(name='key_')
+                annotations_ht = annotations_ht.annotate_globals(
+                    max_key_=(annotations_ht.count() - 1),
+                )
+            curr_max_key_ = annotations_ht.index_globals().max_key_
+            new_variants_ht = callset_ht.anti_join(annotations_ht)
+        else:
+            curr_max_key_ = -1
+            new_variants_ht = callset_ht
 
         # Annotate new variants with VEP.
         # Note about the repartition: our work here is cpu/memory bound and
@@ -214,7 +220,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         # Add serial integer index
         new_variants_ht = new_variants_ht.add_index(name='key_')
         new_variants_ht = new_variants_ht.transmute(
-            key_=new_variants_ht.key_ + annotations_ht.index_globals().max_key_ + 1,
+            key_=new_variants_ht.key_ + curr_max_key_ + 1,
         )
         new_variants_ht = annotate_formatting_annotation_enum_globals(
             new_variants_ht,

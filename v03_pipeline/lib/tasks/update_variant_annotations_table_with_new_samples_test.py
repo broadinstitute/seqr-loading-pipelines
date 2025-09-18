@@ -30,16 +30,12 @@ from v03_pipeline.lib.paths import (
     valid_reference_dataset_path,
 )
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
-from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
-    BaseUpdateVariantAnnotationsTableTask,
-)
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
 from v03_pipeline.lib.test.misc import copy_project_pedigree_to_mocked_dir
 from v03_pipeline.lib.test.mock_clinvar_urls import mock_clinvar_urls
-from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
     MockedReferenceDatasetsTestCase,
 )
@@ -84,15 +80,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
     MockedReferenceDatasetsTestCase,
 ):
     @responses.activate
-    @patch(
-        'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
-    )
     def test_missing_pedigree(
         self,
-        mock_update_vat_with_rdc_task,
     ) -> None:
         with mock_clinvar_urls():
-            mock_update_vat_with_rdc_task.return_value = MockCompleteTask()
             uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SNV_INDEL,
@@ -108,12 +99,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             self.assertFalse(uvatwns_task.complete())
 
     @responses.activate
-    @patch(
-        'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
-    )
     def test_missing_interval_reference_dataset(
         self,
-        mock_update_vat_with_rd_task,
     ) -> None:
         copy_project_pedigree_to_mocked_dir(
             TEST_PEDIGREE_3_REMAP,
@@ -123,7 +110,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             'R0113_test_project',
         )
         with mock_clinvar_urls():
-            mock_update_vat_with_rd_task.return_value = MockCompleteTask()
             shutil.rmtree(
                 valid_reference_dataset_path(
                     ReferenceGenome.GRCh38,
@@ -150,9 +136,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
     )
     @patch('v03_pipeline.lib.tasks.update_new_variants_with_caids.Env')
     @patch(
-        'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
-    )
-    @patch(
         'v03_pipeline.lib.tasks.validate_callset.validate_expected_contig_frequency',
         partial(validate_expected_contig_frequency, min_rows_per_contig=25),
     )
@@ -166,16 +149,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         mock_load_gencode_ensembl_to_refseq_id: Mock,
         mock_vep: Mock,
         mock_standard_contigs: Mock,
-        mock_update_vat_with_rd_task: Mock,
         mock_env_caids: Mock,
         mock_register_alleles: Mock,
     ) -> None:
-        mock_update_vat_with_rd_task.return_value = (
-            BaseUpdateVariantAnnotationsTableTask(
-                reference_genome=ReferenceGenome.GRCh38,
-                dataset_type=DatasetType.SNV_INDEL,
-            )
-        )
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_38_VEP_DATA)
         mock_load_gencode_ensembl_to_refseq_id.return_value = hl.dict(
             {'ENST00000327044': 'NM_015658.4'},
@@ -556,22 +532,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
     @patch(
         'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
     )
-    @patch(
-        'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
-    )
     @patch('v03_pipeline.lib.vep.hl.vep')
     def test_update_vat_grch37(
         self,
         mock_vep: Mock,
-        mock_update_vat_with_rd_task: Mock,
         mock_register_alleles: Mock,
     ) -> None:
-        mock_update_vat_with_rd_task.return_value = (
-            BaseUpdateVariantAnnotationsTableTask(
-                reference_genome=ReferenceGenome.GRCh37,
-                dataset_type=DatasetType.SNV_INDEL,
-            )
-        )
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_37_VEP_DATA)
         mock_register_alleles.side_effect = None
 
@@ -718,9 +684,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
     @patch(
         'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
     )
-    @patch(
-        'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
-    )
     @patch('v03_pipeline.lib.reference_datasets.reference_dataset.FeatureFlag')
     @patch('v03_pipeline.lib.vep.hl.vep')
     @patch(
@@ -731,17 +694,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         mock_load_gencode_ensembl_to_refseq_id: Mock,
         mock_vep: Mock,
         mock_rd_ff: Mock,
-        mock_update_vat_with_rd_task: Mock,
         mock_register_alleles: Mock,
     ) -> None:
         mock_load_gencode_ensembl_to_refseq_id.return_value = hl.dict(
             {'ENST00000327044': 'NM_015658.4'},
-        )
-        mock_update_vat_with_rd_task.return_value = (
-            BaseUpdateVariantAnnotationsTableTask(
-                reference_genome=ReferenceGenome.GRCh38,
-                dataset_type=DatasetType.SNV_INDEL,
-            )
         )
         shutil.rmtree(
             valid_reference_dataset_path(
@@ -798,20 +754,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
     @patch(
         'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
     )
-    @patch(
-        'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
-    )
     def test_mito_update_vat(
         self,
-        mock_update_vat_with_rd_task: Mock,
         mock_register_alleles: Mock,
     ) -> None:
-        mock_update_vat_with_rd_task.return_value = (
-            BaseUpdateVariantAnnotationsTableTask(
-                reference_genome=ReferenceGenome.GRCh38,
-                dataset_type=DatasetType.MITO,
-            )
-        )
         mock_register_alleles.side_effect = None
 
         with mock_clinvar_urls():
