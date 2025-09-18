@@ -4,7 +4,6 @@ from unittest.mock import Mock, PropertyMock, patch
 
 import hail as hl
 import luigi.worker
-import responses
 
 from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
@@ -35,7 +34,6 @@ from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples im
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
 from v03_pipeline.lib.test.misc import copy_project_pedigree_to_mocked_dir
-from v03_pipeline.lib.test.mock_clinvar_urls import mock_clinvar_urls
 from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
     MockedReferenceDatasetsTestCase,
 )
@@ -79,26 +77,23 @@ TEST_RUN_ID = 'manual__2024-04-03'
 class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
     MockedReferenceDatasetsTestCase,
 ):
-    @responses.activate
     def test_missing_pedigree(
         self,
     ) -> None:
-        with mock_clinvar_urls():
-            uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
-                reference_genome=ReferenceGenome.GRCh38,
-                dataset_type=DatasetType.SNV_INDEL,
-                sample_type=SampleType.WGS,
-                callset_path=TEST_SNV_INDEL_VCF,
-                project_guids=['R0113_test_project'],
-                skip_validation=True,
-                run_id=TEST_RUN_ID,
-            )
-            worker = luigi.worker.Worker()
-            worker.add(uvatwns_task)
-            worker.run()
-            self.assertFalse(uvatwns_task.complete())
+        uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_SNV_INDEL_VCF,
+            project_guids=['R0113_test_project'],
+            skip_validation=True,
+            run_id=TEST_RUN_ID,
+        )
+        worker = luigi.worker.Worker()
+        worker.add(uvatwns_task)
+        worker.run()
+        self.assertFalse(uvatwns_task.complete())
 
-    @responses.activate
     def test_missing_interval_reference_dataset(
         self,
     ) -> None:
@@ -109,28 +104,26 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             SampleType.WGS,
             'R0113_test_project',
         )
-        with mock_clinvar_urls():
-            shutil.rmtree(
-                valid_reference_dataset_path(
-                    ReferenceGenome.GRCh38,
-                    ReferenceDataset.screen,
-                ),
-            )
-            uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
-                reference_genome=ReferenceGenome.GRCh38,
-                dataset_type=DatasetType.SNV_INDEL,
-                sample_type=SampleType.WGS,
-                callset_path=TEST_SNV_INDEL_VCF,
-                project_guids=['R0113_test_project'],
-                skip_validation=True,
-                run_id=TEST_RUN_ID,
-            )
-            worker = luigi.worker.Worker()
-            worker.add(uvatwns_task)
-            worker.run()
-            self.assertFalse(uvatwns_task.complete())
+        shutil.rmtree(
+            valid_reference_dataset_path(
+                ReferenceGenome.GRCh38,
+                ReferenceDataset.screen,
+            ),
+        )
+        uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_SNV_INDEL_VCF,
+            project_guids=['R0113_test_project'],
+            skip_validation=True,
+            run_id=TEST_RUN_ID,
+        )
+        worker = luigi.worker.Worker()
+        worker.add(uvatwns_task)
+        worker.run()
+        self.assertFalse(uvatwns_task.complete())
 
-    @responses.activate
     @patch(
         'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
     )
@@ -256,279 +249,261 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ),
         )
 
-        with mock_clinvar_urls():
-            coding_and_noncoding_variants_ht.write(
-                valid_reference_dataset_path(
-                    ReferenceGenome.GRCh38,
-                    ReferenceDataset.gnomad_coding_and_noncoding,
-                ),
-                overwrite=True,
-            )
-            copy_project_pedigree_to_mocked_dir(
-                TEST_PEDIGREE_3_REMAP,
+        coding_and_noncoding_variants_ht.write(
+            valid_reference_dataset_path(
                 ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                SampleType.WGS,
-                'R0113_test_project',
-            )
-            worker = luigi.worker.Worker()
-            uvatwns_task_3 = UpdateVariantAnnotationsTableWithNewSamplesTask(
-                reference_genome=ReferenceGenome.GRCh38,
-                dataset_type=DatasetType.SNV_INDEL,
-                sample_type=SampleType.WGS,
-                callset_path=TEST_SNV_INDEL_VCF,
-                project_guids=['R0113_test_project'],
-                skip_validation=False,
-                run_id=TEST_RUN_ID,
-            )
-            worker.add(uvatwns_task_3)
-            worker.run()
-            self.assertTrue(uvatwns_task_3.complete())
-            ht = hl.read_table(uvatwns_task_3.output().path)
-            self.assertEqual(ht.count(), 30)
-            self.assertEqual(
-                [
-                    x
-                    for x in ht.select(
-                        'CAID',
-                    ).collect()
-                    if x.locus.position <= 871269  # noqa: PLR2004
-                ],
-                [
-                    hl.Struct(
-                        locus=hl.Locus(
-                            contig='chr1',
-                            position=871269,
-                            reference_genome='GRCh38',
-                        ),
-                        alleles=['A', 'C'],
-                        CAID='CA1',
+                ReferenceDataset.gnomad_coding_and_noncoding,
+            ),
+            overwrite=True,
+        )
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_3_REMAP,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            SampleType.WGS,
+            'R0113_test_project',
+        )
+        worker = luigi.worker.Worker()
+        uvatwns_task_3 = UpdateVariantAnnotationsTableWithNewSamplesTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_SNV_INDEL_VCF,
+            project_guids=['R0113_test_project'],
+            skip_validation=False,
+            run_id=TEST_RUN_ID,
+        )
+        worker.add(uvatwns_task_3)
+        worker.run()
+        self.assertTrue(uvatwns_task_3.complete())
+        ht = hl.read_table(uvatwns_task_3.output().path)
+        self.assertEqual(ht.count(), 30)
+        self.assertEqual(
+            [
+                x
+                for x in ht.select(
+                    'CAID',
+                ).collect()
+                if x.locus.position <= 871269  # noqa: PLR2004
+            ],
+            [
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1',
+                        position=871269,
+                        reference_genome='GRCh38',
                     ),
-                ],
-            )
-            self.assertEqual(
-                ht.globals.updates.collect(),
-                [
-                    {
+                    alleles=['A', 'C'],
+                    CAID='CA1',
+                ),
+            ],
+        )
+        self.assertEqual(
+            ht.globals.updates.collect(),
+            [
+                {
+                    hl.Struct(
+                        callset=TEST_SNV_INDEL_VCF,
+                        project_guid='R0113_test_project',
+                        remap_pedigree_hash=hl.eval(
+                            remap_pedigree_hash(TEST_PEDIGREE_3_REMAP),
+                        ),
+                    ),
+                },
+            ],
+        )
+        self.assertEqual(
+            hl.eval(ht.globals.max_key_),
+            29,
+        )
+
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_4_REMAP,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            SampleType.WGS,
+            'R0114_project4',
+        )
+        # Ensure that new variants are added correctly to the table.
+        uvatwns_task_4 = UpdateVariantAnnotationsTableWithNewSamplesTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_SNV_INDEL_VCF,
+            project_guids=['R0114_project4'],
+            skip_validation=False,
+            run_id=TEST_RUN_ID + '-another-run',
+        )
+        worker.add(uvatwns_task_4)
+        worker.run()
+        self.assertTrue(uvatwns_task_4.complete())
+        ht = hl.read_table(uvatwns_task_4.output().path)
+        self.assertCountEqual(
+            [
+                x
+                for x in ht.select(
+                    'hgmd',
+                    'variant_id',
+                    'xpos',
+                    'screen',
+                    'CAID',
+                ).collect()
+                if x.locus.position <= 878809  # noqa: PLR2004
+            ],
+            [
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1',
+                        position=871269,
+                        reference_genome='GRCh38',
+                    ),
+                    alleles=['A', 'C'],
+                    hgmd=hl.Struct(
+                        accession='abcdefg',
+                        class_id=3,
+                    ),
+                    variant_id='1-871269-A-C',
+                    xpos=1000871269,
+                    screen=hl.Struct(region_type_ids=[1]),
+                    CAID='CA1',
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1',
+                        position=874734,
+                        reference_genome='GRCh38',
+                    ),
+                    alleles=['C', 'T'],
+                    hgmd=None,
+                    variant_id='1-874734-C-T',
+                    xpos=1000874734,
+                    screen=hl.Struct(region_type_ids=[]),
+                    CAID='CA2',
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1',
+                        position=876499,
+                        reference_genome='GRCh38',
+                    ),
+                    alleles=['A', 'G'],
+                    hgmd=None,
+                    variant_id='1-876499-A-G',
+                    xpos=1000876499,
+                    screen=hl.Struct(region_type_ids=[]),
+                    CAID='CA3',
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1',
+                        position=878314,
+                        reference_genome='GRCh38',
+                    ),
+                    alleles=['G', 'C'],
+                    hgmd=None,
+                    variant_id='1-878314-G-C',
+                    xpos=1000878314,
+                    screen=hl.Struct(region_type_ids=[]),
+                    CAID='CA4',
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1',
+                        position=878809,
+                        reference_genome='GRCh38',
+                    ),
+                    alleles=['C', 'T'],
+                    hgmd=None,
+                    variant_id='1-878809-C-T',
+                    xpos=1000878809,
+                    screen=hl.Struct(region_type_ids=[]),
+                    CAID=None,
+                ),
+            ],
+        )
+        self.assertCountEqual(
+            ht.filter(
+                ht.locus.position <= 878809,  # noqa: PLR2004
+            ).sorted_transcript_consequences.consequence_term_ids.collect(),
+            [
+                [[9], [23, 26], [23, 13, 26]],
+                [[9], [23, 26], [23, 13, 26]],
+                [[9], [23, 26], [23, 13, 26]],
+                [[9], [23, 26], [23, 13, 26]],
+                [[9], [23, 26], [23, 13, 26]],
+            ],
+        )
+        self.assertCountEqual(
+            ht.globals.collect(),
+            [
+                hl.Struct(
+                    updates={
                         hl.Struct(
-                            callset=TEST_SNV_INDEL_VCF,
+                            callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
                             project_guid='R0113_test_project',
                             remap_pedigree_hash=hl.eval(
-                                remap_pedigree_hash(TEST_PEDIGREE_3_REMAP),
+                                remap_pedigree_hash(
+                                    TEST_PEDIGREE_3_REMAP,
+                                ),
+                            ),
+                        ),
+                        hl.Struct(
+                            callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
+                            project_guid='R0114_project4',
+                            remap_pedigree_hash=hl.eval(
+                                remap_pedigree_hash(
+                                    TEST_PEDIGREE_4_REMAP,
+                                ),
                             ),
                         ),
                     },
-                ],
-            )
-            self.assertEqual(
-                hl.eval(ht.globals.max_key_),
-                29,
-            )
+                    versions=hl.Struct(
+                        dbnsfp='1.0',
+                        eigen='1.1',
+                        exac='1.1',
+                        gnomad_exomes='1.0',
+                        gnomad_genomes='1.0',
+                        splice_ai='1.1',
+                        topmed='1.1',
+                        gnomad_non_coding_constraint='1.0',
+                        screen='1.0',
+                        hgmd='1.0',
+                    ),
+                    migrations=[],
+                    max_key_=29,
+                    enums=hl.Struct(
+                        dbnsfp=ReferenceDataset.dbnsfp.enum_globals,
+                        eigen=hl.Struct(),
+                        exac=hl.Struct(),
+                        gnomad_exomes=hl.Struct(),
+                        gnomad_genomes=hl.Struct(),
+                        splice_ai=ReferenceDataset.splice_ai.enum_globals,
+                        topmed=hl.Struct(),
+                        hgmd=ReferenceDataset.hgmd.enum_globals,
+                        gnomad_non_coding_constraint=hl.Struct(),
+                        screen=ReferenceDataset.screen.enum_globals,
+                        sorted_motif_feature_consequences=hl.Struct(
+                            consequence_term=MOTIF_CONSEQUENCE_TERMS,
+                        ),
+                        sorted_regulatory_feature_consequences=hl.Struct(
+                            biotype=REGULATORY_BIOTYPES,
+                            consequence_term=REGULATORY_CONSEQUENCE_TERMS,
+                        ),
+                        sorted_transcript_consequences=hl.Struct(
+                            biotype=BIOTYPES,
+                            consequence_term=TRANSCRIPT_CONSEQUENCE_TERMS,
+                            loftee=hl.Struct(
+                                lof_filter=LOF_FILTERS,
+                            ),
+                            utrannotator=hl.Struct(
+                                fiveutr_consequence=FIVEUTR_CONSEQUENCES,
+                            ),
+                        ),
+                    ),
+                ),
+            ],
+        )
 
-            copy_project_pedigree_to_mocked_dir(
-                TEST_PEDIGREE_4_REMAP,
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                SampleType.WGS,
-                'R0114_project4',
-            )
-            # Ensure that new variants are added correctly to the table.
-            uvatwns_task_4 = UpdateVariantAnnotationsTableWithNewSamplesTask(
-                reference_genome=ReferenceGenome.GRCh38,
-                dataset_type=DatasetType.SNV_INDEL,
-                sample_type=SampleType.WGS,
-                callset_path=TEST_SNV_INDEL_VCF,
-                project_guids=['R0114_project4'],
-                skip_validation=False,
-                run_id=TEST_RUN_ID + '-another-run',
-            )
-            worker.add(uvatwns_task_4)
-            worker.run()
-            self.assertTrue(uvatwns_task_4.complete())
-            ht = hl.read_table(uvatwns_task_4.output().path)
-            self.assertCountEqual(
-                [
-                    x
-                    for x in ht.select(
-                        'clinvar',
-                        'hgmd',
-                        'variant_id',
-                        'xpos',
-                        'screen',
-                        'CAID',
-                    ).collect()
-                    if x.locus.position <= 878809  # noqa: PLR2004
-                ],
-                [
-                    hl.Struct(
-                        locus=hl.Locus(
-                            contig='chr1',
-                            position=871269,
-                            reference_genome='GRCh38',
-                        ),
-                        alleles=['A', 'C'],
-                        clinvar=hl.Struct(
-                            alleleId=None,
-                            conflictingPathogenicities=None,
-                            goldStars=None,
-                            pathogenicity_id=None,
-                            assertion_ids=None,
-                            submitters=None,
-                            conditions=None,
-                        ),
-                        hgmd=hl.Struct(
-                            accession='abcdefg',
-                            class_id=3,
-                        ),
-                        variant_id='1-871269-A-C',
-                        xpos=1000871269,
-                        screen=hl.Struct(region_type_ids=[1]),
-                        CAID='CA1',
-                    ),
-                    hl.Struct(
-                        locus=hl.Locus(
-                            contig='chr1',
-                            position=874734,
-                            reference_genome='GRCh38',
-                        ),
-                        alleles=['C', 'T'],
-                        clinvar=None,
-                        hgmd=None,
-                        variant_id='1-874734-C-T',
-                        xpos=1000874734,
-                        screen=hl.Struct(region_type_ids=[]),
-                        CAID='CA2',
-                    ),
-                    hl.Struct(
-                        locus=hl.Locus(
-                            contig='chr1',
-                            position=876499,
-                            reference_genome='GRCh38',
-                        ),
-                        alleles=['A', 'G'],
-                        clinvar=None,
-                        hgmd=None,
-                        variant_id='1-876499-A-G',
-                        xpos=1000876499,
-                        screen=hl.Struct(region_type_ids=[]),
-                        CAID='CA3',
-                    ),
-                    hl.Struct(
-                        locus=hl.Locus(
-                            contig='chr1',
-                            position=878314,
-                            reference_genome='GRCh38',
-                        ),
-                        alleles=['G', 'C'],
-                        clinvar=None,
-                        hgmd=None,
-                        variant_id='1-878314-G-C',
-                        xpos=1000878314,
-                        screen=hl.Struct(region_type_ids=[]),
-                        CAID='CA4',
-                    ),
-                    hl.Struct(
-                        locus=hl.Locus(
-                            contig='chr1',
-                            position=878809,
-                            reference_genome='GRCh38',
-                        ),
-                        alleles=['C', 'T'],
-                        clinvar=None,
-                        hgmd=None,
-                        variant_id='1-878809-C-T',
-                        xpos=1000878809,
-                        screen=hl.Struct(region_type_ids=[]),
-                        CAID=None,
-                    ),
-                ],
-            )
-            self.assertCountEqual(
-                ht.filter(
-                    ht.locus.position <= 878809,  # noqa: PLR2004
-                ).sorted_transcript_consequences.consequence_term_ids.collect(),
-                [
-                    [[9], [23, 26], [23, 13, 26]],
-                    [[9], [23, 26], [23, 13, 26]],
-                    [[9], [23, 26], [23, 13, 26]],
-                    [[9], [23, 26], [23, 13, 26]],
-                    [[9], [23, 26], [23, 13, 26]],
-                ],
-            )
-            self.assertCountEqual(
-                ht.globals.collect(),
-                [
-                    hl.Struct(
-                        updates={
-                            hl.Struct(
-                                callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
-                                project_guid='R0113_test_project',
-                                remap_pedigree_hash=hl.eval(
-                                    remap_pedigree_hash(
-                                        TEST_PEDIGREE_3_REMAP,
-                                    ),
-                                ),
-                            ),
-                            hl.Struct(
-                                callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
-                                project_guid='R0114_project4',
-                                remap_pedigree_hash=hl.eval(
-                                    remap_pedigree_hash(
-                                        TEST_PEDIGREE_4_REMAP,
-                                    ),
-                                ),
-                            ),
-                        },
-                        versions=hl.Struct(
-                            clinvar='2024-11-11',
-                            dbnsfp='1.0',
-                            eigen='1.1',
-                            exac='1.1',
-                            gnomad_exomes='1.0',
-                            gnomad_genomes='1.0',
-                            splice_ai='1.1',
-                            topmed='1.1',
-                            gnomad_non_coding_constraint='1.0',
-                            screen='1.0',
-                            hgmd='1.0',
-                        ),
-                        migrations=[],
-                        max_key_=29,
-                        enums=hl.Struct(
-                            clinvar=ReferenceDataset.clinvar.enum_globals,
-                            dbnsfp=ReferenceDataset.dbnsfp.enum_globals,
-                            eigen=hl.Struct(),
-                            exac=hl.Struct(),
-                            gnomad_exomes=hl.Struct(),
-                            gnomad_genomes=hl.Struct(),
-                            splice_ai=ReferenceDataset.splice_ai.enum_globals,
-                            topmed=hl.Struct(),
-                            hgmd=ReferenceDataset.hgmd.enum_globals,
-                            gnomad_non_coding_constraint=hl.Struct(),
-                            screen=ReferenceDataset.screen.enum_globals,
-                            sorted_motif_feature_consequences=hl.Struct(
-                                consequence_term=MOTIF_CONSEQUENCE_TERMS,
-                            ),
-                            sorted_regulatory_feature_consequences=hl.Struct(
-                                biotype=REGULATORY_BIOTYPES,
-                                consequence_term=REGULATORY_CONSEQUENCE_TERMS,
-                            ),
-                            sorted_transcript_consequences=hl.Struct(
-                                biotype=BIOTYPES,
-                                consequence_term=TRANSCRIPT_CONSEQUENCE_TERMS,
-                                loftee=hl.Struct(
-                                    lof_filter=LOF_FILTERS,
-                                ),
-                                utrannotator=hl.Struct(
-                                    fiveutr_consequence=FIVEUTR_CONSEQUENCES,
-                                ),
-                            ),
-                        ),
-                    ),
-                ],
-            )
-
-    @responses.activate
     @patch(
         'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
     )
@@ -540,147 +515,135 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
     ) -> None:
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_37_VEP_DATA)
         mock_register_alleles.side_effect = None
-
-        with mock_clinvar_urls(ReferenceGenome.GRCh37):
-            copy_project_pedigree_to_mocked_dir(
-                TEST_PEDIGREE_3_REMAP,
-                ReferenceGenome.GRCh37,
-                DatasetType.SNV_INDEL,
-                SampleType.WGS,
-                'R0113_test_project',
-            )
-            worker = luigi.worker.Worker()
-            uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
-                reference_genome=ReferenceGenome.GRCh37,
-                dataset_type=DatasetType.SNV_INDEL,
-                sample_type=SampleType.WGS,
-                callset_path=TEST_SNV_INDEL_VCF,
-                project_guids=['R0113_test_project'],
-                skip_validation=True,
-                run_id=TEST_RUN_ID,
-            )
-            worker.add(uvatwns_task)
-            worker.run()
-            self.assertTrue(uvatwns_task.complete())
-            ht = hl.read_table(uvatwns_task.output().path)
-            self.assertEqual(ht.count(), 30)
-            self.assertFalse(hasattr(ht, 'rg37_locus'))
-            self.assertEqual(
-                ht.collect()[0],
-                hl.Struct(
-                    locus=hl.Locus(
-                        contig=1,
-                        position=871269,
-                        reference_genome='GRCh37',
-                    ),
-                    alleles=['A', 'C'],
-                    rsid=None,
-                    variant_id='1-871269-A-C',
-                    xpos=1000871269,
-                    sorted_transcript_consequences=[
-                        hl.Struct(
-                            amino_acids='S/L',
-                            canonical=1,
-                            codons='tCg/tTg',
-                            gene_id='ENSG00000188976',
-                            hgvsc='ENST00000327044.6:c.1667C>T',
-                            hgvsp='ENSP00000317992.6:p.Ser556Leu',
-                            transcript_id='ENST00000327044',
-                            biotype_id=39,
-                            consequence_term_ids=[9],
-                            is_lof_nagnag=None,
-                            lof_filter_ids=[0, 1],
-                        ),
-                        hl.Struct(
-                            amino_acids=None,
-                            canonical=None,
-                            codons=None,
-                            gene_id='ENSG00000188976',
-                            hgvsc='ENST00000477976.1:n.3114C>T',
-                            hgvsp=None,
-                            transcript_id='ENST00000477976',
-                            biotype_id=38,
-                            consequence_term_ids=[23, 26],
-                            is_lof_nagnag=None,
-                            lof_filter_ids=None,
-                        ),
-                        hl.Struct(
-                            amino_acids=None,
-                            canonical=None,
-                            codons=None,
-                            gene_id='ENSG00000188976',
-                            hgvsc='ENST00000483767.1:n.523C>T',
-                            hgvsp=None,
-                            transcript_id='ENST00000483767',
-                            biotype_id=38,
-                            consequence_term_ids=[23, 26],
-                            is_lof_nagnag=None,
-                            lof_filter_ids=None,
-                        ),
-                    ],
-                    rg38_locus=hl.Locus(
-                        contig='chr1',
-                        position=935889,
-                        reference_genome='GRCh38',
-                    ),
-                    clinvar=hl.Struct(
-                        alleleId=None,
-                        conflictingPathogenicities=None,
-                        goldStars=None,
-                        pathogenicity_id=None,
-                        assertion_ids=None,
-                        submitters=None,
-                        conditions=None,
-                    ),
-                    eigen=hl.Struct(Eigen_phred=1.5880000591278076),
-                    exac=hl.Struct(
-                        AF_POPMAX=0.0004100881633348763,
-                        AF=0.0004633000062312931,
-                        AC_Adj=51,
-                        AC_Het=51,
-                        AC_Hom=0,
-                        AC_Hemi=None,
-                        AN_Adj=108288,
-                    ),
-                    gnomad_exomes=hl.Struct(
-                        AF=0.00012876000255346298,
-                        AN=240758,
-                        AC=31,
-                        Hom=0,
-                        AF_POPMAX_OR_GLOBAL=0.0001119549197028391,
-                        FAF_AF=9.315000352216884e-05,
-                        Hemi=0,
-                    ),
-                    gnomad_genomes=hl.Struct(
-                        AF=None,
-                        AN=None,
-                        AC=None,
-                        Hom=None,
-                        AF_POPMAX_OR_GLOBAL=None,
-                        FAF_AF=None,
-                        Hemi=None,
-                    ),
-                    splice_ai=hl.Struct(
-                        delta_score=0.029999999329447746,
-                        splice_consequence_id=3,
-                    ),
-                    topmed=hl.Struct(AC=None, AF=None, AN=None, Hom=None, Het=None),
-                    dbnsfp=hl.Struct(
-                        REVEL_score=0.0430000014603138,
-                        SIFT_score=None,
-                        Polyphen2_HVAR_score=None,
-                        MutationTaster_pred_id=0,
-                        CADD_phred=9.699999809265137,
-                        MPC_score=None,
-                        PrimateAI_score=None,
-                    ),
-                    hgmd=None,
-                    CAID=None,
-                    key_=0,
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_3_REMAP,
+            ReferenceGenome.GRCh37,
+            DatasetType.SNV_INDEL,
+            SampleType.WGS,
+            'R0113_test_project',
+        )
+        worker = luigi.worker.Worker()
+        uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
+            reference_genome=ReferenceGenome.GRCh37,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_SNV_INDEL_VCF,
+            project_guids=['R0113_test_project'],
+            skip_validation=True,
+            run_id=TEST_RUN_ID,
+        )
+        worker.add(uvatwns_task)
+        worker.run()
+        self.assertTrue(uvatwns_task.complete())
+        ht = hl.read_table(uvatwns_task.output().path)
+        self.assertEqual(ht.count(), 30)
+        self.assertFalse(hasattr(ht, 'rg37_locus'))
+        self.assertEqual(
+            ht.collect()[0],
+            hl.Struct(
+                locus=hl.Locus(
+                    contig=1,
+                    position=871269,
+                    reference_genome='GRCh37',
                 ),
-            )
+                alleles=['A', 'C'],
+                rsid=None,
+                variant_id='1-871269-A-C',
+                xpos=1000871269,
+                sorted_transcript_consequences=[
+                    hl.Struct(
+                        amino_acids='S/L',
+                        canonical=1,
+                        codons='tCg/tTg',
+                        gene_id='ENSG00000188976',
+                        hgvsc='ENST00000327044.6:c.1667C>T',
+                        hgvsp='ENSP00000317992.6:p.Ser556Leu',
+                        transcript_id='ENST00000327044',
+                        biotype_id=39,
+                        consequence_term_ids=[9],
+                        is_lof_nagnag=None,
+                        lof_filter_ids=[0, 1],
+                    ),
+                    hl.Struct(
+                        amino_acids=None,
+                        canonical=None,
+                        codons=None,
+                        gene_id='ENSG00000188976',
+                        hgvsc='ENST00000477976.1:n.3114C>T',
+                        hgvsp=None,
+                        transcript_id='ENST00000477976',
+                        biotype_id=38,
+                        consequence_term_ids=[23, 26],
+                        is_lof_nagnag=None,
+                        lof_filter_ids=None,
+                    ),
+                    hl.Struct(
+                        amino_acids=None,
+                        canonical=None,
+                        codons=None,
+                        gene_id='ENSG00000188976',
+                        hgvsc='ENST00000483767.1:n.523C>T',
+                        hgvsp=None,
+                        transcript_id='ENST00000483767',
+                        biotype_id=38,
+                        consequence_term_ids=[23, 26],
+                        is_lof_nagnag=None,
+                        lof_filter_ids=None,
+                    ),
+                ],
+                rg38_locus=hl.Locus(
+                    contig='chr1',
+                    position=935889,
+                    reference_genome='GRCh38',
+                ),
+                eigen=hl.Struct(Eigen_phred=1.5880000591278076),
+                exac=hl.Struct(
+                    AF_POPMAX=0.0004100881633348763,
+                    AF=0.0004633000062312931,
+                    AC_Adj=51,
+                    AC_Het=51,
+                    AC_Hom=0,
+                    AC_Hemi=None,
+                    AN_Adj=108288,
+                ),
+                gnomad_exomes=hl.Struct(
+                    AF=0.00012876000255346298,
+                    AN=240758,
+                    AC=31,
+                    Hom=0,
+                    AF_POPMAX_OR_GLOBAL=0.0001119549197028391,
+                    FAF_AF=9.315000352216884e-05,
+                    Hemi=0,
+                ),
+                gnomad_genomes=hl.Struct(
+                    AF=None,
+                    AN=None,
+                    AC=None,
+                    Hom=None,
+                    AF_POPMAX_OR_GLOBAL=None,
+                    FAF_AF=None,
+                    Hemi=None,
+                ),
+                splice_ai=hl.Struct(
+                    delta_score=0.029999999329447746,
+                    splice_consequence_id=3,
+                ),
+                topmed=hl.Struct(AC=None, AF=None, AN=None, Hom=None, Het=None),
+                dbnsfp=hl.Struct(
+                    REVEL_score=0.0430000014603138,
+                    SIFT_score=None,
+                    Polyphen2_HVAR_score=None,
+                    MutationTaster_pred_id=0,
+                    CADD_phred=9.699999809265137,
+                    MPC_score=None,
+                    PrimateAI_score=None,
+                ),
+                hgmd=None,
+                CAID=None,
+                key_=0,
+            ),
+        )
 
-    @responses.activate
     @patch(
         'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
     )
@@ -708,49 +671,45 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         mock_rd_ff.ACCESS_PRIVATE_REFERENCE_DATASETS = False
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_38_VEP_DATA)
         mock_register_alleles.side_effect = None
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_3_REMAP,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            SampleType.WGS,
+            'R0113_test_project',
+        )
+        worker = luigi.worker.Worker()
+        uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_SNV_INDEL_VCF,
+            project_guids=['R0113_test_project'],
+            skip_validation=True,
+            run_id=TEST_RUN_ID,
+        )
+        worker.add(uvatwns_task)
+        worker.run()
+        self.assertTrue(uvatwns_task.complete())
+        ht = hl.read_table(uvatwns_task.output().path)
+        self.assertEqual(ht.count(), 30)
+        self.assertCountEqual(
+            ht.globals.versions.collect(),
+            [
+                hl.Struct(
+                    dbnsfp='1.0',
+                    eigen='1.1',
+                    exac='1.1',
+                    gnomad_exomes='1.0',
+                    gnomad_genomes='1.0',
+                    splice_ai='1.1',
+                    topmed='1.1',
+                    gnomad_non_coding_constraint='1.0',
+                    screen='1.0',
+                ),
+            ],
+        )
 
-        with mock_clinvar_urls():
-            copy_project_pedigree_to_mocked_dir(
-                TEST_PEDIGREE_3_REMAP,
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                SampleType.WGS,
-                'R0113_test_project',
-            )
-            worker = luigi.worker.Worker()
-            uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
-                reference_genome=ReferenceGenome.GRCh38,
-                dataset_type=DatasetType.SNV_INDEL,
-                sample_type=SampleType.WGS,
-                callset_path=TEST_SNV_INDEL_VCF,
-                project_guids=['R0113_test_project'],
-                skip_validation=True,
-                run_id=TEST_RUN_ID,
-            )
-            worker.add(uvatwns_task)
-            worker.run()
-            self.assertTrue(uvatwns_task.complete())
-            ht = hl.read_table(uvatwns_task.output().path)
-            self.assertEqual(ht.count(), 30)
-            self.assertCountEqual(
-                ht.globals.versions.collect(),
-                [
-                    hl.Struct(
-                        clinvar='2024-11-11',
-                        dbnsfp='1.0',
-                        eigen='1.1',
-                        exac='1.1',
-                        gnomad_exomes='1.0',
-                        gnomad_genomes='1.0',
-                        splice_ai='1.1',
-                        topmed='1.1',
-                        gnomad_non_coding_constraint='1.0',
-                        screen='1.0',
-                    ),
-                ],
-            )
-
-    @responses.activate
     @patch(
         'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
     )
@@ -759,110 +718,105 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         mock_register_alleles: Mock,
     ) -> None:
         mock_register_alleles.side_effect = None
-
-        with mock_clinvar_urls():
-            copy_project_pedigree_to_mocked_dir(
-                TEST_PEDIGREE_5,
-                ReferenceGenome.GRCh38,
-                DatasetType.MITO,
-                SampleType.WGS,
-                'R0115_test_project2',
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_5,
+            ReferenceGenome.GRCh38,
+            DatasetType.MITO,
+            SampleType.WGS,
+            'R0115_test_project2',
+        )
+        worker = luigi.worker.Worker()
+        update_variant_annotations_task = (
+            UpdateVariantAnnotationsTableWithNewSamplesTask(
+                reference_genome=ReferenceGenome.GRCh38,
+                dataset_type=DatasetType.MITO,
+                sample_type=SampleType.WGS,
+                callset_path=TEST_MITO_MT,
+                project_guids=['R0115_test_project2'],
+                skip_validation=True,
+                run_id=TEST_RUN_ID,
             )
-            worker = luigi.worker.Worker()
-            update_variant_annotations_task = (
-                UpdateVariantAnnotationsTableWithNewSamplesTask(
-                    reference_genome=ReferenceGenome.GRCh38,
-                    dataset_type=DatasetType.MITO,
-                    sample_type=SampleType.WGS,
-                    callset_path=TEST_MITO_MT,
-                    project_guids=['R0115_test_project2'],
-                    skip_validation=True,
-                    run_id=TEST_RUN_ID,
-                )
-            )
-            worker.add(update_variant_annotations_task)
-            worker.run()
-            self.assertTrue(update_variant_annotations_task.complete())
-            ht = hl.read_table(update_variant_annotations_task.output().path)
-            self.assertEqual(ht.count(), 5)
-            self.assertCountEqual(
-                ht.globals.collect(),
-                [
-                    hl.Struct(
-                        versions=hl.Struct(
-                            clinvar='2024-11-11',
-                            dbnsfp='1.0',
-                            gnomad_mito='1.1',
-                            helix_mito='1.0',
-                            hmtvar='1.1',
-                            mitomap='1.0',
-                            mitimpact='1.0',
-                            local_constraint_mito='1.0',
+        )
+        worker.add(update_variant_annotations_task)
+        worker.run()
+        self.assertTrue(update_variant_annotations_task.complete())
+        ht = hl.read_table(update_variant_annotations_task.output().path)
+        self.assertEqual(ht.count(), 5)
+        self.assertCountEqual(
+            ht.globals.collect(),
+            [
+                hl.Struct(
+                    versions=hl.Struct(
+                        dbnsfp='1.0',
+                        gnomad_mito='1.1',
+                        helix_mito='1.0',
+                        hmtvar='1.1',
+                        mitomap='1.0',
+                        mitimpact='1.0',
+                        local_constraint_mito='1.0',
+                    ),
+                    enums=hl.Struct(
+                        local_constraint_mito=hl.Struct(),
+                        dbnsfp=ReferenceDataset.dbnsfp.enum_globals,
+                        gnomad_mito=hl.Struct(),
+                        helix_mito=hl.Struct(),
+                        hmtvar=hl.Struct(),
+                        mitomap=hl.Struct(),
+                        mitimpact=hl.Struct(),
+                        sorted_transcript_consequences=hl.Struct(
+                            biotype=BIOTYPES,
+                            consequence_term=TRANSCRIPT_CONSEQUENCE_TERMS,
+                            lof_filter=LOF_FILTERS,
                         ),
-                        enums=hl.Struct(
-                            local_constraint_mito=hl.Struct(),
-                            clinvar=ReferenceDataset.clinvar.enum_globals,
-                            dbnsfp=ReferenceDataset.dbnsfp.enum_globals,
-                            gnomad_mito=hl.Struct(),
-                            helix_mito=hl.Struct(),
-                            hmtvar=hl.Struct(),
-                            mitomap=hl.Struct(),
-                            mitimpact=hl.Struct(),
-                            sorted_transcript_consequences=hl.Struct(
-                                biotype=BIOTYPES,
-                                consequence_term=TRANSCRIPT_CONSEQUENCE_TERMS,
-                                lof_filter=LOF_FILTERS,
-                            ),
-                            mitotip=hl.Struct(trna_prediction=MITOTIP_PATHOGENICITIES),
-                        ),
-                        migrations=[],
-                        max_key_=4,
-                        updates={
-                            hl.Struct(
-                                callset='v03_pipeline/var/test/callsets/mito_1.mt',
-                                project_guid='R0115_test_project2',
-                                remap_pedigree_hash=hl.eval(
-                                    remap_pedigree_hash(
-                                        TEST_PEDIGREE_5,
-                                    ),
+                        mitotip=hl.Struct(trna_prediction=MITOTIP_PATHOGENICITIES),
+                    ),
+                    migrations=[],
+                    max_key_=4,
+                    updates={
+                        hl.Struct(
+                            callset='v03_pipeline/var/test/callsets/mito_1.mt',
+                            project_guid='R0115_test_project2',
+                            remap_pedigree_hash=hl.eval(
+                                remap_pedigree_hash(
+                                    TEST_PEDIGREE_5,
                                 ),
                             ),
-                        },
-                    ),
-                ],
-            )
-            self.assertCountEqual(
-                ht.collect()[0],
-                hl.Struct(
-                    locus=hl.Locus(
-                        contig='chrM',
-                        position=3,
-                        reference_genome='GRCh38',
-                    ),
-                    alleles=['T', 'C'],
-                    common_low_heteroplasmy=False,
-                    haplogroup=hl.Struct(is_defining=False),
-                    mitotip=hl.Struct(trna_prediction_id=None),
-                    rg37_locus=hl.Locus(
-                        contig='MT',
-                        position=3,
-                        reference_genome='GRCh37',
-                    ),
-                    rsid=None,
-                    sorted_transcript_consequences=None,
-                    variant_id='M-3-T-C',
-                    xpos=25000000003,
-                    clinvar=None,
-                    dbnsfp=None,
-                    gnomad_mito=None,
-                    helix_mito=None,
-                    hmtvar=None,
-                    mitomap=None,
-                    mitimpact=None,
-                    local_constraint_mito=None,
-                    key_=0,
+                        ),
+                    },
                 ),
-            )
+            ],
+        )
+        self.assertCountEqual(
+            ht.collect()[0],
+            hl.Struct(
+                locus=hl.Locus(
+                    contig='chrM',
+                    position=3,
+                    reference_genome='GRCh38',
+                ),
+                alleles=['T', 'C'],
+                common_low_heteroplasmy=False,
+                haplogroup=hl.Struct(is_defining=False),
+                mitotip=hl.Struct(trna_prediction_id=None),
+                rg37_locus=hl.Locus(
+                    contig='MT',
+                    position=3,
+                    reference_genome='GRCh37',
+                ),
+                rsid=None,
+                sorted_transcript_consequences=None,
+                variant_id='M-3-T-C',
+                xpos=25000000003,
+                dbnsfp=None,
+                gnomad_mito=None,
+                helix_mito=None,
+                hmtvar=None,
+                mitomap=None,
+                mitimpact=None,
+                local_constraint_mito=None,
+                key_=0,
+            ),
+        )
 
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_gene_symbol_to_gene_id',
