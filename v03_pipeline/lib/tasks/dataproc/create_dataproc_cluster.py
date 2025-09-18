@@ -9,7 +9,7 @@ from pip._internal.operations import freeze as pip_freeze
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.gcp import get_service_account_credentials
-from v03_pipeline.lib.model import Env, FeatureFlag, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, Env, FeatureFlag, ReferenceGenome
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )
@@ -31,7 +31,11 @@ TIMEOUT_S = 1200
 logger = get_logger(__name__)
 
 
-def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
+def get_cluster_config(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+):
     service_account_credentials = get_service_account_credentials()
     return {
         'project_id': Env.GCLOUD_PROJECT,
@@ -68,7 +72,7 @@ def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
                 },
             },
             'secondary_worker_config': {
-                'num_instances': Env.GCLOUD_DATAPROC_SECONDARY_WORKERS,
+                'num_instances': dataset_type.dataproc_preemptibles,
                 'machine_type_uri': INSTANCE_TYPE,
                 'disk_config': {
                     'boot_disk_type': 'pd-standard',
@@ -113,6 +117,7 @@ def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
                     'spark-env:REFERENCE_DATASETS_DIR': Env.REFERENCE_DATASETS_DIR,
                     'spark-env:CLINGEN_ALLELE_REGISTRY_LOGIN': Env.CLINGEN_ALLELE_REGISTRY_LOGIN,
                     'spark-env:CLINGEN_ALLELE_REGISTRY_PASSWORD': Env.CLINGEN_ALLELE_REGISTRY_PASSWORD,
+                    'spark-env:SAMPLE_TYPE_VALIDATION_EXCLUDED_PROJECTS': Env.SAMPLE_TYPE_VALIDATION_EXCLUDED_PROJECTS,
                 },
             },
             'lifecycle_config': {'idle_delete_ttl': {'seconds': 1200}},
@@ -150,9 +155,6 @@ class CreateDataprocClusterTask(luigi.Task):
         )
 
     def complete(self) -> bool:
-        if not self.dataset_type.requires_dataproc:
-            msg = f'{self.dataset_type} should not require a dataproc cluster'
-            raise RuntimeError(msg)
         try:
             cluster = self.client.get_cluster(
                 request={
@@ -187,7 +189,11 @@ class CreateDataprocClusterTask(luigi.Task):
             request={
                 'project_id': Env.GCLOUD_PROJECT,
                 'region': Env.GCLOUD_REGION,
-                'cluster': get_cluster_config(self.reference_genome, self.run_id),
+                'cluster': get_cluster_config(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.run_id,
+                ),
             },
         )
         wait_s = 0

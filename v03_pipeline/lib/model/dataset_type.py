@@ -5,6 +5,7 @@ import hail as hl
 
 from v03_pipeline.lib.annotations import gcnv, mito, shared, snv_indel, sv
 from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.model.environment import Env
 
 MITO_MIN_HOM_THRESHOLD = 0.95
 ZERO = 0.0
@@ -344,10 +345,6 @@ class DatasetType(StrEnum):
         return self == DatasetType.SNV_INDEL
 
     @property
-    def requires_dataproc(self):
-        return self == DatasetType.SNV_INDEL
-
-    @property
     def filter_invalid_sites(self):
         return self == DatasetType.SNV_INDEL
 
@@ -380,3 +377,9 @@ class DatasetType(StrEnum):
     @property
     def re_key_by_seqr_internal_truth_vid(self) -> None:
         return self == DatasetType.SV
+
+    @property
+    def dataproc_preemptibles(self) -> int | None:
+        if self == DatasetType.SNV_INDEL:
+            return Env.GCLOUD_DATAPROC_SECONDARY_WORKERS
+        return 1
