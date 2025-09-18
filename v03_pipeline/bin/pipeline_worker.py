@@ -29,19 +29,18 @@ def process_queue(local_scheduler=False):
             r'request_(\d{8}-\d{6})_\d+\.json',
             os.path.basename(latest_queue_path),
         ).group(1)
-        loading_run_task_params = {'run_id': run_id, **lpr.model_dump()}
-        tasks = [
-            WriteSuccessFileTask(**loading_run_task_params),
-        ]
-        luigi_task_result = luigi.build(
-            tasks,
-            detailed_summary=True,
-            local_scheduler=local_scheduler,
-        )
-        if luigi_task_result.status not in {
-            luigi.execution_summary.LuigiStatusCode.SUCCESS,
-            luigi.execution_summary.LuigiStatusCode.SUCCESS_WITH_RETRY,
-        }:
+        for _run_id_attempt in range(3):
+            luigi_task_result = luigi.build(
+                [WriteSuccessFileTask(run_id=run_id, **lpr.model_dump())],
+                detailed_summary=True,
+                local_scheduler=local_scheduler,
+            )
+            if luigi_task_result.status in {
+                luigi.execution_summary.LuigiStatusCode.SUCCESS,
+                luigi.execution_summary.LuigiStatusCode.SUCCESS_WITH_RETRY,
+            }:
+                break
+        else:
             raise RuntimeError(luigi_task_result.status.value[1])  # noqa: TRY301
         safe_post_to_slack_success(
             run_id,
