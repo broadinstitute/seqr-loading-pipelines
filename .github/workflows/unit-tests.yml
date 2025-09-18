@@ -34,7 +34,7 @@ jobs:
             -p 9000:9000 \
             -e CLICKHOUSE_USER=default \
             -e CLICKHOUSE_PASSWORD=default_password \
-            bitnami/clickhouse:latest
+            bitnamilegacy/clickhouse:latest
       - name: Wait for ClickHouse
         run: |
           until docker exec clickhouse clickhouse-client --query "SELECT 1"; do
@@ -64,10 +64,7 @@ jobs:
           scandir: './v03_pipeline/bin'
       - name: Unit Tests
         run: |
-          export GRCH37_TO_GRCH38_LIFTOVER_REF_PATH=v03_pipeline/var/test/liftover/grch37_to_grch38.over.chain.gz
-          export GRCH38_TO_GRCH37_LIFTOVER_REF_PATH=v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz
           export ACCESS_PRIVATE_REFERENCE_DATASETS=1
-          export INCLUDE_PIPELINE_VERSION_IN_PREFIX=1
           export CLICKHOUSE_OPTIMIZE_TABLE_WAIT_S=1
           export PYSPARK_SUBMIT_ARGS='--driver-memory 8G pyspark-shell'
           export CLICKHOUSE_DATABASE=test

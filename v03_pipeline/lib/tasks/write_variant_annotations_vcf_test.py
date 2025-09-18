@@ -1,3 +1,4 @@
+import gzip
 from unittest.mock import Mock, patch
 
 import hailtop.fs as hfs
@@ -84,3 +85,6 @@ class WriteVariantAnnotationsVCFTest(MockedReferenceDatasetsTestCase):
                 write_variant_annotations_vcf_task.output().path,
             ),
         )
+        with hfs.open(write_variant_annotations_vcf_task.output().path, 'rb') as f:
+            buf = f.read()
+            self.assertTrue(gzip.decompress(buf).startswith(b'##fileformat=VCFv4.2'))
