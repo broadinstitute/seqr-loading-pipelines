@@ -29,10 +29,7 @@ def process_queue(local_scheduler=False):
             r'request_(\d{8}-\d{6})_\d+\.json',
             os.path.basename(latest_queue_path),
         ).group(1)
-        loading_run_task_params = {
-            'run_id': run_id,
-            **{k: v for k, v in lpr.model_dump().items()},
-        }
+        loading_run_task_params = {'run_id': run_id, **lpr.model_dump()}
         tasks = [
             WriteSuccessFileTask(**loading_run_task_params),
         ]
