@@ -117,6 +117,7 @@ def get_cluster_config(
                     'spark-env:REFERENCE_DATASETS_DIR': Env.REFERENCE_DATASETS_DIR,
                     'spark-env:CLINGEN_ALLELE_REGISTRY_LOGIN': Env.CLINGEN_ALLELE_REGISTRY_LOGIN,
                     'spark-env:CLINGEN_ALLELE_REGISTRY_PASSWORD': Env.CLINGEN_ALLELE_REGISTRY_PASSWORD,
+                    'spark-env:SAMPLE_TYPE_VALIDATION_EXCLUDED_PROJECTS': Env.SAMPLE_TYPE_VALIDATION_EXCLUDED_PROJECTS,
                 },
             },
             'lifecycle_config': {'idle_delete_ttl': {'seconds': 1200}},
