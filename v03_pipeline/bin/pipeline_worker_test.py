@@ -48,14 +48,14 @@ class PipelineWorkerTest(MockedDatarootTestCase):
         with open(
             os.path.join(
                 loading_pipeline_queue_dir(),
-                'request_20250916-200704_1234.json',
+                'request_20250916-200704-123456.json',
             ),
             'w',
         ) as f:
             json.dump(raw_request, f)
         process_queue(local_scheduler=True)
         mock_safe_post_to_slack.assert_called_once_with(
-            ':white_check_mark: Pipeline Run Success! Kicking off ClickHouse Load! :white_check_mark:\nRun ID: 20250916-200704\nCallset Path: v03_pipeline/var/test/callsets/1kg_30variants.vcf\nProject Guids: project_a\nReference Genome: GRCh38\nDataset Type: SNV_INDEL\nSample Type: WGS\nSkip Validation: False\nSkip Sex & Relatedness: False\nSkip Expect TDR Metrics: False',
+            ':white_check_mark: Pipeline Run Success! Kicking off ClickHouse Load! :white_check_mark:\nRun ID: 20250916-200704-123456\nCallset Path: v03_pipeline/var/test/callsets/1kg_30variants.vcf\nProject Guids: project_a\nReference Genome: GRCh38\nDataset Type: SNV_INDEL\nSample Type: WGS\nSkip Validation: False\nSkip Sex & Relatedness: False\nSkip Expect TDR Metrics: False',
         )
 
     @patch('v03_pipeline.lib.paths.LOCAL_DISK_MOUNT_PATH', './var/seqr')
@@ -83,12 +83,12 @@ class PipelineWorkerTest(MockedDatarootTestCase):
         with open(
             os.path.join(
                 loading_pipeline_queue_dir(),
-                'request_20250918-200704_1234.json',
+                'request_20250918-200704-123456.json',
             ),
             'w',
         ) as f:
             json.dump(raw_request, f)
         process_queue(local_scheduler=True)
         mock_safe_post_to_slack.assert_called_once_with(
-            ':failed: Pipeline Run Failed. :failed:\nRun ID: 20250918-200704\nCallset Path: v03_pipeline/var/test/callsets/1kg_30variants.vcf\nProject Guids: project_a\nReference Genome: GRCh38\nDataset Type: SNV_INDEL\nSample Type: WGS\nSkip Validation: False\nSkip Sex & Relatedness: False\nSkip Expect TDR Metrics: False\nReason: there were failed tasks',
+            ':failed: Pipeline Run Failed. :failed:\nRun ID: 20250918-200704-123456\nCallset Path: v03_pipeline/var/test/callsets/1kg_30variants.vcf\nProject Guids: project_a\nReference Genome: GRCh38\nDataset Type: SNV_INDEL\nSample Type: WGS\nSkip Validation: False\nSkip Sex & Relatedness: False\nSkip Expect TDR Metrics: False\nReason: there were failed tasks',
         )

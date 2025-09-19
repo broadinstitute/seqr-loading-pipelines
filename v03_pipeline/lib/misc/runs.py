@@ -1,3 +1,4 @@
+import datetime
 import os
 from collections import defaultdict
 
@@ -12,6 +13,12 @@ from v03_pipeline.lib.paths import (
     loading_pipeline_queue_dir,
     pipeline_run_success_file_path,
 )
+
+
+def new_run_id():
+    return datetime.datetime.now(datetime.UTC).strftime(
+        '%Y%m%d-%H%M%S-%f',
+    )
 
 
 def get_oldest_queue_path() -> str | None:

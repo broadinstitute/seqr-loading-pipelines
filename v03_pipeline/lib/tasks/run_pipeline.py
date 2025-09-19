@@ -21,6 +21,8 @@ from v03_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRunTas
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class RunPipelineTask(luigi.WrapperTask):
+    attempt_id = luigi.IntParameter()
+
     def requires(self):
         return [
             self.clone(WriteMetadataForRunTask),

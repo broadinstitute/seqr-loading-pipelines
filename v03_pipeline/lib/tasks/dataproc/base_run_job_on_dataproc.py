@@ -23,6 +23,8 @@ logger = get_logger(__name__)
 
 @luigi.util.inherits(BaseLoadingPipelineParams)
 class BaseRunJobOnDataprocTask(luigi.Task):
+    attempt_id = luigi.IntParameter()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.client = dataproc.JobControllerClient(
@@ -37,7 +39,7 @@ class BaseRunJobOnDataprocTask(luigi.Task):
 
     @property
     def job_id(self):
-        return f'{self.task.task_family}-{self.run_id}'
+        return f'{self.task.task_family}-{self.run_id}-{self.attempt_id}'
 
     def requires(self) -> [luigi.Task]:
         return [self.clone(CreateDataprocClusterTask)]
@@ -58,7 +60,7 @@ class BaseRunJobOnDataprocTask(luigi.Task):
             google.cloud.dataproc_v1.types.jobs.JobStatus.State.ERROR,
             google.cloud.dataproc_v1.types.jobs.JobStatus.State.ATTEMPT_FAILURE,
         }:
-            msg = f'Job {self.task.task_family}-{self.run_id} entered {job.status.state.name} state'
+            msg = f'Job {self.job_id} entered {job.status.state.name} state'
             logger.error(msg)
             logger.error(job.status.details)
         return (

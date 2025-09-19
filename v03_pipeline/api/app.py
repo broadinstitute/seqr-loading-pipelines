@@ -1,4 +1,3 @@
-import os
 import traceback
 
 import aiofiles
@@ -7,9 +6,12 @@ from aiohttp import web, web_exceptions
 
 from v03_pipeline.api.model import LoadingPipelineRequest
 from v03_pipeline.lib.logger import get_logger
-from v03_pipeline.lib.misc.runs import is_queue_full
+from v03_pipeline.lib.misc.runs import is_queue_full, new_run_id
 from v03_pipeline.lib.model.environment import Env
-from v03_pipeline.lib.paths import loading_pipeline_queue_path
+from v03_pipeline.lib.paths import (
+    loading_pipeline_queue_dir,
+    loading_pipeline_queue_path,
+)
 
 logger = get_logger(__name__)
 
@@ -44,7 +46,8 @@ async def loading_pipeline_enqueue(request: web.Request) -> web.Response:
     except ValueError as e:
         raise web.HTTPBadRequest from e
 
-    async with aiofiles.open(loading_pipeline_queue_path(), 'w') as f:
+    run_id = new_run_id()
+    async with aiofiles.open(loading_pipeline_queue_path(run_id), 'w') as f:
         await f.write(lpr.model_dump_json())
     return web.json_response(
         {'Successfully queued': lpr.model_dump()},
@@ -58,7 +61,7 @@ async def status(_: web.Request) -> web.Response:
 
 async def init_web_app():
     await aiofiles.os.makedirs(
-        os.path.dirname(loading_pipeline_queue_path()),
+        loading_pipeline_queue_dir(),
         exist_ok=True,
     )
     app = web.Application(middlewares=[error_middleware])

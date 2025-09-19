@@ -19,6 +19,7 @@ logger = get_logger(__name__)
 
 
 def process_queue(local_scheduler=False):
+    run_id = None
     try:
         latest_queue_path = get_oldest_queue_path()
         if latest_queue_path is None:
@@ -26,14 +27,15 @@ def process_queue(local_scheduler=False):
         with open(latest_queue_path) as f:
             lpr = LoadingPipelineRequest.model_validate_json(f.read())
         run_id = re.search(
-            r'request_(\d{8}-\d{6})_\d+\.json',
+            r'request_(\d{8}-\d{6}-\d{6})\.json',
             os.path.basename(latest_queue_path),
         ).group(1)
-        for attempt in range(3):
+        for attempt_id in range(3):
             luigi_task_result = luigi.build(
                 [
                     WriteSuccessFileTask(
-                        run_id=f'{run_id}-{attempt}',
+                        run_id=run_id,
+                        attempt_id=attempt_id,
                         **lpr.model_dump(),
                     ),
                 ],
@@ -53,11 +55,12 @@ def process_queue(local_scheduler=False):
         )
     except Exception as e:
         logger.exception('Unhandled Exception')
-        safe_post_to_slack_failure(
-            run_id,
-            lpr,
-            e,
-        )
+        if run_id is not None:
+            safe_post_to_slack_failure(
+                run_id,
+                lpr,
+                e,
+            )
     finally:
         if latest_queue_path is not None and os.path.exists(latest_queue_path):
             os.remove(latest_queue_path)

@@ -25,6 +25,7 @@ class WriteSuccessFileTaskTest(MockedDatarootTestCase):
             callset_path='test_callset',
             project_guids=['R0113_test_project'],
             run_id='manual__2024-04-03',
+            attempt_id=0,
         )
         worker.add(write_success_file)
         worker.run()

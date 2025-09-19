@@ -1,7 +1,5 @@
-import datetime
 import hashlib
 import os
-import uuid
 
 import hailtop.fs as hfs
 
@@ -402,16 +400,13 @@ def loading_pipeline_queue_dir() -> str:
     )
 
 
-def loading_pipeline_queue_path() -> str:
+def loading_pipeline_queue_path(run_id: str) -> str:
     """
     Returns a new path for a loading pipeline queue request file.
     """
-    run_id = datetime.datetime.now(datetime.UTC).strftime(
-        '%Y%m%d-%H%M%S',
-    )
     return os.path.join(
         loading_pipeline_queue_dir(),
-        f'request_{run_id}_{str(uuid.uuid1().int)[:4]}.json',
+        f'request_{run_id}.json',
     )
 
 
