@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
-from v03_pipeline.lib.tasks.dataproc.misc import to_kebab_str_args
+from v03_pipeline.lib.tasks.dataproc.misc import get_cluster_name, to_kebab_str_args
 from v03_pipeline.lib.tasks.dataproc.run_pipeline_on_dataproc import (
     RunPipelineOnDataprocTask,
 )
@@ -46,3 +46,20 @@ class MiscTest(unittest.TestCase):
                 'False',
             ],
         )
+
+    def test_get_cluster_name(self, _: Mock):
+        run_id = '20250919-003012-1'
+        result = get_cluster_name(ReferenceGenome.GRCh37, run_id)
+        self.assertEqual(result, 'prod-pipeline-runner-grch37-20250919-003012')
+
+        run_id = 'hail_search_to_clickhouse_migration-20250919-003012'
+        result = get_cluster_name(ReferenceGenome.GRCh37, run_id)
+        self.assertEqual(result, 'prod-pipeline-runner-grch37-hs-to-clckhse-mgrtn')
+
+        run_id = '20250919-003012-0'
+        result = get_cluster_name(ReferenceGenome.GRCh38, run_id)
+        self.assertEqual(result, 'prod-pipeline-runner-grch38-20250919-003012')
+
+        run_id = '20250919-003012'
+        result = get_cluster_name(ReferenceGenome.GRCh37, run_id)
+        self.assertEqual(result, 'prod-pipeline-runner-grch37-20250919-003012')

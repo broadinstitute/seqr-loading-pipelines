@@ -29,9 +29,14 @@ def process_queue(local_scheduler=False):
             r'request_(\d{8}-\d{6})_\d+\.json',
             os.path.basename(latest_queue_path),
         ).group(1)
-        for _run_id_attempt in range(3):
+        for attempt in range(3):
             luigi_task_result = luigi.build(
-                [WriteSuccessFileTask(run_id=run_id, **lpr.model_dump())],
+                [
+                    WriteSuccessFileTask(
+                        run_id=f'{run_id}_{attempt}',
+                        **lpr.model_dump(),
+                    ),
+                ],
                 detailed_summary=True,
                 local_scheduler=local_scheduler,
             )
