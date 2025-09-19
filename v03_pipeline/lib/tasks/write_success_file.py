@@ -15,6 +15,8 @@ from v03_pipeline.lib.tasks.run_pipeline import RunPipelineTask
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class WriteSuccessFileTask(luigi.Task):
+    attempt_id = luigi.IntParameter()
+
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             pipeline_run_success_file_path(
@@ -26,9 +28,9 @@ class WriteSuccessFileTask(luigi.Task):
 
     def requires(self) -> luigi.Task:
         return (
-            self.clone(RunPipelineOnDataprocTask)
+            self.clone(RunPipelineOnDataprocTask, attempt_id=self.attempt_id)
             if FeatureFlag.RUN_PIPELINE_ON_DATAPROC
-            else self.clone(RunPipelineTask)
+            else self.clone(RunPipelineTask, attempt_id=self.attempt_id)
         )
 
     def run(self):

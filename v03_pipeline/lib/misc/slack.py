@@ -2,7 +2,7 @@ from slacker import Slacker
 
 from v03_pipeline.api.model import LoadingPipelineRequest
 from v03_pipeline.lib.logger import get_logger
-from v03_pipeline.lib.model import Env
+from v03_pipeline.lib.model import Env, FeatureFlag
 
 DATAPROC_URL = 'https://console.cloud.google.com/dataproc/jobs?project={gcloud_project}'
 SLACK_FAILURE_MESSAGE_PREFIX = ':failed: Pipeline Run Failed. :failed:'
@@ -44,7 +44,7 @@ def safe_post_to_slack_failure(
             f'Reason: {e!s}',
         ],
     )
-    if Env.RUN_PIPELINE_ON_DATAPROC:
+    if FeatureFlag.RUN_PIPELINE_ON_DATAPROC:
         message = [
             *message,
             f'<{DATAPROC_URL.format(gcloud_project=Env.GCLOUD_PROJECT)}|Dataproc Jobs Page>',

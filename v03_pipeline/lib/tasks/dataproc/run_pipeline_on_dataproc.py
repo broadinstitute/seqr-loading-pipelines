@@ -11,6 +11,8 @@ from v03_pipeline.lib.tasks.run_pipeline import RunPipelineTask
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class RunPipelineOnDataprocTask(BaseRunJobOnDataprocTask):
+    attempt_id = luigi.IntParameter()
+
     @property
     def task(self) -> luigi.Task:
         return RunPipelineTask
