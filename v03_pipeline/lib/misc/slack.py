@@ -4,6 +4,7 @@ from v03_pipeline.api.model import LoadingPipelineRequest
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import Env
 
+DATAPROC_URL = 'https://console.cloud.google.com/dataproc/jobs?project={gcloud_project}'
 SLACK_FAILURE_MESSAGE_PREFIX = ':failed: Pipeline Run Failed. :failed:'
 SLACK_SUCCESS_MESSAGE_PREFIX = ':white_check_mark: Pipeline Run Success! Kicking off ClickHouse Load! :white_check_mark:'
 
@@ -35,7 +36,7 @@ def safe_post_to_slack_failure(
     lpr: LoadingPipelineRequest,
     e: type[Exception],
 ) -> None:
-    message = '\n'.join(
+    message = (
         [
             SLACK_FAILURE_MESSAGE_PREFIX,
             f'Run ID: {run_id}',
@@ -43,7 +44,12 @@ def safe_post_to_slack_failure(
             f'Reason: {e!s}',
         ],
     )
-    _safe_post_to_slack(message)
+    if Env.RUN_PIPELINE_ON_DATAPROC:
+        message = [
+            *message,
+            f'<Dataproc Jobs Page|{DATAPROC_URL.format(gcloud_project=Env.GCLOUD_PROJECT)}>',
+        ]
+    _safe_post_to_slack('\n'.join(message))
 
 
 def safe_post_to_slack_success(run_id: str, lpr: LoadingPipelineRequest) -> None:
