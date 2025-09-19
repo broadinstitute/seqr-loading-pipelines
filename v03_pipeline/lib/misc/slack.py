@@ -36,14 +36,12 @@ def safe_post_to_slack_failure(
     lpr: LoadingPipelineRequest,
     e: type[Exception],
 ) -> None:
-    message = (
-        [
-            SLACK_FAILURE_MESSAGE_PREFIX,
-            f'Run ID: {run_id}',
-            str(lpr),
-            f'Reason: {e!s}',
-        ],
-    )
+    message = [
+        SLACK_FAILURE_MESSAGE_PREFIX,
+        f'Run ID: {run_id}',
+        str(lpr),
+        f'Reason: {e!s}',
+    ]
     if FeatureFlag.RUN_PIPELINE_ON_DATAPROC:
         message = [
             *message,
