@@ -33,7 +33,7 @@ def process_queue(local_scheduler=False):
             luigi_task_result = luigi.build(
                 [
                     WriteSuccessFileTask(
-                        run_id=f'{run_id}_{attempt}',
+                        run_id=f'{run_id}-{attempt}',
                         **lpr.model_dump(),
                     ),
                 ],
