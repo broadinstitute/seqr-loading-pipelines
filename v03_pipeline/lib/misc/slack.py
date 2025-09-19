@@ -47,7 +47,7 @@ def safe_post_to_slack_failure(
     if Env.RUN_PIPELINE_ON_DATAPROC:
         message = [
             *message,
-            f'<Dataproc Jobs Page|{DATAPROC_URL.format(gcloud_project=Env.GCLOUD_PROJECT)}>',
+            f'<{DATAPROC_URL.format(gcloud_project=Env.GCLOUD_PROJECT)}|Dataproc Jobs Page>',
         ]
     _safe_post_to_slack('\n'.join(message))
 
