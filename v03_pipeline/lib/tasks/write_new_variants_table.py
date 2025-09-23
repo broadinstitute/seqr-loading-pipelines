@@ -154,7 +154,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             constrain(
                 math.ceil(new_variants_count / VARIANTS_PER_VEP_PARTITION),
                 10,
-                10000,
+                5000,
             ),
         )
         new_variants_ht = run_vep(

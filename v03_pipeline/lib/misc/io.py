@@ -16,7 +16,7 @@ from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, Sex
 
 BIALLELIC = 2
 B_PER_MB = 1 << 20  # 1024 * 1024
-MB_PER_PARTITION = 128
+MB_PER_PARTITION = 32
 MAX_SAMPLES_SPLIT_MULTI_SHUFFLE = 100
 
 
