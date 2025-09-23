@@ -28,7 +28,7 @@ class BaseLoadingRunParams(luigi.Task):
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
-    skip_validation = luigi.BoolParameter(
+    skip_all_validations = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )

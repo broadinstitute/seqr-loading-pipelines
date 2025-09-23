@@ -81,7 +81,7 @@ def compute_hail_n_partitions(file_size_b: int) -> int:
 )
 def split_multi_hts(
     mt: hl.MatrixTable,
-    skip_validation: bool,
+    skip_all_validations: bool,
     max_samples_split_multi_shuffle=MAX_SAMPLES_SPLIT_MULTI_SHUFFLE,
 ) -> hl.MatrixTable:
     bi = mt.filter_rows(hl.len(mt.alleles) == BIALLELIC)
@@ -98,7 +98,7 @@ def split_multi_hts(
     mt = split.union_rows(bi)
     # If we've disabled validation (which is expected to throw an exception
     # for duplicate variants, we would like to distinc )
-    if skip_validation:
+    if skip_all_validations:
         return mt.distinct_by_row()
     return mt
 

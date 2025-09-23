@@ -16,9 +16,14 @@ class LoadingPipelineRequest(BaseModel):
     sample_type: SampleType
     reference_genome: ReferenceGenome
     dataset_type: DatasetType
-    skip_validation: bool = False
+    skip_all_validations: bool = Field(
+        default = False,
+        validation_alias=AliasChoices('skip_validation', 'skip_all_validations'),
+    )
     skip_check_sex_and_relatedness: bool = False
     skip_expect_tdr_metrics: bool = False
+    skip_validate_sample_type: bool = False
+    skip_validate_expected_contig_frequency: bool = False
 
     @field_validator('callset_path')
     @classmethod
@@ -30,17 +35,3 @@ class LoadingPipelineRequest(BaseModel):
             msg = 'callset_path must point to a file that exists'
             raise ValueError(msg)
         return callset_path
-
-    def __str__(self) -> str:
-        return '\n'.join(
-            [
-                f'Callset Path: {self.callset_path}',
-                f'Project Guids: {",".join(self.project_guids)}',
-                f'Reference Genome: {self.reference_genome.value}',
-                f'Dataset Type: {self.dataset_type.value}',
-                f'Sample Type: {self.sample_type.value}',
-                f'Skip Validation: {self.skip_validation}',
-                f'Skip Sex & Relatedness: {self.skip_check_sex_and_relatedness}',
-                f'Skip Expect TDR Metrics: {self.skip_expect_tdr_metrics}',
-            ],
-        )

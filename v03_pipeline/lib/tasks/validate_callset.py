@@ -50,7 +50,7 @@ class ValidateCallsetTask(BaseUpdateTask):
 
     def requires(self) -> list[luigi.Task]:
         requirements = [self.clone(WriteImportedCallsetTask)]
-        if not self.skip_validation and self.dataset_type.can_run_validation:
+        if not self.skip_all_validations and self.dataset_type.can_run_validation:
             requirements = [
                 *requirements,
                 (
@@ -88,7 +88,7 @@ class ValidateCallsetTask(BaseUpdateTask):
             )
 
         validation_exceptions = []
-        if self.skip_validation or not self.dataset_type.can_run_validation:
+        if self.skip_all_validations or not self.dataset_type.can_run_validation:
             return mt.select_globals(
                 callset_path=self.callset_path,
                 validated_sample_type=self.sample_type.value,

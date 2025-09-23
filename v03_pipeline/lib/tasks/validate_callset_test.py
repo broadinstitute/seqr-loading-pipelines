@@ -55,7 +55,7 @@ class ValidateCallsetTest(MockedDatarootTestCase):
             # all contigs but chr1, and contains non-coding variants.
             callset_path=MULTIPLE_VALIDATION_EXCEPTIONS_VCF,
             project_guids=['project_a'],
-            skip_validation=False,
+            skip_all_validations=False,
             run_id=TEST_RUN_ID,
         )
         worker.add(validate_callset_task)
@@ -68,7 +68,7 @@ class ValidateCallsetTest(MockedDatarootTestCase):
             sample_type=SampleType.WES,
             callset_path=MULTIPLE_VALIDATION_EXCEPTIONS_VCF,
             project_guids=['project_a'],
-            skip_validation=False,
+            skip_all_validations=False,
             run_id=TEST_RUN_ID,
         )
         self.assertTrue(write_validation_errors_task.complete())
