@@ -10,7 +10,6 @@ from gnomad.sample_qc.pipeline import filter_rows_for_qc
 from gnomad.utils.filtering import filter_to_autosomes
 from gnomad_qc.v4.sample_qc.assign_ancestry import assign_pop_with_per_pop_probs
 
-from v03_pipeline.lib.misc.io import split_multi_hts
 from v03_pipeline.lib.model import SampleType
 
 GNOMAD_FILTER_MIN_AF = 0.001
@@ -21,12 +20,6 @@ CONTAMINATION_UPPER_THRESHOLD = 0.05
 WES_COVERAGE_LOW_THRESHOLD = 85
 WGS_CALLRATE_LOW_THRESHOLD = 30
 
-POP_PCA_LOADINGS_PATH = (
-    'gs://gcp-public-data--gnomad/release/4.0/pca/gnomad.v4.0.pca_loadings.ht'
-)
-ANCESTRY_RF_MODEL_PATH = (
-    'gs://seqr-reference-data/v3.1/GRCh38/SNV_INDEL/ancestry_imputation_model.onnx'
-)
 NUM_PCS = 20
 GNOMAD_POP_PROBABILITY_CUTOFFS = {
     'afr': 0.93,
@@ -40,7 +33,6 @@ GNOMAD_POP_PROBABILITY_CUTOFFS = {
     'sas': 0.92,
 }
 POPULATION_MISSING_LABEL = 'oth'
-
 HAIL_QC_METRICS = [
     'n_snp',
     'r_ti_tv',
@@ -54,6 +46,8 @@ HAIL_QC_METRICS = [
 def call_sample_qc(
     mt: hl.MatrixTable,
     tdr_metrics_ht: hl.Table,
+    pop_pca_loadings_ht: hl.Table,
+    ancestry_rf_model: onnx.ModelProto,
     sample_type: SampleType,
 ):
     mt = mt.annotate_entries(
@@ -63,8 +57,10 @@ def call_sample_qc(
         .default(hl.missing(hl.tcall)),
     )
     mt = annotate_filtered_callrate(mt)
-    mt = annotate_filter_flags(mt, tdr_metrics_ht, sample_type)
-    mt = annotate_qc_gen_anc(mt)
+    # Annotates contamination_rate, percent_bases_at_20x, and mean_coverage
+    mt = mt.annotate_cols(**tdr_metrics_ht[mt.col_key])
+    mt = annotate_filter_flags(mt, sample_type)
+    mt = annotate_qc_gen_anc(mt, pop_pca_loadings_ht, ancestry_rf_model)
     return run_hail_sample_qc(mt, sample_type)
 
 
@@ -87,19 +83,17 @@ def annotate_filtered_callrate(mt: hl.MatrixTable) -> hl.MatrixTable:
 
 def annotate_filter_flags(
     mt: hl.MatrixTable,
-    tdr_metrics_ht: hl.Table,
     sample_type: SampleType,
 ) -> hl.MatrixTable:
-    mt = mt.annotate_cols(**tdr_metrics_ht[mt.col_key])
     flags = {
         'callrate': mt.filtered_callrate < CALLRATE_LOW_THRESHOLD,
         'contamination': mt.contamination_rate > CONTAMINATION_UPPER_THRESHOLD,
+        'coverage': (
+            mt.percent_bases_at_20x < WES_COVERAGE_LOW_THRESHOLD
+            if sample_type == SampleType.WES
+            else mt.mean_coverage < WGS_CALLRATE_LOW_THRESHOLD
+        ),
     }
-    if sample_type == SampleType.WES:
-        flags['coverage'] = mt.percent_bases_at_20x < WES_COVERAGE_LOW_THRESHOLD
-    else:
-        flags['coverage'] = mt.mean_coverage < WGS_CALLRATE_LOW_THRESHOLD
-
     return mt.annotate_cols(
         filter_flags=hl.array(
             [hl.or_missing(filter_cond, name) for name, filter_cond in flags.items()],
@@ -107,17 +101,19 @@ def annotate_filter_flags(
     )
 
 
-def annotate_qc_gen_anc(mt: hl.MatrixTable) -> hl.MatrixTable:
+def annotate_qc_gen_anc(
+    mt: hl.MatrixTable,
+    ancestry_rf_model: onnx.ModelProto,
+    pop_pca_loadings_ht: hl.Table,
+) -> hl.MatrixTable:
     mt = mt.select_entries('GT')
-    scores = _get_pop_pca_scores(mt)
-    with hl.hadoop_open(ANCESTRY_RF_MODEL_PATH, 'rb') as f:
-        fit = onnx.load(f)
-
+    scores = pc_project(mt, pop_pca_loadings_ht)
+    scores = scores.annotate(scores=scores.scores[:NUM_PCS], known_pop='Unknown')
     pop_pca_ht, _ = assign_population_pcs(
         scores,
         pc_cols=scores.scores,
         output_col='qc_pop',
-        fit=fit,
+        fit=ancestry_rf_model,
         apply_model_func=apply_onnx_classification_model,
     )
     pop_pca_ht = pop_pca_ht.key_by('s')
@@ -134,15 +130,8 @@ def annotate_qc_gen_anc(mt: hl.MatrixTable) -> hl.MatrixTable:
     return mt.annotate_cols(**pop_pca_ht[mt.col_key])
 
 
-def _get_pop_pca_scores(mt: hl.MatrixTable) -> hl.Table:
-    loadings = hl.read_table(POP_PCA_LOADINGS_PATH)
-    scores = pc_project(mt, loadings)
-    return scores.annotate(scores=scores.scores[:NUM_PCS], known_pop='Unknown')
-
-
 def run_hail_sample_qc(mt: hl.MatrixTable, sample_type: SampleType) -> hl.MatrixTable:
     mt = filter_to_autosomes(mt)
-    mt = split_multi_hts(mt, True)
     mt = hl.sample_qc(mt)
     mt = mt.annotate_cols(
         sample_qc=mt.sample_qc.annotate(
