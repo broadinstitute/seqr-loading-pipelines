@@ -5,7 +5,6 @@ from v03_pipeline.lib.tasks.clickhouse_migration.migrate_all_projects_to_clickho
     MigrateAllProjectsToClickHouseOnDataprocTask,
 )
 from v03_pipeline.lib.tasks.run_pipeline import RunPipelineTask
-from v03_pipeline.lib.tasks.update_project_table import UpdateProjectTableTask
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
@@ -16,7 +15,6 @@ __all__ = [
     'MigrateAllProjectsToClickHouseOnDataprocTask',
     'MigrateAllProjectsToClickHouseTask',
     'RunPipelineTask',
-    'UpdateProjectTableTask',
     'UpdateVariantAnnotationsTableWithNewSamplesTask',
     'WriteMetadataForRunTask',
     'WriteSuccessFileTask',
