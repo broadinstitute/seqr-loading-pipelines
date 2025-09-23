@@ -35,6 +35,8 @@ from v03_pipeline.lib.tasks.write_metadata_for_run import (
 from v03_pipeline.lib.vep import run_vep
 
 VARIANTS_PER_VEP_PARTITION = 1e3
+MIN_PARTITIONS = 10
+MAX_PARTITIONS = 10000
 GENCODE_RELEASE = 42
 GENCODE_FOR_VEP_RELEASE = 44
 
@@ -139,7 +141,12 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                     max_key_=(annotations_ht.count() - 1),
                 )
             curr_max_key_ = annotations_ht.index_globals().max_key_
-            new_variants_ht = callset_ht.anti_join(annotations_ht)
+            new_variants_ht = callset_ht.repartition(
+                # Repartition this join to improve performance
+                constrain(
+                    callset_ht.n_partitions() * 100, MIN_PARTITIONS, MAX_PARTITIONS,
+                ),
+            ).anti_join(annotations_ht)
         else:
             curr_max_key_ = -1
             new_variants_ht = callset_ht
@@ -153,8 +160,8 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         new_variants_ht = new_variants_ht.repartition(
             constrain(
                 math.ceil(new_variants_count / VARIANTS_PER_VEP_PARTITION),
-                10,
-                5000,
+                MIN_PARTITIONS,
+                MAX_PARTITIONS,
             ),
         )
         new_variants_ht = run_vep(
