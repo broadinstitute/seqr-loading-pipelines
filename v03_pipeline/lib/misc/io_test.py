@@ -33,7 +33,7 @@ class IOTest(unittest.TestCase):
     def test_compute_hail_n_partitions(self) -> None:
         self.assertEqual(compute_hail_n_partitions(23), 1)
         self.assertEqual(compute_hail_n_partitions(191310), 1)
-        self.assertEqual(compute_hail_n_partitions(1913100000), 15)
+        self.assertEqual(compute_hail_n_partitions(1913100000), 58)
 
     def test_import_imputed_sex(self) -> None:
         ht = import_imputed_sex(TEST_IMPUTED_SEX)
