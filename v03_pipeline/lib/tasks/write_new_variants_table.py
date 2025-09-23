@@ -144,7 +144,9 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             new_variants_ht = callset_ht.repartition(
                 # Repartition this join to improve performance
                 constrain(
-                    callset_ht.n_partitions() * 100, MIN_PARTITIONS, MAX_PARTITIONS,
+                    callset_ht.n_partitions() * 100,
+                    MIN_PARTITIONS,
+                    MAX_PARTITIONS,
                 ),
             ).anti_join(annotations_ht)
         else:
