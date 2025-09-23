@@ -17,7 +17,7 @@ class LoadingPipelineRequest(BaseModel):
     reference_genome: ReferenceGenome
     dataset_type: DatasetType
     skip_all_validations: bool = Field(
-        default = False,
+        default=False,
         validation_alias=AliasChoices('skip_validation', 'skip_all_validations'),
     )
     skip_check_sex_and_relatedness: bool = False
