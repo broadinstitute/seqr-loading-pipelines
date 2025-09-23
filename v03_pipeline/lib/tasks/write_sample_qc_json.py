@@ -14,14 +14,14 @@ from v03_pipeline.lib.paths import (
     sample_qc_json_path,
     tdr_metrics_dir,
 )
+from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
-from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask, RawFileTask
+from v03_pipeline.lib.tasks.files import GCSorLocalTarget, RawFileTask
+from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset import (
+    UpdatedReferenceDatasetTask,
+)
 from v03_pipeline.lib.tasks.validate_callset import ValidateCallsetTask
 from v03_pipeline.lib.tasks.write_tdr_metrics_files import WriteTDRMetricsFilesTask
-
-POP_PCA_LOADINGS_PATH = (
-    'gs://gcp-public-data--gnomad/release/4.0/pca/gnomad.v4.0.pca_loadings.ht'
-)
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
@@ -39,7 +39,10 @@ class WriteSampleQCJsonTask(luigi.Task):
         return [
             self.clone(ValidateCallsetTask),
             self.clone(WriteTDRMetricsFilesTask),
-            HailTableTask(POP_PCA_LOADINGS_PATH),
+            self.clone(
+                UpdatedReferenceDatasetTask,
+                reference_dataset=ReferenceDataset.gnomad_qc,
+            ),
             RawFileTask(ancestry_model_rf_path()),
         ]
 

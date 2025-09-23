@@ -103,8 +103,8 @@ def annotate_filter_flags(
 
 def annotate_qc_gen_anc(
     mt: hl.MatrixTable,
-    ancestry_rf_model: onnx.ModelProto,
     pop_pca_loadings_ht: hl.Table,
+    ancestry_rf_model: onnx.ModelProto,
 ) -> hl.MatrixTable:
     mt = mt.select_entries('GT')
     scores = pc_project(mt, pop_pca_loadings_ht)
