@@ -8,7 +8,7 @@ from v03_pipeline.lib.misc.validation import SKIPPABLE_VALIDATIONS
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 
 ALL_VALIDATIONS = 'all'
-STRINGIFIED_SKIPPABLE_VALIDATIONS = {f.__name__ for f in SKIPPABLE_VALIDATIONS}
+STRINGIFIED_SKIPPABLE_VALIDATIONS = [f.__name__ for f in SKIPPABLE_VALIDATIONS]
 VALID_FILE_TYPES = ['vcf', 'vcf.gz', 'vcf.bgz', 'mt']
 
 
@@ -34,7 +34,7 @@ class LoadingPipelineRequest(BaseModel):
     @classmethod
     def must_be_known_validator(cls, validations_to_skip):
         for v in validations_to_skip:
-            if v not in STRINGIFIED_SKIPPABLE_VALIDATIONS:
+            if v not in set(STRINGIFIED_SKIPPABLE_VALIDATIONS):
                 msg = f'{v} is not a valid validator'
                 raise ValueError(msg)
         return validations_to_skip
@@ -55,11 +55,17 @@ class LoadingPipelineRequest(BaseModel):
     )  # the root validator runs before Pydantic parses or coerces field values.
     @classmethod
     def backwards_compatible_skip_validation(cls, values):
-        if values.get('skip_validation'):
-            values['validations_to_skip'] = STRINGIFIED_SKIPPABLE_VALIDATIONS
-        if values.get('validations_to_skip') == ['all']:
+        if values.get('skip_validation') or values.get('validations_to_skip') == [
+            'all'
+        ]:
             values['validations_to_skip'] = STRINGIFIED_SKIPPABLE_VALIDATIONS
         return values
 
+    def dict(self, *args, **kwargs):
+        data = self.model_dump(*args, **kwargs)
+        data['validations_to_skip'] = [f.__name__ for f in self.validations_to_skip]
+        return data
+
     def json(self, *args, **kwargs):
+        print(self.dict(*args, **kwargs), 'ben')
         return json.dumps(self.dict(*args, **kwargs), *args, **kwargs)

@@ -93,10 +93,9 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
                     'reference_genome': 'GRCh38',
                     'sample_type': 'WGS',
                     'skip_check_sex_and_relatedness': False,
-                    'skip_all_validations': False,
+                    'skip_validation': False,
                     'skip_expect_tdr_metrics': False,
-                    'skip_validate_sample_type': False,
-                    'skip_validate_expected_contig_frequency': False,
+                    'validations_to_skip': [],
                 },
             },
         )
