@@ -4,10 +4,9 @@ from typing import Literal
 import hailtop.fs as hfs
 from pydantic import AliasChoices, BaseModel, Field, field_validator, root_validator
 
-from v03_pipeline.lib.misc.validation import SKIPPABLE_VALIDATIONS
+from v03_pipeline.lib.misc.validation import ALL_VALIDATIONS, SKIPPABLE_VALIDATIONS
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 
-ALL_VALIDATIONS = 'all'
 STRINGIFIED_SKIPPABLE_VALIDATIONS = [f.__name__ for f in SKIPPABLE_VALIDATIONS]
 VALID_FILE_TYPES = ['vcf', 'vcf.gz', 'vcf.bgz', 'mt']
 
@@ -56,7 +55,7 @@ class LoadingPipelineRequest(BaseModel):
     @classmethod
     def backwards_compatible_skip_validation(cls, values):
         if values.get('skip_validation') or values.get('validations_to_skip') == [
-            'all',
+            ALL_VALIDATIONS
         ]:
             values['validations_to_skip'] = STRINGIFIED_SKIPPABLE_VALIDATIONS
         return values
