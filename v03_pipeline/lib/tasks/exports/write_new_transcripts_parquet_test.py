@@ -87,7 +87,7 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
             project_guids=[
                 'fake_project',
             ],
-            skip_all_validations=True,
+            validations_to_skip=['all'],
             run_id=TEST_RUN_ID,
         )
         worker.add(task)
@@ -187,7 +187,7 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
             project_guids=[
                 'fake_project',
             ],
-            skip_all_validations=True,
+            validations_to_skip=['all'],
             run_id=TEST_RUN_ID,
         )
         worker.add(task)

@@ -101,7 +101,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             callset_path=TEST_VCF,
             project_guids=['R0113_test_project'],
             project_i=0,
-            skip_all_validations=True,
+            validations_to_skip=['all'],
             skip_expect_tdr_metrics=True,
         )
         worker.add(wrsc_task)
@@ -151,7 +151,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             callset_path=TEST_VCF,
             project_guids=['R0114_project4'],
             project_i=0,
-            skip_all_validations=True,
+            validations_to_skip=['all'],
             skip_expect_tdr_metrics=True,
         )
         worker.add(wrsc_task)
@@ -244,7 +244,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             callset_path=TEST_VCF,
             project_guids=['R0114_project4'],
             project_i=0,
-            skip_all_validations=True,
+            validations_to_skip=['all'],
             skip_expect_tdr_metrics=True,
         )
         worker.add(wrsc_task)
@@ -256,7 +256,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WES,
             callset_path=TEST_VCF,
             project_guids=['R0114_project4'],
-            skip_all_validations=True,
+            validations_to_skip=['all'],
             run_id=TEST_RUN_ID,
         )
         self.assertTrue(write_validation_errors_task.complete())

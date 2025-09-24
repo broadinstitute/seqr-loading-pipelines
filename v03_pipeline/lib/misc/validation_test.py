@@ -5,6 +5,7 @@ import hail as hl
 
 from v03_pipeline.lib.misc.validation import (
     SeqrValidationError,
+    Validation,
     validate_allele_depth_length,
     validate_allele_type,
     validate_expected_contig_frequency,
@@ -39,6 +40,22 @@ def _mt_from_contigs(contigs):
 
 
 class ValidationTest(unittest.TestCase):
+    def test_enum(self) -> None:
+        self.assertEqual(Validation.ALLELE_TYPE.value, validate_allele_type)
+
+        # Test that ALL returns a tuple of all functions
+        self.assertEqual(
+            Validation.ALL.value,
+            [
+                validate_allele_type,
+                validate_allele_depth_length,
+                validate_no_duplicate_variants,
+                validate_expected_contig_frequency,
+                validate_imported_field_types,
+                validate_sample_type,
+            ],
+        )
+
     def test_validate_allele_type(self) -> None:
         mt = (
             hl.MatrixTable.from_parts(

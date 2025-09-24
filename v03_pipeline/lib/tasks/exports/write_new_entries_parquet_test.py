@@ -114,7 +114,7 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project', 'R0114_project4'],
-            skip_all_validations=True,
+            validations_to_skip=['all'],
             run_id=TEST_RUN_ID,
         )
         worker.add(task)
@@ -214,7 +214,7 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_MITO_CALLSET,
             project_guids=['R0116_test_project3'],
-            skip_all_validations=True,
+            validations_to_skip=['all'],
             run_id=TEST_RUN_ID,
         )
         worker.add(task)
@@ -269,7 +269,7 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_SV_VCF_2,
             project_guids=['R0115_test_project2'],
-            skip_all_validations=True,
+            validations_to_skip=['all'],
             run_id=TEST_RUN_ID,
         )
         worker.add(task)
@@ -352,7 +352,7 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
             sample_type=SampleType.WES,
             callset_path=TEST_GCNV_BED_FILE,
             project_guids=['R0115_test_project2'],
-            skip_all_validations=True,
+            validations_to_skip=['all'],
             run_id=TEST_RUN_ID,
         )
         worker.add(task)

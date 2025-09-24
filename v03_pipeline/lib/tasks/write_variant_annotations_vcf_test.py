@@ -64,7 +64,7 @@ class WriteVariantAnnotationsVCFTest(MockedReferenceDatasetsTestCase):
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SV_VCF,
                 project_guids=['R0115_test_project2'],
-                skip_all_validations=True,
+                validations_to_skip=['all'],
                 skip_expect_tdr_metrics=True,
             )
         )

@@ -113,7 +113,7 @@ class WriteSampleQCJsonTaskTest(MockedReferenceDatasetsTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guids=['R0113_test_project'],
-            skip_all_validations=True,
+            validations_to_skip=['all'],
         )
         worker.add(task)
         worker.run()

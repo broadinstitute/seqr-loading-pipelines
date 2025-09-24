@@ -28,10 +28,7 @@ class BaseLoadingRunParams(luigi.Task):
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
-    skip_all_validations = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
+    validations_to_skip = luigi.ListParameter(default=[])
     is_new_gcnv_joint_call = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,

@@ -54,7 +54,7 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guids=['R0113_test_project', 'R0114_project4'],
-            skip_all_validations=True,
+            validations_to_skip=['all'],
             run_id='run_123456',
         )
         worker.add(write_metadata_for_run_task)
