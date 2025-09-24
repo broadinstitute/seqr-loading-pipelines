@@ -31,7 +31,8 @@ class ValidateCallsetTask(BaseUpdateTask):
     def validation_dependencies(self) -> dict[str, hl.Table]:
         deps = {}
         if (
-            'validate_sample_type' not in self.validations_to_skip
+            self.validations_to_skip != ['all']
+            and 'validate_sample_type' not in self.validations_to_skip
             and self.dataset_type.can_run_validation
         ):
             deps['coding_and_noncoding_variants_ht'] = hl.read_table(
@@ -62,7 +63,8 @@ class ValidateCallsetTask(BaseUpdateTask):
     def requires(self) -> list[luigi.Task]:
         requirements = [self.clone(WriteImportedCallsetTask)]
         if (
-            'validate_sample_type' not in self.validations_to_skip
+            self.validations_to_skip != ['all']
+            and 'validate_sample_type' not in self.validations_to_skip
             and self.dataset_type.can_run_validation
         ):
             requirements = [
@@ -100,7 +102,14 @@ class ValidateCallsetTask(BaseUpdateTask):
                     & (hl.len(mt.alleles[1]) < MAX_SNV_INDEL_ALLELE_LENGTH)
                 ),
             )
-
+        if (
+            self.validations_to_skip == ['all']
+            or not self.dataset_type.can_run_validation
+        ):
+            return mt.select_globals(
+                callset_path=self.callset_path,
+                validated_sample_type=self.sample_type.value,
+            )
         validation_exceptions = []
         for validation_f in SKIPPABLE_VALIDATIONS:
             try:
