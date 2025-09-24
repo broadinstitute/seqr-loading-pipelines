@@ -57,7 +57,7 @@ class LoadingPipelineRequest(BaseModel):
     def backwards_compatible_skip_validation(cls, values):
         if values.get('skip_validation'):
             values['validations_to_skip'] = STRINGIFIED_SKIPPABLE_VALIDATIONS
-        if values.get('validations_to_skip') == ['all']
+        if values.get('validations_to_skip') == ['all']:
             values['validations_to_skip'] = STRINGIFIED_SKIPPABLE_VALIDATIONS
         return values
 
