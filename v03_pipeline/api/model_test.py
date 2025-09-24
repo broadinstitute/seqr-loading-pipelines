@@ -34,3 +34,39 @@ class ModelTest(unittest.TestCase):
                 '3 validation errors for LoadingPipelineRequest',
             ),
         )
+
+    def test_validations_to_skip(self) -> None:
+        shared_params = {
+            'callset_path': TEST_VCF,
+            'projects_to_run': ['project_a'],
+            'sample_type': SampleType.WGS.value,
+            'reference_genome': ReferenceGenome.GRCh38.value,
+            'dataset_type': DatasetType.SNV_INDEL.value,
+        }
+        raw_request = {
+            **shared_params,
+            'skip_validation': True,
+        }
+        lpr = LoadingPipelineRequest.model_validate(raw_request)
+        self.assertGreater(len(lpr.validations_to_skip), 1)
+
+        raw_request = {
+            **shared_params,
+            'validations_to_skip': ['all'],
+        }
+        lpr = LoadingPipelineRequest.model_validate(raw_request)
+        self.assertGreater(len(lpr.validations_to_skip), 1)
+
+        raw_request = {
+            **shared_params,
+            'validations_to_skip': ['validate_sample_type'],
+        }
+        lpr = LoadingPipelineRequest.model_validate(raw_request)
+        self.assertEqual(len(lpr.validations_to_skip), 1)
+
+        raw_request = {
+            **shared_params,
+            'validations_to_skip': ['validate_blended_exome'],
+        }
+        with self.assertRaises(ValueError):
+            LoadingPipelineRequest.model_validate(raw_request)

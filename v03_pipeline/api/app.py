@@ -35,9 +35,7 @@ async def loading_pipeline_enqueue(request: web.Request) -> web.Response:
 
     if is_queue_full():
         return web.json_response(
-            {
-                f'Loading pipeline queue is full. Please try again later. (limit={Env.LOADING_QUEUE_LIMIT})',
-            },
+            f'Loading pipeline queue is full. Please try again later. (limit={Env.LOADING_QUEUE_LIMIT})',
             status=web_exceptions.HTTPConflict.status_code,
         )
 

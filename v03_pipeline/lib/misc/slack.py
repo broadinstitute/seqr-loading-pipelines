@@ -39,7 +39,7 @@ def safe_post_to_slack_failure(
     message = [
         SLACK_FAILURE_MESSAGE_PREFIX,
         f'Run ID: {run_id}',
-        str(lpr),
+        f'```{lpr.model_dump_json(indent=4)}```',
         f'Reason: {e!s}',
     ]
     if FeatureFlag.RUN_PIPELINE_ON_DATAPROC:
@@ -55,7 +55,7 @@ def safe_post_to_slack_success(run_id: str, lpr: LoadingPipelineRequest) -> None
         [
             SLACK_SUCCESS_MESSAGE_PREFIX,
             f'Run ID: {run_id}',
-            str(lpr),
+            f'```{lpr.model_dump_json(indent=4)}```',
         ],
     )
     _safe_post_to_slack(message)
