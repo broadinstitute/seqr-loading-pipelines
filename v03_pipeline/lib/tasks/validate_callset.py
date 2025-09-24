@@ -32,7 +32,7 @@ class ValidateCallsetTask(BaseUpdateTask):
     def validation_dependencies(self) -> dict[str, hl.Table]:
         deps = {}
         if (
-            ALL_VALIDATIONS in self.validations_to_skip
+            ALL_VALIDATIONS not in self.validations_to_skip
             and 'validate_sample_type' not in self.validations_to_skip
             and self.dataset_type.can_run_validation
         ):
@@ -64,7 +64,7 @@ class ValidateCallsetTask(BaseUpdateTask):
     def requires(self) -> list[luigi.Task]:
         requirements = [self.clone(WriteImportedCallsetTask)]
         if (
-            self.validations_to_skip != [ALL_VALIDATIONS]
+            ALL_VALIDATIONS not in self.validations_to_skip
             and 'validate_sample_type' not in self.validations_to_skip
             and self.dataset_type.can_run_validation
         ):
