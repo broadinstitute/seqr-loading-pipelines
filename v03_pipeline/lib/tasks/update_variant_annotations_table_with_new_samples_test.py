@@ -21,7 +21,9 @@ from v03_pipeline.lib.annotations.enums import (
 from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.misc.validation import (
     ALL_VALIDATIONS,
+    validate_allele_type,
     validate_expected_contig_frequency,
+    validate_no_duplicate_variants,
 )
 from v03_pipeline.lib.model import (
     DatasetType,
@@ -132,8 +134,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
     )
     @patch('v03_pipeline.lib.tasks.update_new_variants_with_caids.Env')
     @patch(
-        'v03_pipeline.lib.tasks.validate_callset.validate_expected_contig_frequency',
-        partial(validate_expected_contig_frequency, min_rows_per_contig=25),
+        'v03_pipeline.lib.tasks.validate_callset.SKIPPABLE_VALIDATIONS',
+        [
+            validate_allele_type,
+            validate_no_duplicate_variants,
+            partial(validate_expected_contig_frequency, min_rows_per_contig=25),
+        ],
     )
     @patch.object(ReferenceGenome, 'standard_contigs', new_callable=PropertyMock)
     @patch('v03_pipeline.lib.vep.hl.vep')
