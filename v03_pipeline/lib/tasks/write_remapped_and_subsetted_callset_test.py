@@ -6,6 +6,7 @@ import hail as hl
 import luigi.worker
 
 from v03_pipeline.lib.misc.io import remap_pedigree_hash
+from v03_pipeline.lib.misc.validation import ALL_VALIDATIONS
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.paths import (
     relatedness_check_table_path,
@@ -101,7 +102,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             callset_path=TEST_VCF,
             project_guids=['R0113_test_project'],
             project_i=0,
-            validations_to_skip=['all'],
+            validations_to_skip=[ALL_VALIDATIONS],
             skip_expect_tdr_metrics=True,
         )
         worker.add(wrsc_task)
@@ -151,7 +152,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             callset_path=TEST_VCF,
             project_guids=['R0114_project4'],
             project_i=0,
-            validations_to_skip=['all'],
+            validations_to_skip=[ALL_VALIDATIONS],
             skip_expect_tdr_metrics=True,
         )
         worker.add(wrsc_task)
@@ -244,7 +245,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             callset_path=TEST_VCF,
             project_guids=['R0114_project4'],
             project_i=0,
-            validations_to_skip=['all'],
+            validations_to_skip=[ALL_VALIDATIONS],
             skip_expect_tdr_metrics=True,
         )
         worker.add(wrsc_task)
@@ -256,7 +257,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WES,
             callset_path=TEST_VCF,
             project_guids=['R0114_project4'],
-            validations_to_skip=['all'],
+            validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
         self.assertTrue(write_validation_errors_task.complete())

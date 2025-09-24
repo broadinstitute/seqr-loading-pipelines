@@ -3,6 +3,7 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.misc.validation import (
+    ALL_VALIDATIONS,
     SKIPPABLE_VALIDATIONS,
     SeqrValidationError,
 )
@@ -31,7 +32,7 @@ class ValidateCallsetTask(BaseUpdateTask):
     def validation_dependencies(self) -> dict[str, hl.Table]:
         deps = {}
         if (
-            self.validations_to_skip != ['all']
+            ALL_VALIDATIONS in self.validations_to_skip
             and 'validate_sample_type' not in self.validations_to_skip
             and self.dataset_type.can_run_validation
         ):
@@ -63,7 +64,7 @@ class ValidateCallsetTask(BaseUpdateTask):
     def requires(self) -> list[luigi.Task]:
         requirements = [self.clone(WriteImportedCallsetTask)]
         if (
-            self.validations_to_skip != ['all']
+            self.validations_to_skip != [ALL_VALIDATIONS]
             and 'validate_sample_type' not in self.validations_to_skip
             and self.dataset_type.can_run_validation
         ):
@@ -103,7 +104,7 @@ class ValidateCallsetTask(BaseUpdateTask):
                 ),
             )
         if (
-            self.validations_to_skip == ['all']
+            ALL_VALIDATIONS in self.validations_to_skip
             or not self.dataset_type.can_run_validation
         ):
             return mt.select_globals(

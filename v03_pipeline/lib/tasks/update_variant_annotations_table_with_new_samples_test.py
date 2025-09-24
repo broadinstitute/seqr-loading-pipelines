@@ -19,7 +19,10 @@ from v03_pipeline.lib.annotations.enums import (
     TRANSCRIPT_CONSEQUENCE_TERMS,
 )
 from v03_pipeline.lib.misc.io import remap_pedigree_hash
-from v03_pipeline.lib.misc.validation import validate_expected_contig_frequency
+from v03_pipeline.lib.misc.validation import (
+    ALL_VALIDATIONS,
+    validate_expected_contig_frequency,
+)
 from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceGenome,
@@ -86,7 +89,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
-            validations_to_skip=['all'],
+            validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
         worker = luigi.worker.Worker()
@@ -116,7 +119,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
-            validations_to_skip=['all'],
+            validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
         worker = luigi.worker.Worker()
@@ -529,7 +532,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
-            validations_to_skip=['all'],
+            validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
         worker.add(uvatwns_task)
@@ -685,7 +688,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
-            validations_to_skip=['all'],
+            validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
         worker.add(uvatwns_task)
@@ -733,7 +736,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WGS,
                 callset_path=TEST_MITO_MT,
                 project_guids=['R0115_test_project2'],
-                validations_to_skip=['all'],
+                validations_to_skip=[ALL_VALIDATIONS],
                 run_id=TEST_RUN_ID,
             )
         )
@@ -841,7 +844,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SV_VCF,
                 project_guids=['R0115_test_project2'],
-                validations_to_skip=['all'],
+                validations_to_skip=[ALL_VALIDATIONS],
                 run_id=TEST_RUN_ID,
             )
         )
@@ -1301,7 +1304,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SV_VCF_2,
                 project_guids=['R0115_test_project2'],
-                validations_to_skip=['all'],
+                validations_to_skip=[ALL_VALIDATIONS],
                 run_id='second_run_id',
             )
         )
@@ -1421,7 +1424,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SV_VCF_2,
                 project_guids=['R0116_test_project3', 'R0117_test_project4'],
-                validations_to_skip=['all'],
+                validations_to_skip=[ALL_VALIDATIONS],
                 run_id='run_id',
             )
         )
@@ -1453,7 +1456,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WES,
                 callset_path=TEST_GCNV_BED_FILE,
                 project_guids=['R0115_test_project2'],
-                validations_to_skip=['all'],
+                validations_to_skip=[ALL_VALIDATIONS],
                 run_id=TEST_RUN_ID,
             )
         )
@@ -1592,7 +1595,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WES,
                 callset_path=TEST_GCNV_BED_FILE_2,
                 project_guids=['R0115_test_project2'],
-                validations_to_skip=['all'],
+                validations_to_skip=[ALL_VALIDATIONS],
                 run_id='second_run_id',
             )
         )

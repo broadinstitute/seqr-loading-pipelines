@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 import luigi.worker
 
+from v03_pipeline.lib.misc.validation import ALL_VALIDATIONS
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.paths import relatedness_check_tsv_path
 from v03_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRunTask
@@ -54,7 +55,7 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guids=['R0113_test_project', 'R0114_project4'],
-            validations_to_skip=['all'],
+            validations_to_skip=[ALL_VALIDATIONS],
             run_id='run_123456',
         )
         worker.add(write_metadata_for_run_task)

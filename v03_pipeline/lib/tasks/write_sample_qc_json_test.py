@@ -7,6 +7,7 @@ import hail as hl
 import hailtop.fs as hfs
 import luigi.worker
 
+from v03_pipeline.lib.misc.validation import ALL_VALIDATIONS
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.paths import ancestry_model_rf_path
 from v03_pipeline.lib.tasks.write_sample_qc_json import WriteSampleQCJsonTask
@@ -113,7 +114,7 @@ class WriteSampleQCJsonTaskTest(MockedReferenceDatasetsTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guids=['R0113_test_project'],
-            validations_to_skip=['all'],
+            validations_to_skip=[ALL_VALIDATIONS],
         )
         worker.add(task)
         worker.run()

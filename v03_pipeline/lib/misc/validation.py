@@ -12,6 +12,7 @@ from v03_pipeline.lib.model import (
 AMBIGUOUS_THRESHOLD_PERC: float = 0.01  # Fraction of samples identified as "ambiguous_sex" above which an error will be thrown.
 MIN_ROWS_PER_CONTIG = 100
 SAMPLE_TYPE_MATCH_THRESHOLD = 0.3
+ALL_VALIDATIONS = 'all'
 
 
 class SeqrValidationError(Exception):
