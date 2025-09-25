@@ -106,19 +106,19 @@ class ClickHouseTable(StrEnum):
         ]
 
     @classmethod
-    def for_dataset_type_atomic_insert_entries(
+    def for_dataset_type_atomic_entries_update(
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseTable']:
         return [
-            *cls.for_dataset_type_atomic_insert_entries_project_partitioned(
+            *cls.for_dataset_type_atomic_entries_update_project_partitioned(
                 dataset_type,
             ),
-            *cls.for_dataset_type_atomic_insert_entries_unpartitioned(dataset_type),
+            *cls.for_dataset_type_atomic_entries_update_unpartitioned(dataset_type),
         ]
 
     @classmethod
-    def for_dataset_type_atomic_insert_entries_project_partitioned(
+    def for_dataset_type_atomic_entries_update_project_partitioned(
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseTable']:
@@ -130,7 +130,7 @@ class ClickHouseTable(StrEnum):
         ]
 
     @classmethod
-    def for_dataset_type_atomic_insert_entries_unpartitioned(
+    def for_dataset_type_atomic_entries_update_unpartitioned(
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseTable']:
@@ -167,7 +167,7 @@ class ClickHouseMaterializedView(StrEnum):
         return []
 
     @classmethod
-    def for_dataset_type_atomic_insert_entries(
+    def for_dataset_type_atomic_entries_update(
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseMaterializedView']:
@@ -179,7 +179,7 @@ class ClickHouseMaterializedView(StrEnum):
         ]
 
     @classmethod
-    def for_dataset_type_atomic_insert_entries_refreshable(
+    def for_dataset_type_atomic_entries_update_refreshable(
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseMaterializedView']:
@@ -584,18 +584,18 @@ def atomic_insert_entries(
     drop_staging_db()
     create_staging_tables(
         table_name_builder,
-        ClickHouseTable.for_dataset_type_atomic_insert_entries(dataset_type),
+        ClickHouseTable.for_dataset_type_atomic_entries_update(dataset_type),
     )
     create_staging_materialized_views(
         table_name_builder,
-        ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries(
+        ClickHouseMaterializedView.for_dataset_type_atomic_entries_update(
             dataset_type,
         ),
     )
     stage_existing_project_partitions(
         table_name_builder,
         project_guids,
-        ClickHouseTable.for_dataset_type_atomic_insert_entries_project_partitioned(
+        ClickHouseTable.for_dataset_type_atomic_entries_update_project_partitioned(
             dataset_type,
         ),
     )
@@ -616,21 +616,21 @@ def atomic_insert_entries(
     )
     refresh_materialized_views(
         table_name_builder,
-        ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries_refreshable(
+        ClickHouseMaterializedView.for_dataset_type_atomic_entries_update_refreshable(
             dataset_type,
         ),
         staging=True,
     )
     replace_project_partitions(
         table_name_builder,
-        ClickHouseTable.for_dataset_type_atomic_insert_entries_project_partitioned(
+        ClickHouseTable.for_dataset_type_atomic_entries_update_project_partitioned(
             dataset_type,
         ),
         project_guids,
     )
     exchange_tables(
         table_name_builder,
-        ClickHouseTable.for_dataset_type_atomic_insert_entries_unpartitioned(
+        ClickHouseTable.for_dataset_type_atomic_entries_update_unpartitioned(
             dataset_type,
         ),
     )
@@ -672,6 +672,7 @@ def load_complete_run(
 def delete_family_guids(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
+    run_id: str,
     project_guid: str,
     family_guids: list[str],
 ):
@@ -680,7 +681,7 @@ def delete_family_guids(
     table_name_builder = TableNameBuilder(
         reference_genome,
         dataset_type,
-        f'delete_families_{family_guids}',
+        run_id,
     )
     entries_exist = logged_query(
         f"""
@@ -693,20 +694,21 @@ def delete_family_guids(
     if not entries_exist:
         msg = f'No data exists for {reference_genome.value} & {dataset_type.value}'
         logger.info(msg)
+        return
     create_staging_tables(
         table_name_builder,
-        ClickHouseTable.for_dataset_type_atomic_insert_entries(dataset_type),
+        ClickHouseTable.for_dataset_type_atomic_entries_update(dataset_type),
     )
     create_staging_materialized_views(
         table_name_builder,
-        ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries(
+        ClickHouseMaterializedView.for_dataset_type_atomic_entries_update(
             dataset_type,
         ),
     )
     stage_existing_project_partitions(
         table_name_builder,
         [project_guid],
-        ClickHouseTable.for_dataset_type_atomic_insert_entries_project_partitioned(
+        ClickHouseTable.for_dataset_type_atomic_entries_update_project_partitioned(
             dataset_type,
         ),
     )
@@ -719,21 +721,21 @@ def delete_family_guids(
     )
     refresh_materialized_views(
         table_name_builder,
-        ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries_refreshable(
+        ClickHouseMaterializedView.for_dataset_type_atomic_entries_update_refreshable(
             dataset_type,
         ),
         staging=True,
     )
     replace_project_partitions(
         table_name_builder,
-        ClickHouseTable.for_dataset_type_atomic_insert_entries_project_partitioned(
+        ClickHouseTable.for_dataset_type_atomic_entries_update_project_partitioned(
             dataset_type,
         ),
         [project_guid],
     )
     exchange_tables(
         table_name_builder,
-        ClickHouseTable.for_dataset_type_atomic_insert_entries_unpartitioned(
+        ClickHouseTable.for_dataset_type_atomic_entries_update_unpartitioned(
             dataset_type,
         ),
     )

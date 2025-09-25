@@ -44,3 +44,11 @@ class LoadingPipelineRequest(BaseModel):
                 f'Skip Expect TDR Metrics: {self.skip_expect_tdr_metrics}',
             ],
         )
+
+
+class DeleteFamiliesRequest(BaseModel):
+    project_guid: str
+    family_guids: list[str] = Field(
+        min_length=1,
+        frozen=True,
+    )

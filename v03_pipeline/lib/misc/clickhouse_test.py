@@ -523,13 +523,13 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         create_staging_tables(
             table_name_builder,
-            ClickHouseTable.for_dataset_type_atomic_insert_entries(
+            ClickHouseTable.for_dataset_type_atomic_entries_update(
                 DatasetType.SNV_INDEL,
             ),
         )
         create_staging_materialized_views(
             table_name_builder,
-            ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries(
+            ClickHouseMaterializedView.for_dataset_type_atomic_entries_update(
                 DatasetType.SNV_INDEL,
             ),
         )
@@ -540,7 +540,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 'project_b',
                 'project_d',  # Partition does not exist already.
             ],
-            ClickHouseTable.for_dataset_type_atomic_insert_entries_project_partitioned(
+            ClickHouseTable.for_dataset_type_atomic_entries_update_project_partitioned(
                 DatasetType.SNV_INDEL,
             ),
         )
@@ -636,14 +636,14 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         refresh_materialized_views(
             table_name_builder,
-            ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries_refreshable(
+            ClickHouseMaterializedView.for_dataset_type_atomic_entries_update_refreshable(
                 DatasetType.SNV_INDEL,
             ),
             staging=True,
         )
         replace_project_partitions(
             table_name_builder,
-            ClickHouseTable.for_dataset_type_atomic_insert_entries_project_partitioned(
+            ClickHouseTable.for_dataset_type_atomic_entries_update_project_partitioned(
                 DatasetType.SNV_INDEL,
             ),
             ['project_a', 'project_d'],
@@ -823,7 +823,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         exchange_tables(
             table_name_builder,
-            ClickHouseTable.for_dataset_type_atomic_insert_entries_unpartitioned(
+            ClickHouseTable.for_dataset_type_atomic_entries_update_unpartitioned(
                 DatasetType.SNV_INDEL,
             ),
         )
@@ -1019,7 +1019,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         refresh_materialized_views(
             table_name_builder,
-            ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries_refreshable(
+            ClickHouseMaterializedView.for_dataset_type_atomic_entries_update_refreshable(
                 DatasetType.SNV_INDEL,
             ),
             staging=False,
@@ -1032,7 +1032,12 @@ class ClickhouseTest(MockedDatarootTestCase):
             """,
         )
         self.assertCountEqual(gt_stats, [(12,)])
-        delete_family_guids(ReferenceGenome.GRCh38, DatasetType.SNV_INDEL, 'project_a', ['family_a1', 'family_a2'])
+        delete_family_guids(
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            'project_a',
+            ['family_a1', 'family_a2'],
+        )
         project_gt_stats = client.execute(
             f"""
             SELECT project_guid, sum(het_samples), sum(hom_samples)
@@ -1060,7 +1065,4 @@ class ClickhouseTest(MockedDatarootTestCase):
             {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats_dict`
             """,
         )
-        self.assertCountEqual(
-            gt_stats_dict,
-            [(10,)]
-        )
+        self.assertCountEqual(gt_stats_dict, [(10,)])
