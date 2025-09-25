@@ -11,7 +11,7 @@ from v03_pipeline.lib.misc.clickhouse import (
     ClickHouseMaterializedView,
     ClickHouseTable,
     TableNameBuilder,
-    create_staging_non_table_entities,
+    create_staging_materialized_views,
     create_staging_tables,
     delete_existing_families_from_staging_entries,
     direct_insert_all_keys,
@@ -526,14 +526,11 @@ class ClickhouseTest(MockedDatarootTestCase):
                 DatasetType.SNV_INDEL,
             ),
         )
-        create_staging_non_table_entities(
+        create_staging_materialized_views(
             table_name_builder,
-            [
-                *ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries(
-                    DatasetType.SNV_INDEL,
-                ),
-                *ClickHouseDictionary.for_dataset_type(DatasetType.SNV_INDEL),
-            ],
+            ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries(
+                DatasetType.SNV_INDEL,
+            ),
         )
         stage_existing_project_partitions(
             table_name_builder,

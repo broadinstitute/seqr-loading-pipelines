@@ -271,30 +271,31 @@ def create_staging_tables(
         )
 
 
-def create_staging_non_table_entities(
+def create_staging_materialized_views(
     table_name_builder: TableNameBuilder,
-    clickhouse_entities: list[ClickHouseEntity],
+    clickhouse_mvs: list[ClickHouseMaterializedView],
 ):
-    for clickhouse_entity in clickhouse_entities:
-        create_entity_statement = logged_query(
+    for clickhouse_mv in clickhouse_mvs:
+        create_mv_statement = logged_query(
             """
             SELECT create_table_query FROM system.tables
             WHERE
-            database = %(database)s
+            engine = 'MaterializedView'
+            AND database = %(database)s
             AND name = %(name)s
             """,
             {
                 'database': Env.CLICKHOUSE_DATABASE,
-                'name': table_name_builder.dst_table(clickhouse_entity)
+                'name': table_name_builder.dst_table(clickhouse_mv)
                 .split('.')[1]
                 .replace('`', ''),
             },
         )[0][0]
-        create_entity_statement = create_entity_statement.replace(
+        create_mv_statement = create_mv_statement.replace(
             table_name_builder.dst_prefix,
             table_name_builder.staging_dst_prefix,
         )
-        logged_query(create_entity_statement)
+        logged_query(create_mv_statement)
 
 
 # Note that this function is NOT idemptotent.  Clickhouse permits
@@ -585,13 +586,11 @@ def atomic_insert_entries(
         table_name_builder,
         ClickHouseTable.for_dataset_type_atomic_insert_entries(dataset_type),
     )
-    create_staging_non_table_entities(
+    create_staging_materialized_views(
         table_name_builder,
-        [
-            *ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries(
-                dataset_type,
-            ),
-        ],
+        ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries(
+            dataset_type,
+        ),
     )
     stage_existing_project_partitions(
         table_name_builder,
@@ -668,6 +667,81 @@ def load_complete_run(
             dataset_type,
         ),
     )
+
+
+def delete_family_guids(
+    project_guid: str,
+    family_guids: list[str],
+):
+    msg = f'Attempting delete families in {project_guid}: {family_guids}'
+    logger.info(msg)
+    for dataset_type in DatasetType:
+        for reference_genome in dataset_type.reference_genomes:
+            table_name_builder = TableNameBuilder(
+                reference_genome,
+                dataset_type,
+                f'delete_families_{family_guids}',
+            )
+            entries_exist = logged_query(
+                f"""
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM {table_name_builder.dst_table(ClickHouseTable.ENTRIES)}
+                );
+                """,
+            )[0][0]
+            if not entries_exist:
+                msg = f'No data exists for {reference_genome.value} & {dataset_type.value}'
+                logger.info(msg)
+            create_staging_tables(
+                table_name_builder,
+                ClickHouseTable.for_dataset_type_atomic_insert_entries(dataset_type),
+            )
+            create_staging_materialized_views(
+                table_name_builder,
+                ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries(
+                    dataset_type,
+                ),
+            )
+            stage_existing_project_partitions(
+                table_name_builder,
+                [project_guid],
+                ClickHouseTable.for_dataset_type_atomic_insert_entries_project_partitioned(
+                    dataset_type,
+                ),
+            )
+            delete_existing_families_from_staging_entries(
+                table_name_builder,
+                family_guids,
+            )
+            optimize_entries(
+                table_name_builder,
+            )
+            refresh_materialized_views(
+                table_name_builder,
+                ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries_refreshable(
+                    dataset_type,
+                ),
+                staging=True,
+            )
+            replace_project_partitions(
+                table_name_builder,
+                ClickHouseTable.for_dataset_type_atomic_insert_entries_project_partitioned(
+                    dataset_type,
+                ),
+                [project_guid],
+            )
+            exchange_tables(
+                table_name_builder,
+                ClickHouseTable.for_dataset_type_atomic_insert_entries_unpartitioned(
+                    dataset_type,
+                ),
+            )
+            drop_staging_db()
+            reload_dictionaries(
+                table_name_builder,
+                ClickHouseDictionary.for_dataset_type(dataset_type),
+            )
 
 
 def get_clickhouse_client(
