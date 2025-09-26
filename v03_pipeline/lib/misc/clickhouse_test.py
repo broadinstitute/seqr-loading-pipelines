@@ -1035,6 +1035,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         delete_family_guids(
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
+            TEST_RUN_ID,
             'project_a',
             ['family_a1', 'family_a2'],
         )
