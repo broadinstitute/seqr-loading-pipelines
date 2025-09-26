@@ -71,7 +71,7 @@ def run_loading_pipeline(
     lpr: LoadingPipelineRequest,
     run_id: str,
     local_scheduler: bool,
-    **_: Any,
+    *_: Any,
 ):
     for attempt_id in range(3):
         luigi_task_result = luigi.build(
@@ -108,7 +108,7 @@ def run_loading_pipeline(
         write_success_file(lpr.reference_genome, lpr.dataset_type, run_id)
 
 
-def run_delete_families(dpr: DeleteFamiliesRequest, run_id: str, **_: Any):
+def run_delete_families(dpr: DeleteFamiliesRequest, run_id: str, *_: Any):
     for dataset_type in DatasetType:
         for reference_genome in dataset_type.reference_genomes:
             delete_family_guids(
