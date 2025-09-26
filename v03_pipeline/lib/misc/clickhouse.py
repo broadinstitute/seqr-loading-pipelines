@@ -692,7 +692,7 @@ def delete_family_guids(
         """,
     )[0][0]
     if not entries_exist:
-        msg = f'No data exists for {reference_genome.value} & {dataset_type.value}'
+        msg = f'No data exists for {reference_genome.value} & {dataset_type.value} so skipping'
         logger.info(msg)
         return
     create_staging_tables(
