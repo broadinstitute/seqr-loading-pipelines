@@ -87,6 +87,7 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
             resp_json,
             {
                 'Successfully queued': {
+                    'request_type': 'LoadingPipelineRequest',
                     'callset_path': 'v03_pipeline/var/test/callsets/1kg_30variants.vcf',
                     'dataset_type': 'SNV_INDEL',
                     'project_guids': ['project_a'],

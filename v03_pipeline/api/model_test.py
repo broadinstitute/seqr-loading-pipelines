@@ -18,6 +18,7 @@ class ModelTest(unittest.TestCase):
         lpr = LoadingPipelineRequest.model_validate(raw_request)
         self.assertEqual(lpr.reference_genome, ReferenceGenome.GRCh38)
         self.assertEqual(lpr.project_guids, ['project_a'])
+        self.assertEqual(lpr.request_type, 'LoadingPipelineRequest')
 
     def test_invalid_loading_pipeline_requests(self) -> None:
         raw_request = {
@@ -42,3 +43,4 @@ class ModelTest(unittest.TestCase):
         raw_request['family_guids'] = ['family_a1']
         dfr = DeleteFamiliesRequest.model_validate(raw_request)
         self.assertEqual(dfr.project_guid, 'project_a')
+        self.assertEqual(dfr.request_type, 'DeleteFamiliesRequest')

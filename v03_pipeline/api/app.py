@@ -44,13 +44,13 @@ async def loading_pipeline_enqueue(request: web.Request) -> web.Response:
     except ValueError as e:
         raise web.HTTPBadRequest from e
 
-    run_id = new_run_id()
-    async with aiofiles.open(loading_pipeline_queue_path(run_id), 'w') as f:
+    async with aiofiles.open(loading_pipeline_queue_path(new_run_id()), 'w') as f:
         await f.write(lpr.model_dump_json())
     return web.json_response(
         {'Successfully queued': lpr.model_dump()},
         status=web_exceptions.HTTPAccepted.status_code,
     )
+
 
 async def delete_families_enqueue(request: web.Request) -> web.Response:
     if not request.body_exists:
@@ -67,8 +67,7 @@ async def delete_families_enqueue(request: web.Request) -> web.Response:
     except ValueError as e:
         raise web.HTTPBadRequest from e
 
-    run_id = new_run_id()
-    async with aiofiles.open(loading_pipeline_queue_path(run_id), 'w') as f:
+    async with aiofiles.open(loading_pipeline_queue_path(new_run_id()), 'w') as f:
         await f.write(dfr.model_dump_json())
     return web.json_response(
         {'Successfully queued': dfr.model_dump()},
