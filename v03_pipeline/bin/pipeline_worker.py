@@ -42,7 +42,10 @@ def parse_latest_queue_path(
     with open(latest_queue_path) as f:
         raw_json = json.load(f)
     request_type_name = raw_json['request_type']
-    request_cls = globals().get(request_type_name)
+    request_cls = next(
+        (cls for cls in REQUEST_HANDLER_MAP if cls.__name__ == request_type_name),
+        None,
+    )
     if not request_cls:
         msg = f'Unknown request_type: {request_type_name}'
         raise ValueError(msg)

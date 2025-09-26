@@ -25,7 +25,7 @@ class MyFailingTask(luigi.Task):
 class PipelineWorkerTest(MockedDatarootTestCase):
     @patch('v03_pipeline.lib.paths.LOCAL_DISK_MOUNT_PATH', './var/seqr')
     @patch('v03_pipeline.lib.misc.slack._safe_post_to_slack')
-    @patch('v03_pipeline.bin.pipeline_worker.WriteSuccessFileTask')
+    @patch('v03_pipeline.api.request_handlers.WriteSuccessFileTask')
     @patch('v03_pipeline.bin.pipeline_worker.logger')
     def test_process_queue(
         self,
@@ -34,6 +34,7 @@ class PipelineWorkerTest(MockedDatarootTestCase):
         mock_safe_post_to_slack,
     ):
         raw_request = {
+            'request_type': 'LoadingPipelineRequest',
             'callset_path': TEST_VCF,
             'projects_to_run': ['project_a'],
             'sample_type': SampleType.WGS.value,
@@ -55,12 +56,12 @@ class PipelineWorkerTest(MockedDatarootTestCase):
             json.dump(raw_request, f)
         process_queue(local_scheduler=True)
         mock_safe_post_to_slack.assert_called_once_with(
-            ':white_check_mark: Pipeline Run Success! Kicking off ClickHouse Load! :white_check_mark:\nRun ID: 20250916-200704-123456\n```{\n    "callset_path": "v03_pipeline/var/test/callsets/1kg_30variants.vcf",\n    "project_guids": [\n        "project_a"\n    ],\n    "sample_type": "WGS",\n    "reference_genome": "GRCh38",\n    "dataset_type": "SNV_INDEL",\n    "skip_check_sex_and_relatedness": false,\n    "skip_expect_tdr_metrics": false,\n    "validations_to_skip": [],\n    "skip_validation": false\n}```',
+            ':white_check_mark: Pipeline Run Success! Kicking off ClickHouse Load! :white_check_mark:\nRun ID: 20250916-200704-123456\n```{\n    "callset_path": "v03_pipeline/var/test/callsets/1kg_30variants.vcf",\n    "dataset_type": "SNV_INDEL",\n    "project_guids": [\n        "project_a"\n    ],\n    "reference_genome": "GRCh38",\n    "request_type": "LoadingPipelineRequest",\n    "sample_type": "WGS",\n    "skip_check_sex_and_relatedness": false,\n    "skip_expect_tdr_metrics": false,\n    "skip_validation": false\n}```',
         )
 
     @patch('v03_pipeline.lib.paths.LOCAL_DISK_MOUNT_PATH', './var/seqr')
     @patch('v03_pipeline.lib.misc.slack._safe_post_to_slack')
-    @patch('v03_pipeline.bin.pipeline_worker.WriteSuccessFileTask')
+    @patch('v03_pipeline.api.request_handlers.WriteSuccessFileTask')
     @patch('v03_pipeline.bin.pipeline_worker.logger')
     def test_process_failure(
         self,
@@ -69,6 +70,7 @@ class PipelineWorkerTest(MockedDatarootTestCase):
         mock_safe_post_to_slack,
     ):
         raw_request = {
+            'request_type': 'LoadingPipelineRequest',
             'callset_path': TEST_VCF,
             'projects_to_run': ['project_a'],
             'sample_type': SampleType.WGS.value,
@@ -90,5 +92,5 @@ class PipelineWorkerTest(MockedDatarootTestCase):
             json.dump(raw_request, f)
         process_queue(local_scheduler=True)
         mock_safe_post_to_slack.assert_called_once_with(
-            ':failed: Pipeline Run Failed. :failed:\nRun ID: 20250918-200704-123456\n```{\n    "callset_path": "v03_pipeline/var/test/callsets/1kg_30variants.vcf",\n    "project_guids": [\n        "project_a"\n    ],\n    "sample_type": "WGS",\n    "reference_genome": "GRCh38",\n    "dataset_type": "SNV_INDEL",\n    "skip_check_sex_and_relatedness": false,\n    "skip_expect_tdr_metrics": false,\n    "validations_to_skip": [],\n    "skip_validation": false\n}```\nReason: there were failed tasks',
+            ':failed: Pipeline Run Failed. :failed:\nRun ID: 20250918-200704-123456\n```{\n    "callset_path": "v03_pipeline/var/test/callsets/1kg_30variants.vcf",\n    "dataset_type": "SNV_INDEL",\n    "project_guids": [\n        "project_a"\n    ],\n    "reference_genome": "GRCh38",\n    "request_type": "LoadingPipelineRequest",\n    "sample_type": "WGS",\n    "skip_check_sex_and_relatedness": false,\n    "skip_expect_tdr_metrics": false,\n    "skip_validation": false\n}```\nReason: there were failed tasks',
         )
