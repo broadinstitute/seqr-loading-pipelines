@@ -79,7 +79,7 @@ def run_loading_pipeline(
                 WriteSuccessFileTask(
                     run_id=run_id,
                     attempt_id=attempt_id,
-                    **lpr.model_dump(),
+                    **lpr.model_dump(exclude='request_type'),
                 ),
             ],
             detailed_summary=True,
@@ -115,7 +115,7 @@ def run_delete_families(dpr: DeleteFamiliesRequest, run_id: str, *_: Any):
                 reference_genome,
                 dataset_type,
                 run_id,
-                **dpr.model_dump(),
+                **dpr.model_dump(exclude='request_type'),
             )
 
 
