@@ -1,6 +1,8 @@
+import json
+
 from slacker import Slacker
 
-from v03_pipeline.api.model import LoadingPipelineRequest
+from v03_pipeline.api.model import PipelineRunnerRequest
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import Env, FeatureFlag
 
@@ -33,13 +35,13 @@ def _safe_post_to_slack(message) -> None:
 
 def safe_post_to_slack_failure(
     run_id: str,
-    lpr: LoadingPipelineRequest,
+    prr: PipelineRunnerRequest,
     e: type[Exception],
 ) -> None:
     message = [
         SLACK_FAILURE_MESSAGE_PREFIX,
         f'Run ID: {run_id}',
-        str(lpr),
+        f'```{json.dumps(prr.model_dump(), indent=4, sort_keys=True)}```',
         f'Reason: {e!s}',
     ]
     if FeatureFlag.RUN_PIPELINE_ON_DATAPROC:
@@ -50,12 +52,12 @@ def safe_post_to_slack_failure(
     _safe_post_to_slack('\n'.join(message))
 
 
-def safe_post_to_slack_success(run_id: str, lpr: LoadingPipelineRequest) -> None:
+def safe_post_to_slack_success(run_id: str, prr: PipelineRunnerRequest) -> None:
     message = '\n'.join(
         [
             SLACK_SUCCESS_MESSAGE_PREFIX,
             f'Run ID: {run_id}',
-            str(lpr),
+            f'```{json.dumps(prr.model_dump(), indent=4, sort_keys=True)}```',
         ],
     )
     _safe_post_to_slack(message)

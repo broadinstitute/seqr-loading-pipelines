@@ -6,7 +6,15 @@ from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 VALID_FILE_TYPES = ['vcf', 'vcf.gz', 'vcf.bgz', 'mt']
 
 
-class LoadingPipelineRequest(BaseModel):
+class PipelineRunnerRequest(BaseModel, frozen=True):
+    request_type: str
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.model_fields['request_type'].default = cls.__name__
+
+
+class LoadingPipelineRequest(PipelineRunnerRequest):
     callset_path: str
     project_guids: list[str] = Field(
         min_length=1,
@@ -31,16 +39,10 @@ class LoadingPipelineRequest(BaseModel):
             raise ValueError(msg)
         return callset_path
 
-    def __str__(self) -> str:
-        return '\n'.join(
-            [
-                f'Callset Path: {self.callset_path}',
-                f'Project Guids: {",".join(self.project_guids)}',
-                f'Reference Genome: {self.reference_genome.value}',
-                f'Dataset Type: {self.dataset_type.value}',
-                f'Sample Type: {self.sample_type.value}',
-                f'Skip Validation: {self.skip_validation}',
-                f'Skip Sex & Relatedness: {self.skip_check_sex_and_relatedness}',
-                f'Skip Expect TDR Metrics: {self.skip_expect_tdr_metrics}',
-            ],
-        )
+
+class DeleteFamiliesRequest(PipelineRunnerRequest):
+    project_guid: str
+    family_guids: list[str] = Field(
+        min_length=1,
+        frozen=True,
+    )

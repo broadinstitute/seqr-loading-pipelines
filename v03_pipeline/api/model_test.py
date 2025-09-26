@@ -1,6 +1,6 @@
 import unittest
 
-from v03_pipeline.api.model import LoadingPipelineRequest
+from v03_pipeline.api.model import DeleteFamiliesRequest, LoadingPipelineRequest
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
@@ -18,6 +18,7 @@ class ModelTest(unittest.TestCase):
         lpr = LoadingPipelineRequest.model_validate(raw_request)
         self.assertEqual(lpr.reference_genome, ReferenceGenome.GRCh38)
         self.assertEqual(lpr.project_guids, ['project_a'])
+        self.assertEqual(lpr.request_type, 'LoadingPipelineRequest')
 
     def test_invalid_loading_pipeline_requests(self) -> None:
         raw_request = {
@@ -34,3 +35,12 @@ class ModelTest(unittest.TestCase):
                 '3 validation errors for LoadingPipelineRequest',
             ),
         )
+
+    def test_delete_families_request(self) -> None:
+        raw_request = {'project_guid': 'project_a', 'family_guids': []}
+        with self.assertRaises(ValueError):
+            DeleteFamiliesRequest.model_validate(raw_request)
+        raw_request['family_guids'] = ['family_a1']
+        dfr = DeleteFamiliesRequest.model_validate(raw_request)
+        self.assertEqual(dfr.project_guid, 'project_a')
+        self.assertEqual(dfr.request_type, 'DeleteFamiliesRequest')
