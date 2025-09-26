@@ -688,8 +688,11 @@ def delete_family_guids(
         SELECT EXISTS (
             SELECT 1
             FROM {table_name_builder.dst_table(ClickHouseTable.ENTRIES)}
+            WHERE project_guid = %(project_guid)s
+            AND has(%(family_guids)s, family_guid)
         );
         """,
+        {'family_guids': family_guids, 'project_guid': project_guid},
     )[0][0]
     if not entries_exist:
         msg = f'No data exists for {reference_genome.value} & {dataset_type.value} so skipping'
