@@ -7,8 +7,8 @@ from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import Env, FeatureFlag
 
 DATAPROC_URL = 'https://console.cloud.google.com/dataproc/jobs?project={gcloud_project}'
-SLACK_FAILURE_MESSAGE_PREFIX = ':failed: Pipeline Run Failed. :failed:'
-SLACK_SUCCESS_MESSAGE_PREFIX = ':white_check_mark: Pipeline Run Success! Kicking off ClickHouse Load! :white_check_mark:'
+SLACK_FAILURE_MESSAGE_PREFIX = ':failed: Pipeline Runner Request Failed :failed:'
+SLACK_SUCCESS_MESSAGE_PREFIX = ':white_check_mark: Pipeline Runner Request Success! :white_check_mark:'
 
 
 logger = get_logger(__name__)
