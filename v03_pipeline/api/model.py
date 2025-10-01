@@ -39,7 +39,7 @@ class LoadingPipelineRequest(PipelineRunnerRequest):
         ):  # note that hfs.ls throws an exception if it cannot find a non-wildcard path
             msg = 'callset_path must point to a shard pattern that exists'
             raise ValueError(msg)
-        if not hfs.exists(callset_path):
+        if '*' not in callset_path and not hfs.exists(callset_path):
             msg = 'callset_path must point to a file that exists'
             raise ValueError(msg)
         return callset_path
