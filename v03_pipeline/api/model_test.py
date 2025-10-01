@@ -1,15 +1,16 @@
 import unittest
+from pathlib import Path
 
 from v03_pipeline.api.model import DeleteFamiliesRequest, LoadingPipelineRequest
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 
-TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
+CALLSET_PATH = str(Path('v03_pipeline/var/test/callsets/1kg_30variants.vcf').resolve())
 
 
 class ModelTest(unittest.TestCase):
     def test_valid_loading_pipeline_requests(self) -> None:
         raw_request = {
-            'callset_path': TEST_VCF,
+            'callset_path': CALLSET_PATH,
             'projects_to_run': ['project_a'],
             'sample_type': SampleType.WGS.value,
             'reference_genome': ReferenceGenome.GRCh38.value,
@@ -19,6 +20,13 @@ class ModelTest(unittest.TestCase):
         self.assertEqual(lpr.reference_genome, ReferenceGenome.GRCh38)
         self.assertEqual(lpr.project_guids, ['project_a'])
         self.assertEqual(lpr.request_type, 'LoadingPipelineRequest')
+
+        # Test wildcard VCF
+        raw_request['callset_path'] = CALLSET_PATH.replace(
+            '1kg_30variants.vcf',
+            '1kg_30*.vcf',
+        )
+        lpr = LoadingPipelineRequest.model_validate(raw_request)
 
     def test_invalid_loading_pipeline_requests(self) -> None:
         raw_request = {

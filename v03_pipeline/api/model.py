@@ -34,6 +34,11 @@ class LoadingPipelineRequest(PipelineRunnerRequest):
         if not any(callset_path.endswith(file_type) for file_type in VALID_FILE_TYPES):
             msg = 'callset_path must be a VCF or a Hail Matrix Table'
             raise ValueError(msg)
+        if '*' in callset_path and not hfs.ls(
+            callset_path,
+        ):  # note that hfs.ls throws an exception if it cannot find a non-wildcard path
+            msg = 'callset_path must point to a shard pattern that exists'
+            raise ValueError(msg)
         if not hfs.exists(callset_path):
             msg = 'callset_path must point to a file that exists'
             raise ValueError(msg)
