@@ -67,6 +67,7 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
                     'callset_path must point to a file that exists' in log.output[0],
                 )
 
+    @patch('v03_pipeline.lib.paths.LOCAL_DISK_MOUNT_PATH', './var/seqr')
     async def test_loading_pipeline_enqueue(self):
         body = {
             'callset_path': CALLSET_PATH,
