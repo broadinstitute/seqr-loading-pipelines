@@ -11,6 +11,7 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 CALLSET_PATH = str(Path('v03_pipeline/var/test/callsets/1kg_30variants.vcf').resolve())
 
 
+@patch('v03_pipeline.lib.paths.LOCAL_DISK_MOUNT_PATH', './var/seqr')
 class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
     async def get_application(self):
         return await init_web_app()
@@ -68,7 +69,6 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
                     'callset_path must point to a file that exists' in log.output[0],
                 )
 
-    @patch('v03_pipeline.lib.paths.LOCAL_DISK_MOUNT_PATH', './var/seqr')
     async def test_loading_pipeline_enqueue(self):
         body = {
             'callset_path': CALLSET_PATH,
