@@ -1,5 +1,4 @@
 from pathlib import Path
-from unittest.mock import patch
 
 from aiohttp import web_exceptions
 from aiohttp.test_utils import AioHTTPTestCase
