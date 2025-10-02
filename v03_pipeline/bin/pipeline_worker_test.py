@@ -23,7 +23,6 @@ class MyFailingTask(luigi.Task):
 
 
 class PipelineWorkerTest(MockedDatarootTestCase):
-    @patch('v03_pipeline.lib.paths.LOCAL_DISK_MOUNT_PATH', './var/seqr')
     @patch('v03_pipeline.lib.misc.slack._safe_post_to_slack')
     @patch('v03_pipeline.api.request_handlers.WriteSuccessFileTask')
     @patch('v03_pipeline.bin.pipeline_worker.logger')
@@ -59,7 +58,6 @@ class PipelineWorkerTest(MockedDatarootTestCase):
             ':white_check_mark: Pipeline Runner Request Success! :white_check_mark:\nRun ID: 20250916-200704-123456\n```{\n    "callset_path": "v03_pipeline/var/test/callsets/1kg_30variants.vcf",\n    "dataset_type": "SNV_INDEL",\n    "project_guids": [\n        "project_a"\n    ],\n    "reference_genome": "GRCh38",\n    "request_type": "LoadingPipelineRequest",\n    "sample_type": "WGS",\n    "skip_check_sex_and_relatedness": false,\n    "skip_expect_tdr_metrics": false,\n    "skip_validation": false\n}```',
         )
 
-    @patch('v03_pipeline.lib.paths.LOCAL_DISK_MOUNT_PATH', './var/seqr')
     @patch('v03_pipeline.lib.misc.slack._safe_post_to_slack')
     @patch('v03_pipeline.api.request_handlers.WriteSuccessFileTask')
     @patch('v03_pipeline.bin.pipeline_worker.logger')

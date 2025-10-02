@@ -10,7 +10,6 @@ from v03_pipeline.lib.model import (
     ReferenceGenome,
     SampleType,
 )
-from v03_pipeline.lib.model.constants import LOCAL_DISK_MOUNT_PATH
 from v03_pipeline.lib.reference_datasets.reference_dataset import (
     ReferenceDataset,
 )
@@ -395,7 +394,7 @@ def loading_pipeline_queue_dir() -> str:
     Returns the directory where loading pipeline requests are queued.
     """
     return os.path.join(
-        LOCAL_DISK_MOUNT_PATH,
+        Env.LOCAL_DISK_MOUNT_PATH,
         'loading_pipeline_queue',
     )
 
