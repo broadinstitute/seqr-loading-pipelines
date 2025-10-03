@@ -5,7 +5,12 @@ import google.auth.transport.requests
 import google.oauth2.credentials
 import pytz
 
+from v03_pipeline.lib.model import FeatureFlag
+
 SERVICE_ACCOUNT_CREDENTIALS = None
+CLOUD_PLATFORM_SCOPE = [
+    'https://www.googleapis.com/auth/cloud-platform',
+]
 SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
     'https://www.googleapis.com/auth/userinfo.profile',
     'https://www.googleapis.com/auth/userinfo.email',
@@ -18,7 +23,10 @@ def get_service_account_credentials() -> google.oauth2.credentials.Credentials:
     global SERVICE_ACCOUNT_CREDENTIALS
     if not SERVICE_ACCOUNT_CREDENTIALS:
         SERVICE_ACCOUNT_CREDENTIALS, _ = google.auth.default(
-            scopes=SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE,
+            scopes=[
+                *SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE,
+                *(CLOUD_PLATFORM_SCOPE if FeatureFlag.EXPECT_TDR_METRICS else []),
+            ],
         )
     tz = pytz.UTC
     if (
