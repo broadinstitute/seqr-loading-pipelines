@@ -31,7 +31,9 @@ class Relation(Enum):
     def coefficients_equal(self, coefficients: list[float]) -> bool:
         if self == Relation.PARENT_CHILD:
             return np.allclose(
-                coefficients[0], self.coefficients[0], atol=0.025,
+                coefficients[0],
+                self.coefficients[0],
+                atol=0.025,
             ) and np.allclose(
                 coefficients[1:],
                 self.coefficients[1:],
