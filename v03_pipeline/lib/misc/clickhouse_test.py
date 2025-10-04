@@ -1067,3 +1067,6 @@ class ClickhouseTest(MockedDatarootTestCase):
             """,
         )
         self.assertCountEqual(gt_stats_dict, [(10,)])
+
+    def test_rebuild_gt_stats(self):
+        pass
