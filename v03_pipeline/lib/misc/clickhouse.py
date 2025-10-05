@@ -294,7 +294,9 @@ def create_staging_materialized_views(
     clickhouse_mvs: list[ClickHouseMaterializedView],
 ):
     for clickhouse_mv in clickhouse_mvs:
-        create_table_statement = get_create_mv_statements(clickhouse_mv)[0]
+        create_table_statement = get_create_mv_statements(
+            table_name_builder, clickhouse_mv,
+        )[0]
         create_table_statement = create_table_statement.replace(
             table_name_builder.dst_prefix,
             table_name_builder.staging_dst_prefix,
@@ -745,7 +747,7 @@ def rebuild_gt_stats(
     run_id: str,
     project_guids: list[str],
 ) -> None:
-    if ClickHouseDictionary.GT_STATS not in ClickHouseDictionary.for_dataset_type(
+    if ClickHouseDictionary.GT_STATS_DICT not in ClickHouseDictionary.for_dataset_type(
         dataset_type,
     ):
         msg = f'Skipping gt stats rebuild for {reference_genome.value}/{dataset_type.value} {project_guids[:10]}...'
@@ -784,6 +786,7 @@ def rebuild_gt_stats(
             {'project_guid': project_guid},
         )
     select_statement = get_create_mv_statements(
+        table_name_builder,
         ClickHouseMaterializedView.ENTRIES_TO_PROJECT_GT_STATS_MV,
     )[1]
     logged_query(

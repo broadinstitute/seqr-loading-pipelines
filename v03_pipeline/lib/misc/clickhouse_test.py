@@ -20,7 +20,9 @@ from v03_pipeline.lib.misc.clickhouse import (
     get_clickhouse_client,
     insert_new_entries,
     load_complete_run,
+    logged_query,
     optimize_entries,
+    rebuild_gt_stats,
     refresh_materialized_views,
     reload_dictionaries,
     replace_project_partitions,
@@ -1069,4 +1071,84 @@ class ClickhouseTest(MockedDatarootTestCase):
         self.assertCountEqual(gt_stats_dict, [(10,)])
 
     def test_rebuild_gt_stats(self):
-        pass
+        table_name_builder = TableNameBuilder(
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            TEST_RUN_ID,
+        )
+        client = get_clickhouse_client()
+        client.execute(
+            f"""
+            INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries`
+            VALUES
+            (0, 'project_a', 'family_a1', 123456789, 'WES', 0, CAST([] AS Array(UInt32)), [('sample_a1','HOM')], 1),
+            (1, 'project_a', 'family_a2', 123456789, 'WGS', 0, CAST([] AS Array(UInt32)), [('sample_a2','HET')], 1),
+            (2, 'project_a', 'family_a3', 133456789, 'WGS', 0, CAST([] AS Array(UInt32)), [('sample_a3','HOM')], 1),
+            (3, 'project_a', 'family_a4', 133456789, 'WES', 0, CAST([] AS Array(UInt32)), [('sample_a4','REF')], 1),
+            (4, 'project_a', 'family_a5', 133456789, 'WES', 1, CAST([] AS Array(UInt32)), [('sample_a5','REF'),('sample_a6','HET'),('sample_a7','REF')], 1),
+            (4, 'project_a', 'family_a6', 133456789, 'WGS', 0, CAST([] AS Array(UInt32)), [('sample_a8','HOM')], 1),
+            (0, 'project_b', 'family_b1', 123456789, 'WES', 0, CAST([] AS Array(UInt32)), [('sample_b4','REF')], 1),
+            (1, 'project_b', 'family_b2', 123456789, 'WES', 0, CAST([] AS Array(UInt32)), [('sample_b5','HET')], 1),
+            (2, 'project_b', 'family_b2', 123456789, 'WES', 0, CAST([] AS Array(UInt32)), [('sample_b5','REF')], 1),
+            """,
+        )
+        logged_query(  # DROP the partition from the non-staging entries to as a non-mv-impacting change.
+            f"""
+            ALTER TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries`
+            DROP PARTITION %(project_guid)s
+            """,
+            {'project_guid': 'project_a'},
+        )
+        project_gt_stats = client.execute(
+            f"""
+            SELECT project_guid, sum(het_samples), sum(hom_samples)
+            FROM
+            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/project_gt_stats`
+            GROUP BY project_guid
+            """,
+        )
+        self.assertCountEqual(
+            project_gt_stats,
+            [('project_a', 2, 3), ('project_b', 1, 0)],
+        )
+        refresh_materialized_views(
+            table_name_builder,
+            ClickHouseMaterializedView.for_dataset_type_atomic_entries_update_refreshable(
+                DatasetType.SNV_INDEL,
+            ),
+            staging=False,
+        )
+        gt_stats = client.execute(
+            f"""
+            SELECT sum(ac_wes), sum(ac_wgs)
+            FROM
+            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
+            """,
+        )
+        self.assertCountEqual(gt_stats, [(4, 5)])
+        rebuild_gt_stats(
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            TEST_RUN_ID,
+            ['project_a', 'project_b'],
+        )
+        project_gt_stats = client.execute(
+            f"""
+            SELECT project_guid, sum(het_samples), sum(hom_samples)
+            FROM
+            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/project_gt_stats`
+            GROUP BY project_guid
+            """,
+        )
+        self.assertCountEqual(
+            project_gt_stats,
+            [('project_b', 1, 0)],
+        )
+        gt_stats = client.execute(
+            f"""
+            SELECT sum(ac_wes), sum(ac_wgs)
+            FROM
+            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
+            """,
+        )
+        self.assertCountEqual(gt_stats, [(1, 0)])
