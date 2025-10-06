@@ -295,7 +295,8 @@ def create_staging_materialized_views(
 ):
     for clickhouse_mv in clickhouse_mvs:
         create_table_statement = get_create_mv_statements(
-            table_name_builder, clickhouse_mv,
+            table_name_builder,
+            clickhouse_mv,
         )[0]
         create_table_statement = create_table_statement.replace(
             table_name_builder.dst_prefix,

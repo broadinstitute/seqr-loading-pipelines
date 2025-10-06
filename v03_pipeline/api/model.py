@@ -8,6 +8,7 @@ VALID_FILE_TYPES = ['vcf', 'vcf.gz', 'vcf.bgz', 'mt']
 
 class PipelineRunnerRequest(BaseModel, frozen=True):
     request_type: str
+    abc: str
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
