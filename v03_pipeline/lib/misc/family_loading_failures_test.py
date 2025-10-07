@@ -227,7 +227,6 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
                 {'s': 'ROS_006_18Y03226_D1', 'predicted_sex': 'F'},
                 {'s': 'ROS_006_18Y03227_D1', 'predicted_sex': 'F'},  # Pedigree Sex U
                 {'s': 'ROS_006_18Y03228_D1', 'predicted_sex': 'F'},
-                {'s': 'ROS_007_19Y05919_D1', 'predicted_sex': 'F'},
                 {'s': 'ROS_007_19Y05939_D1', 'predicted_sex': 'M'},
                 {'s': 'ROS_007_19Y05987_D1', 'predicted_sex': 'U'},  # Pedigree Sex F
                 {'s': 'ROS_007_19Y05989_D1', 'predicted_sex': 'XXX'},
@@ -249,6 +248,7 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             [
                 [
                     'Sample ROS_007_19Y05939_D1 has pedigree sex F but imputed sex M',
+                    'Sample ROS_007_19Y05919_D1 has pedigree sex F is missing from the sex check source',
                 ],
             ],
         )

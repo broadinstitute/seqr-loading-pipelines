@@ -150,6 +150,11 @@ def get_families_failed_sex_check(
     failed_families = defaultdict(list)
     for family in families:
         for sample_id in family.samples:
+            if sample_id not in sex_check_lookup:
+                failed_families[family].append(
+                    f'Sample {sample_id} has pedigree sex {family.samples[sample_id].sex.value} is missing from the sex check source',
+                )
+                continue
             # NB: Both Unknown samples in pedigree and Unknown
             # samples in the predicted_sex are precluded from
             # failing the sex check.
