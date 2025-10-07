@@ -284,18 +284,6 @@ def valid_reference_dataset_path(
     )
 
 
-def ancestry_model_rf_path() -> str:
-    return os.path.join(
-        _v03_reference_dataset_prefix(
-            Env.REFERENCE_DATASETS_DIR,
-            AccessControl.PUBLIC,
-            ReferenceGenome.GRCh38,
-        ),
-        DatasetType.SNV_INDEL,
-        'ancestry_imputation_model.onnx',
-    )
-
-
 def variant_annotations_table_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
