@@ -247,10 +247,8 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             failed_families.values(),
             [
                 [
-                    'Sample ROS_007_19Y05939_D1 has pedigree sex F but imputed sex M',
-                ],
-                [
                     'Sample ROS_007_19Y05919_D1 has pedigree sex F but is missing from the sex check source',
+                    'Sample ROS_007_19Y05939_D1 has pedigree sex F but imputed sex M',
                 ],
             ],
         )
