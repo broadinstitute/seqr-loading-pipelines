@@ -1,5 +1,3 @@
-import hail as hl
-
 BIOTYPES = [
     'IG_C_gene',
     'IG_D_gene',
@@ -205,46 +203,3 @@ SV_CONSEQUENCE_RANKS = [
     'INTRONIC',
     'NEAREST_TSS',
 ]
-
-CLINVAR_ASSERTIONS = [
-    'Affects',
-    'association',
-    'association_not_found',
-    'confers_sensitivity',
-    'drug_response',
-    'low_penetrance',
-    'not_provided',
-    'other',
-    'protective',
-    'risk_factor',
-    'no_classification_for_the_single_variant',
-    'no_classifications_from_unflagged_records',
-]
-
-CLINVAR_DEFAULT_PATHOGENICITY = 'No_pathogenic_assertion'
-
-# NB: sorted by pathogenicity
-CLINVAR_PATHOGENICITIES = [
-    'Pathogenic',
-    'Pathogenic/Likely_pathogenic',
-    'Pathogenic/Likely_pathogenic/Established_risk_allele',
-    'Pathogenic/Likely_pathogenic/Likely_risk_allele',
-    'Pathogenic/Likely_risk_allele',
-    'Likely_pathogenic',
-    'Likely_pathogenic/Likely_risk_allele',
-    'Established_risk_allele',
-    'Likely_risk_allele',
-    'Conflicting_classifications_of_pathogenicity',
-    'Uncertain_risk_allele',
-    'Uncertain_significance/Uncertain_risk_allele',
-    'Uncertain_significance',
-    CLINVAR_DEFAULT_PATHOGENICITY,
-    'Likely_benign',
-    'Benign/Likely_benign',
-    'Benign',
-]
-
-
-CLINVAR_PATHOGENICITIES_LOOKUP = hl.dict(
-    hl.enumerate(CLINVAR_PATHOGENICITIES, index_first=False),
-)

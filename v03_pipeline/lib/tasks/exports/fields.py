@@ -1,11 +1,27 @@
+import gzip
+
 import hail as hl
+import hailtop.fs as hfs
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.paths import db_id_to_gene_id_path
 from v03_pipeline.lib.tasks.exports.misc import reformat_transcripts_for_export
+
+FIVE_PERCENT = 0.05
+STANDARD_CONTIGS = hl.set(
+    [c.replace('MT', 'M') for c in ReferenceGenome.GRCh37.standard_contigs],
+)
 
 
 def reference_independent_contig(locus: hl.LocusExpression):
-    return locus.contig.replace('^chr', '').replace('MT', 'M')
+    contig = locus.contig.replace('^chr', '').replace('MT', 'M')
+    return hl.or_missing(
+        # lifted over alternate contigs may be present
+        # even though the primary contig is filtered to
+        # standard contigs earlier in the pipeline
+        STANDARD_CONTIGS.contains(contig),
+        contig,
+    )
 
 
 def get_dataset_type_specific_annotations(
@@ -66,6 +82,7 @@ def get_dataset_type_specific_annotations(
 
 
 def get_calls_export_fields(
+    ht: hl.Table,
     fe: hl.Struct,
     dataset_type: DatasetType,
 ):
@@ -100,15 +117,42 @@ def get_calls_export_fields(
             cn=fe.CN,
             qs=fe.QS,
             defragged=fe.defragged,
-            start=fe.sample_start,
-            end=fe.sample_end,
-            numExon=fe.sample_num_exon,
-            geneIds=fe.sample_gene_ids,
+            start=hl.or_else(fe.sample_start, ht.start_locus.position),
+            end=hl.or_else(fe.sample_end, ht.end_locus.position),
+            numExon=hl.or_else(fe.sample_num_exon, ht.num_exon),
+            geneIds=hl.or_else(
+                fe.sample_gene_ids,
+                hl.set(ht.sorted_gene_consequences.gene_id),
+            ),
             newCall=fe.concordance.new_call,
             prevCall=fe.concordance.prev_call,
             prevOverlap=fe.concordance.prev_overlap,
         ),
     }[dataset_type](fe)
+
+
+def get_gene_id_ids_expr(ht: hl.Table, dataset_type: DatasetType):
+    db_id_to_gene_id_lookup = hl.dict(
+        [
+            (gene_id, int(db_id))
+            for line in gzip.decompress(
+                hfs.open(db_id_to_gene_id_path(), 'rb').read(),
+            ).splitlines()[1:]  # skip header line
+            for db_id, gene_id in [line.decode().split(',', 1)]
+        ],
+    )
+    key = (
+        'sorted_gene_consequences'
+        if dataset_type == DatasetType.SV
+        else 'sorted_transcript_consequences'
+    )
+    return hl.set(
+        ht[key]
+        .gene_id.map(
+            lambda x: db_id_to_gene_id_lookup.get(x),
+        )
+        .filter(hl.is_defined),
+    )
 
 
 def get_entries_export_fields(
@@ -131,14 +175,29 @@ def get_entries_export_fields(
         'xpos': ht.xpos,
         **(
             {
-                'is_gnomad_gt_5_percent': hl.is_defined(ht.is_gt_5_percent),
+                'is_gnomad_gt_5_percent': hl.or_else(
+                    ht.gnomad_genomes.AF_POPMAX_OR_GLOBAL > FIVE_PERCENT,
+                    False,
+                ),
             }
-            if hasattr(ht, 'is_gt_5_percent')
+            if dataset_type == DatasetType.SNV_INDEL
+            else {}
+        ),
+        **(
+            {'is_annotated_in_any_gene': hl.len(ht.sorted_transcript_consequences) > 0}
+            if dataset_type == DatasetType.SNV_INDEL
+            else {}
+        ),
+        **(
+            {
+                'geneId_ids': get_gene_id_ids_expr(ht, dataset_type),
+            }
+            if dataset_type in {DatasetType.SNV_INDEL, DatasetType.SV}
             else {}
         ),
         'filters': ht.filters,
-        'calls': ht.family_entries.map(
-            lambda fe: get_calls_export_fields(fe, dataset_type),
+        'calls': hl.sorted(ht.family_entries, key=lambda fe: fe.s).map(
+            lambda fe: get_calls_export_fields(ht, fe, dataset_type),
         ),
         'sign': 1,
     }
@@ -259,7 +318,7 @@ def get_populations_export_fields(ht: hl.Table, dataset_type: DatasetType):
             ),
         },
         DatasetType.GCNV: lambda ht: {
-            'seqrPop': hl.Struct(
+            'sv_callset': hl.Struct(
                 ac=ht.gt_stats.AC,
                 af=ht.gt_stats.AF,
                 an=ht.gt_stats.AN,
@@ -272,13 +331,17 @@ def get_populations_export_fields(ht: hl.Table, dataset_type: DatasetType):
 
 def get_position_fields(ht: hl.Table, dataset_type: DatasetType):
     if dataset_type in {DatasetType.SV, DatasetType.GCNV}:
+        rg37_contig = reference_independent_contig(ht.rg37_locus_end)
         return {
             'chrom': reference_independent_contig(ht.start_locus),
             'pos': ht.start_locus.position,
             'end': ht.end_locus.position,
             'rg37LocusEnd': hl.Struct(
-                contig=reference_independent_contig(ht.rg37_locus_end),
-                position=ht.rg37_locus_end.position,
+                contig=rg37_contig,
+                position=hl.or_missing(
+                    hl.is_defined(rg37_contig),
+                    ht.rg37_locus_end.position,
+                ),
             ),
         }
     if dataset_type == DatasetType.MITO:
@@ -328,7 +391,10 @@ def get_lifted_over_position_fields(ht: hl.Table, dataset_type: DatasetType):
             else reference_independent_contig(ht.rg38_locus)
         ),
         'liftedOverPos': (
-            ht.rg37_locus.position
+            hl.or_missing(
+                hl.is_defined(reference_independent_contig(ht.rg37_locus)),
+                ht.rg37_locus.position,
+            )
             if hasattr(ht, 'rg37_locus')
             else ht.rg38_locus.position
         ),

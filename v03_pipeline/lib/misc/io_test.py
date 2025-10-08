@@ -33,7 +33,7 @@ class IOTest(unittest.TestCase):
     def test_compute_hail_n_partitions(self) -> None:
         self.assertEqual(compute_hail_n_partitions(23), 1)
         self.assertEqual(compute_hail_n_partitions(191310), 1)
-        self.assertEqual(compute_hail_n_partitions(1913100000), 15)
+        self.assertEqual(compute_hail_n_partitions(1913100000), 58)
 
     def test_import_imputed_sex(self) -> None:
         ht = import_imputed_sex(TEST_IMPUTED_SEX)
@@ -168,6 +168,34 @@ class IOTest(unittest.TestCase):
             )
             .key_rows_by('locus', 'alleles')
             .repartition(1),
+            False,
+            1,
+        )
+
+    def test_split_multi_failure_ad_length(self) -> None:
+        self.assertRaisesRegex(
+            SeqrValidationError,
+            'Your callset failed while attempting to split multiallelic sites.  This error can occur if the provided Allele Depth \\(AD\\) field does not match the length of the multiallelic site.',
+            split_multi_hts,
+            hl.MatrixTable.from_parts(
+                rows={
+                    'locus': [
+                        hl.Locus(
+                            contig='chr1',
+                            position=1,
+                            reference_genome='GRCh38',
+                        ),
+                    ],
+                    'alleles': [
+                        ['GAC', 'G', 'GTTTTTTTTTTTTTTTAC'],
+                    ],
+                },
+                cols={'s': ['sample_1']},
+                entries={
+                    'GQ': [[99]],
+                    'AD': [[[0, 1]]],
+                },
+            ).key_rows_by('locus', 'alleles'),
             False,
             1,
         )

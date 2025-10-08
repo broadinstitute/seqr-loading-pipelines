@@ -9,13 +9,14 @@ from pip._internal.operations import freeze as pip_freeze
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.gcp import get_service_account_credentials
-from v03_pipeline.lib.model import Env, FeatureFlag, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, Env, FeatureFlag, ReferenceGenome
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )
 from v03_pipeline.lib.tasks.dataproc.misc import get_cluster_name
 
 DEBIAN_IMAGE = '2.2.5-debian12'
+DISK_SIZE_GB = 400
 HAIL_VERSION = hl.version().split('-')[0]
 INSTANCE_TYPE = 'n1-highmem-8'
 PKGS = '|'.join(
@@ -30,7 +31,11 @@ TIMEOUT_S = 1200
 logger = get_logger(__name__)
 
 
-def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
+def get_cluster_config(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+):
     service_account_credentials = get_service_account_credentials()
     return {
         'project_id': Env.GCLOUD_PROJECT,
@@ -55,7 +60,7 @@ def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
                 'machine_type_uri': INSTANCE_TYPE,
                 'disk_config': {
                     'boot_disk_type': 'pd-standard',
-                    'boot_disk_size_gb': 100,
+                    'boot_disk_size_gb': DISK_SIZE_GB,
                 },
             },
             'worker_config': {
@@ -63,15 +68,15 @@ def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
                 'machine_type_uri': INSTANCE_TYPE,
                 'disk_config': {
                     'boot_disk_type': 'pd-standard',
-                    'boot_disk_size_gb': 100,
+                    'boot_disk_size_gb': DISK_SIZE_GB,
                 },
             },
             'secondary_worker_config': {
-                'num_instances': Env.GCLOUD_DATAPROC_SECONDARY_WORKERS,
+                'num_instances': dataset_type.dataproc_preemptibles,
                 'machine_type_uri': INSTANCE_TYPE,
                 'disk_config': {
                     'boot_disk_type': 'pd-standard',
-                    'boot_disk_size_gb': 100,
+                    'boot_disk_size_gb': DISK_SIZE_GB,
                 },
                 'is_preemptible': True,
                 'preemptibility': 'PREEMPTIBLE',
@@ -105,16 +110,16 @@ def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
                     'spark-env:EXPECT_TDR_METRICS': '1'
                     if FeatureFlag.EXPECT_TDR_METRICS
                     else '0',
-                    'spark-env:HAIL_SEARCH_DATA_DIR': Env.HAIL_SEARCH_DATA_DIR,
+                    'spark-env:PIPELINE_DATA_DIR': Env.PIPELINE_DATA_DIR,
                     'spark-env:HAIL_TMP_DIR': Env.HAIL_TMP_DIR,
-                    'spark-env:INCLUDE_PIPELINE_VERSION_IN_PREFIX': '1'
-                    if FeatureFlag.INCLUDE_PIPELINE_VERSION_IN_PREFIX
-                    else '0',
                     'spark-env:LOADING_DATASETS_DIR': Env.LOADING_DATASETS_DIR,
                     'spark-env:PRIVATE_REFERENCE_DATASETS_DIR': Env.PRIVATE_REFERENCE_DATASETS_DIR,
                     'spark-env:REFERENCE_DATASETS_DIR': Env.REFERENCE_DATASETS_DIR,
                     'spark-env:CLINGEN_ALLELE_REGISTRY_LOGIN': Env.CLINGEN_ALLELE_REGISTRY_LOGIN,
                     'spark-env:CLINGEN_ALLELE_REGISTRY_PASSWORD': Env.CLINGEN_ALLELE_REGISTRY_PASSWORD,
+                    'spark-env:SAMPLE_TYPE_VALIDATION_EXCLUDED_PROJECTS': ','.join(
+                        Env.SAMPLE_TYPE_VALIDATION_EXCLUDED_PROJECTS,
+                    ),
                 },
             },
             'lifecycle_config': {'idle_delete_ttl': {'seconds': 1200}},
@@ -152,9 +157,6 @@ class CreateDataprocClusterTask(luigi.Task):
         )
 
     def complete(self) -> bool:
-        if not self.dataset_type.requires_dataproc:
-            msg = f'{self.dataset_type} should not require a dataproc cluster'
-            raise RuntimeError(msg)
         try:
             cluster = self.client.get_cluster(
                 request={
@@ -189,7 +191,11 @@ class CreateDataprocClusterTask(luigi.Task):
             request={
                 'project_id': Env.GCLOUD_PROJECT,
                 'region': Env.GCLOUD_REGION,
-                'cluster': get_cluster_config(self.reference_genome, self.run_id),
+                'cluster': get_cluster_config(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.run_id,
+                ),
             },
         )
         wait_s = 0

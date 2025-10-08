@@ -1,4 +1,6 @@
 import json
+import os
+import shutil
 
 import hail as hl
 import hailtop.fs as hfs
@@ -10,7 +12,9 @@ from v03_pipeline.lib.model import (
     ReferenceGenome,
     SampleType,
 )
+from v03_pipeline.lib.model.constants import MIGRATION_RUN_ID
 from v03_pipeline.lib.paths import (
+    db_id_to_gene_id_path,
     metadata_for_run_path,
     new_entries_parquet_path,
     pipeline_run_success_file_path,
@@ -18,7 +22,6 @@ from v03_pipeline.lib.paths import (
     variant_annotations_table_path,
 )
 from v03_pipeline.lib.tasks.clickhouse_migration.migrate_all_projects_to_clickhouse import (
-    MIGRATION_RUN_ID,
     MigrateAllProjectsToClickHouseTask,
 )
 from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
@@ -45,6 +48,7 @@ TEST_PROJECT_TABLES = [
         'R0114_project4',
     ),
 ]
+TEST_DB_ID_TO_GENE_ID = 'v03_pipeline/var/test/db_id_to_gene_id.csv.gz'
 
 
 class MigrateAllProjectsToClickHouseTaskTest(MockedReferenceDatasetsTestCase):
@@ -67,6 +71,14 @@ class MigrateAllProjectsToClickHouseTaskTest(MockedReferenceDatasetsTestCase):
                     project_guid,
                 ),
             )
+        os.makedirs(
+            self.mock_env.LOADING_DATASETS_DIR,
+            exist_ok=True,
+        )
+        shutil.copy2(
+            TEST_DB_ID_TO_GENE_ID,
+            db_id_to_gene_id_path(),
+        )
 
     def test_all_project_entries_to_clickhouse_test(
         self,
@@ -75,6 +87,7 @@ class MigrateAllProjectsToClickHouseTaskTest(MockedReferenceDatasetsTestCase):
         task = MigrateAllProjectsToClickHouseTask(
             reference_genome=ReferenceGenome.GRCh37,
             dataset_type=DatasetType.SNV_INDEL,
+            run_id=MIGRATION_RUN_ID,
         )
         worker.add(task)
         worker.run()

@@ -13,11 +13,11 @@ from v03_pipeline.lib.tasks.clickhouse_migration.migrate_project_to_clickhouse i
     MigrateProjectToClickHouseTask,
 )
 
-MIGRATION_RUN_ID = 'hail_search_to_clickhouse_migration'
-
 
 @luigi.util.inherits(BaseLoadingPipelineParams)
 class MigrateAllProjectsToClickHouseTask(luigi.WrapperTask):
+    run_id = luigi.Parameter()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.dynamic_parquet_tasks = set()
@@ -42,7 +42,7 @@ class MigrateAllProjectsToClickHouseTask(luigi.WrapperTask):
                 self.dynamic_parquet_tasks.add(
                     self.clone(
                         MigrateProjectToClickHouseTask,
-                        run_id=f'{MIGRATION_RUN_ID}_{sample_type.value}_{project_guid}',
+                        run_id=f'{self.run_id}_{sample_type.value}_{project_guid}',
                         sample_type=sample_type,
                         project_guid=project_guid,
                     ),

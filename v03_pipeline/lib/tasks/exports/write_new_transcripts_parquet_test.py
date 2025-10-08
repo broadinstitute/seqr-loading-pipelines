@@ -4,6 +4,7 @@ import hail as hl
 import luigi.worker
 import pandas as pd
 
+from v03_pipeline.lib.misc.validation import ALL_VALIDATIONS
 from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceGenome,
@@ -87,8 +88,7 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
             project_guids=[
                 'fake_project',
             ],
-            project_pedigree_paths=['fake_pedigree'],
-            skip_validation=True,
+            validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
         worker.add(task)
@@ -188,8 +188,7 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
             project_guids=[
                 'fake_project',
             ],
-            project_pedigree_paths=['fake_pedigree'],
-            skip_validation=True,
+            validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
         worker.add(task)

@@ -9,7 +9,6 @@ from v03_pipeline.lib.model import (
     SampleType,
 )
 from v03_pipeline.lib.paths import (
-    new_clinvar_variants_parquet_path,
     new_transcripts_parquet_path,
     new_variants_parquet_path,
     pipeline_run_success_file_path,
@@ -67,14 +66,6 @@ class WriteVariantsToClickHouseTest(MockedDatarootTestCase):
         worker.add(task)
         worker.run()
         self.assertTrue(task.complete())
-        df = pd.read_parquet(
-            new_clinvar_variants_parquet_path(
-                ReferenceGenome.GRCh37,
-                DatasetType.SNV_INDEL,
-                TEST_RUN_ID,
-            ),
-        )
-        self.assertEqual(df.shape[0], 1)
         df = pd.read_parquet(
             new_variants_parquet_path(
                 ReferenceGenome.GRCh37,

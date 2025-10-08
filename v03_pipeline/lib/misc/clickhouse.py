@@ -1,9 +1,11 @@
 import functools
 import hashlib
 import os
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
+from string import Template
 
 from clickhouse_driver import Client
 
@@ -12,32 +14,23 @@ from v03_pipeline.lib.misc.retry import retry
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import (
-    new_clinvar_variants_parquet_path,
     new_entries_parquet_path,
     new_transcripts_parquet_path,
     new_variants_parquet_path,
 )
-from v03_pipeline.lib.reference_datasets.reference_dataset import (
-    BaseReferenceDataset,
-    ReferenceDataset,
-)
-from v03_pipeline.lib.tasks.clickhouse_migration.migrate_all_projects_to_clickhouse import (
-    MIGRATION_RUN_ID,
-)
 
 logger = get_logger(__name__)
 
+GCS_NAMED_COLLECTION = 'pipeline_data_access'
 GOOGLE_XML_API_PATH = 'https://storage.googleapis.com/'
-KEY = 'key'
+OPTIMIZE_TABLE_TIMEOUT_S = 99999
 REDACTED = 'REDACTED'
 STAGING_CLICKHOUSE_DATABASE = 'staging'
-VARIANT_ID = 'variantId'
 
 
 class ClickHouseTable(StrEnum):
     ANNOTATIONS_DISK = 'annotations_disk'
     ANNOTATIONS_MEMORY = 'annotations_memory'
-    CLINVAR = 'clinvar'
     KEY_LOOKUP = 'key_lookup'
     TRANSCRIPTS = 'transcripts'
     ENTRIES = 'entries'
@@ -49,58 +42,150 @@ class ClickHouseTable(StrEnum):
         return {
             ClickHouseTable.ANNOTATIONS_DISK: new_variants_parquet_path,
             ClickHouseTable.ANNOTATIONS_MEMORY: new_variants_parquet_path,
-            ClickHouseTable.CLINVAR: new_clinvar_variants_parquet_path,
             ClickHouseTable.KEY_LOOKUP: new_variants_parquet_path,
             ClickHouseTable.TRANSCRIPTS: new_transcripts_parquet_path,
             ClickHouseTable.ENTRIES: new_entries_parquet_path,
         }[self]
 
-    def should_load(
-        self,
-        reference_genome: ReferenceGenome,
-        dataset_type: DatasetType,
-    ):
-        if self == ClickHouseTable.CLINVAR:
-            return (
-                ReferenceDataset.clinvar
-                in BaseReferenceDataset.for_reference_genome_dataset_type(
-                    reference_genome,
-                    dataset_type,
-                )
-            )
-        if self == ClickHouseTable.TRANSCRIPTS:
-            return dataset_type.should_write_new_transcripts
-        return self in {
-            ClickHouseTable.ANNOTATIONS_DISK,
-            ClickHouseTable.ANNOTATIONS_MEMORY,
-            ClickHouseTable.KEY_LOOKUP,
-            ClickHouseTable.ENTRIES,
-        }
-
     @property
     def key_field(self):
-        return VARIANT_ID if self == ClickHouseTable.KEY_LOOKUP else KEY
+        return 'variantId' if self == ClickHouseTable.KEY_LOOKUP else 'key'
 
     @property
-    def select_fields(self):
-        return f'{VARIANT_ID}, {KEY}' if self == ClickHouseTable.KEY_LOOKUP else '*'
+    def join_condition(self):
+        return (
+            'assumeNotNull(src.variantId) = dst.variantId'
+            if self == ClickHouseTable.KEY_LOOKUP
+            else 'assumeNotNull(toUInt32(src.key)) = dst.key'
+        )
+
+    @property
+    def select_fields(self) -> str:
+        return {
+            ClickHouseTable.KEY_LOOKUP: 'variantId, key',
+        }.get(self, '*')
 
     @property
     def insert(self) -> Callable:
-        return (
-            functools.partial(direct_insert, clickhouse_table=self)
-            if self != ClickHouseTable.ENTRIES
-            else functools.partial(atomic_entries_insert, _clickhouse_table=self)
-        )
+        return {
+            ClickHouseTable.ANNOTATIONS_MEMORY: direct_insert_annotations,
+            ClickHouseTable.ENTRIES: atomic_insert_entries,
+            ClickHouseTable.KEY_LOOKUP: functools.partial(
+                direct_insert_all_keys,
+                clickhouse_table=self,
+            ),
+            ClickHouseTable.TRANSCRIPTS: functools.partial(
+                direct_insert_all_keys,
+                clickhouse_table=self,
+            ),
+        }[self]
+
+    @classmethod
+    def for_dataset_type(cls, dataset_type: DatasetType) -> list['ClickHouseTable']:
+        tables = [
+            ClickHouseTable.ANNOTATIONS_MEMORY,
+            ClickHouseTable.KEY_LOOKUP,
+        ]
+        if dataset_type.should_write_new_transcripts:
+            tables = [
+                *tables,
+                ClickHouseTable.TRANSCRIPTS,
+            ]
+        return [
+            *tables,
+            ClickHouseTable.ENTRIES,
+        ]
+
+    @classmethod
+    def for_dataset_type_disk_backed_annotations_tables(
+        cls,
+        _dataset_type: DatasetType,
+    ) -> list['ClickHouseTable']:
+        return [
+            ClickHouseTable.ANNOTATIONS_DISK,
+        ]
+
+    @classmethod
+    def for_dataset_type_atomic_insert_entries(
+        cls,
+        dataset_type: DatasetType,
+    ) -> list['ClickHouseTable']:
+        return [
+            *cls.for_dataset_type_atomic_insert_entries_project_partitioned(
+                dataset_type,
+            ),
+            *cls.for_dataset_type_atomic_insert_entries_unpartitioned(dataset_type),
+        ]
+
+    @classmethod
+    def for_dataset_type_atomic_insert_entries_project_partitioned(
+        cls,
+        dataset_type: DatasetType,
+    ) -> list['ClickHouseTable']:
+        if dataset_type == DatasetType.GCNV:
+            return [ClickHouseTable.ENTRIES]
+        return [
+            ClickHouseTable.ENTRIES,
+            ClickHouseTable.PROJECT_GT_STATS,
+        ]
+
+    @classmethod
+    def for_dataset_type_atomic_insert_entries_unpartitioned(
+        cls,
+        dataset_type: DatasetType,
+    ) -> list['ClickHouseTable']:
+        if dataset_type == DatasetType.GCNV:
+            return []
+        return [ClickHouseTable.GT_STATS]
 
 
 class ClickHouseDictionary(StrEnum):
     GT_STATS_DICT = 'gt_stats_dict'
 
+    @classmethod
+    def for_dataset_type(
+        cls,
+        dataset_type: DatasetType,
+    ) -> list['ClickHouseDictionary']:
+        return {
+            DatasetType.SNV_INDEL: list(cls),
+            DatasetType.MITO: [ClickHouseDictionary.GT_STATS_DICT],
+            DatasetType.SV: [ClickHouseDictionary.GT_STATS_DICT],
+            DatasetType.GCNV: [],
+        }[dataset_type]
+
 
 class ClickHouseMaterializedView(StrEnum):
+    CLINVAR_ALL_VARIANTS_TO_CLINVAR_MV = 'clinvar_all_variants_to_clinvar_mv'
     ENTRIES_TO_PROJECT_GT_STATS_MV = 'entries_to_project_gt_stats_mv'
     PROJECT_GT_STATS_TO_GT_STATS_MV = 'project_gt_stats_to_gt_stats_mv'
+
+    @classmethod
+    def for_dataset_type_refreshable(cls, dataset_type: DatasetType):
+        if dataset_type in {DatasetType.SNV_INDEL, DatasetType.MITO}:
+            return [ClickHouseMaterializedView.CLINVAR_ALL_VARIANTS_TO_CLINVAR_MV]
+        return []
+
+    @classmethod
+    def for_dataset_type_atomic_insert_entries(
+        cls,
+        dataset_type: DatasetType,
+    ) -> list['ClickHouseMaterializedView']:
+        if dataset_type == DatasetType.GCNV:
+            return []
+        return [
+            ClickHouseMaterializedView.ENTRIES_TO_PROJECT_GT_STATS_MV,
+            ClickHouseMaterializedView.PROJECT_GT_STATS_TO_GT_STATS_MV,
+        ]
+
+    @classmethod
+    def for_dataset_type_atomic_insert_entries_refreshable(
+        cls,
+        dataset_type: DatasetType,
+    ) -> list['ClickHouseMaterializedView']:
+        if dataset_type == DatasetType.GCNV:
+            return []
+        return [ClickHouseMaterializedView.PROJECT_GT_STATS_TO_GT_STATS_MV]
 
 
 ClickHouseEntity = ClickHouseDictionary | ClickHouseTable | ClickHouseMaterializedView
@@ -146,26 +231,16 @@ class TableNameBuilder:
             '*.parquet',
         )
         if path.startswith('gs://'):
-            return f"gcs('{path.replace('gs://', GOOGLE_XML_API_PATH)}', '{Env.CLICKHOUSE_GCS_HMAC_KEY}', '{Env.CLICKHOUSE_GCS_HMAC_SECRET}', 'Parquet')"
+            return f"gcs({GCS_NAMED_COLLECTION}, url='{path.replace('gs://', GOOGLE_XML_API_PATH)}')"
         return f"file('{path}', 'Parquet')"
 
 
-def logged_query(query, params=None, increased_timeout: bool = False):
-    client = get_clickhouse_client(increased_timeout)
+def logged_query(query, params=None, timeout: int | None = None):
+    client = get_clickhouse_client(timeout)
     sanitized_query = query
-    if Env.CLICKHOUSE_GCS_HMAC_KEY:
+    if Env.CLICKHOUSE_WRITER_PASSWORD:
         sanitized_query = sanitized_query.replace(
-            Env.CLICKHOUSE_GCS_HMAC_KEY,
-            REDACTED,
-        )
-    if Env.CLICKHOUSE_GCS_HMAC_SECRET:
-        sanitized_query = sanitized_query.replace(
-            Env.CLICKHOUSE_GCS_HMAC_SECRET,
-            REDACTED,
-        )
-    if Env.CLICKHOUSE_PASSWORD:
-        sanitized_query = sanitized_query.replace(
-            Env.CLICKHOUSE_PASSWORD,
+            Env.CLICKHOUSE_WRITER_PASSWORD,
             REDACTED,
         )
     logger.info(f'Executing query: {sanitized_query} | Params: {params}')
@@ -175,32 +250,6 @@ def logged_query(query, params=None, increased_timeout: bool = False):
 @retry(delay=1)
 def drop_staging_db():
     logged_query(f'DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};')
-
-
-def dst_key_exists(
-    table_name_builder: TableNameBuilder,
-    clickhouse_table: ClickHouseTable,
-    key: int | str,
-) -> int:
-    query = f"""
-        SELECT EXISTS (
-            SELECT 1
-            FROM {table_name_builder.dst_table(clickhouse_table)}
-            WHERE {clickhouse_table.key_field} = %(key)s
-        )
-        """
-    return logged_query(query, {'key': key})[0][0]
-
-
-def max_src_key(
-    table_name_builder: TableNameBuilder,
-    clickhouse_table: ClickHouseTable,
-) -> int:
-    return logged_query(
-        f"""
-        SELECT max({clickhouse_table.key_field}) FROM {table_name_builder.src_table(clickhouse_table)}
-        """,
-    )[0][0]
 
 
 def create_staging_tables(
@@ -241,12 +290,6 @@ def create_staging_non_table_entities(
                 .replace('`', ''),
             },
         )[0][0]
-        if isinstance(clickhouse_entity, ClickHouseDictionary):
-            password = Env.CLICKHOUSE_PASSWORD or "''"
-            create_entity_statement = create_entity_statement.replace(
-                "PASSWORD '[HIDDEN]'",
-                f'PASSWORD {password}',
-            )
         create_entity_statement = create_entity_statement.replace(
             table_name_builder.dst_prefix,
             table_name_builder.staging_dst_prefix,
@@ -254,29 +297,35 @@ def create_staging_non_table_entities(
         logged_query(create_entity_statement)
 
 
+# Note that this function is NOT idemptotent.  Clickhouse permits
+# attaching the same partition to a table multiple times.
 def stage_existing_project_partitions(
     table_name_builder: TableNameBuilder,
     project_guids: list[str],
+    clickhouse_tables: list[ClickHouseTable],
 ):
-    for project_guid in project_guids:
-        # Note that ClickHouse successfully handles the case where the project
-        # does not already exist in the dst table.  We simply attach an empty partition!
-        logged_query(
-            f"""
-            ALTER TABLE {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)}
-            ATTACH PARTITION %(project_guid)s FROM {table_name_builder.dst_table(ClickHouseTable.ENTRIES)}
-            """,
-            {'project_guid': project_guid},
-        )
-    # Very important piece here:
-    # ALL projects in the project_gt_stats table are staged, allowing us to rebuild
-    # a production-quality gt_stats materialized view in the staging environment.
-    logged_query(
-        f"""
-        ALTER TABLE {table_name_builder.staging_dst_table(ClickHouseTable.PROJECT_GT_STATS)}
-        ATTACH PARTITION ALL FROM {table_name_builder.dst_table(ClickHouseTable.PROJECT_GT_STATS)}
-        """,
-    )
+    for clickhouse_table in clickhouse_tables:
+        # Very important piece here:
+        # ALL projects in the project_gt_stats table are staged, allowing us to rebuild
+        # a production-quality gt_stats materialized view in the staging environment.
+        if clickhouse_table == ClickHouseTable.PROJECT_GT_STATS:
+            logged_query(
+                f"""
+                ALTER TABLE {table_name_builder.staging_dst_table(clickhouse_table)}
+                ATTACH PARTITION ALL FROM {table_name_builder.dst_table(clickhouse_table)}
+                """,
+            )
+            continue
+        for project_guid in project_guids:
+            # Note that ClickHouse successfully handles the case where the project
+            # does not already exist in the dst table.  We simply attach an empty partition!
+            logged_query(
+                f"""
+                ALTER TABLE {table_name_builder.staging_dst_table(clickhouse_table)}
+                ATTACH PARTITION %(project_guid)s FROM {table_name_builder.dst_table(clickhouse_table)}
+                """,
+                {'project_guid': project_guid},
+            )
 
 
 def delete_existing_families_from_staging_entries(
@@ -306,56 +355,131 @@ def insert_new_entries(
     )
 
 
-def optimize_tables(
+@retry(tries=5)
+def optimize_entries(
+    table_name_builder: TableNameBuilder,
+) -> None:
+    safely_optimized = False
+    while not safely_optimized:
+        decrs_exist = logged_query(
+            f"""
+            SELECT EXISTS (
+                SELECT 1
+                FROM {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)}
+                WHERE sign = -1
+            );
+            """,
+        )[0][0]
+        merges_running = logged_query(
+            """
+            SELECT EXISTS (
+                SELECT 1
+                FROM system.merges
+                WHERE database = %(database)s
+                AND table = %(table)s
+            );
+            """,
+            {
+                'database': STAGING_CLICKHOUSE_DATABASE,
+                'table': table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)
+                .split('.')[1]
+                .replace('`', ''),
+            },
+        )[0][0]
+        if decrs_exist:
+            if merges_running:
+                logger.info('Decrs exist and merges are running, so waiting')
+            else:
+                logger.info('Decrs exist and no merges are running, so optimizing')
+                logged_query(
+                    f"""
+                    OPTIMIZE TABLE {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)} FINAL
+                    """,
+                    timeout=OPTIMIZE_TABLE_TIMEOUT_S,
+                )
+            time.sleep(Env.CLICKHOUSE_OPTIMIZE_TABLE_WAIT_S)
+        else:
+            safely_optimized = True
+
+
+@retry(delay=5)
+def refresh_materialized_views(
+    table_name_builder,
+    materialized_views: list[ClickHouseMaterializedView],
+    staging=False,
+):
+    for materialized_view in materialized_views:
+        logged_query(
+            f"""
+            SYSTEM REFRESH VIEW {table_name_builder.staging_dst_table(materialized_view) if staging else table_name_builder.dst_table(materialized_view)}
+            """,
+        )
+        logged_query(
+            f"""
+            SYSTEM WAIT VIEW {table_name_builder.staging_dst_table(materialized_view) if staging else table_name_builder.dst_table(materialized_view)}
+            """,
+            timeout=600,
+        )
+
+
+@retry(delay=5)
+def validate_family_guid_counts(
     table_name_builder: TableNameBuilder,
     project_guids: list[str],
-    clickhouse_tables: list[ClickHouseTable],
+    family_guids: list[str],
 ) -> None:
-    # ClickHouse docs generally recommend against running OPTIMIZE TABLE FINAL.
-    # However, forcing the merge to happen at load time should make the
-    # application layer free of eventual consistency bugs.
-    for clickhouse_table in clickhouse_tables:
-        for project_guid in project_guids:
-            logged_query(
-                f"""
-                OPTIMIZE TABLE {table_name_builder.staging_dst_table(clickhouse_table)}
-                PARTITION %(project_guid)s FINAL
-                """,
-                {'project_guid': project_guid},
-                # For OPTIMIZE TABLE queries, server is known to not respond with output
-                # or progress to the client.
-                increased_timeout=True,
-            )
-
-
-@retry()
-def refresh_staged_gt_stats(table_name_builder):
-    logged_query(
-        f"""
-        SYSTEM REFRESH VIEW {table_name_builder.staging_dst_table(ClickHouseMaterializedView.PROJECT_GT_STATS_TO_GT_STATS_MV)}
+    query = Template(
+        """
+        SELECT family_guid, COUNT(*)
+        FROM $table_name
+        WHERE project_guid in %(project_guids)s
+        AND family_guid in %(family_guids)s
+        GROUP BY 1
         """,
     )
-    logged_query(
-        f"""
-        SYSTEM WAIT VIEW {table_name_builder.staging_dst_table(ClickHouseMaterializedView.PROJECT_GT_STATS_TO_GT_STATS_MV)}
-        """,
+    src_family_counts = dict(
+        logged_query(
+            query.substitute(
+                table_name=table_name_builder.src_table(
+                    ClickHouseTable.ENTRIES,
+                ),
+            ),
+            {'family_guids': family_guids, 'project_guids': project_guids},
+        ),
     )
-
-
-@retry()
-def reload_staged_gt_stats_dict(table_name_builder):
-    logged_query(
-        f"""
-        SYSTEM RELOAD DICTIONARY {table_name_builder.staging_dst_table(ClickHouseDictionary.GT_STATS_DICT)}
-        """,
+    dst_family_counts = dict(
+        logged_query(
+            query.substitute(
+                table_name=table_name_builder.staging_dst_table(
+                    ClickHouseTable.ENTRIES,
+                ),
+            ),
+            {'family_guids': family_guids, 'project_guids': project_guids},
+        ),
     )
+    if src_family_counts != dst_family_counts:
+        msg = 'Loaded Row counts are different than expected.'
+        raise ValueError(msg)
 
 
-@retry()  # REPLACE partition is a copy, so this is idempotent.
+@retry(delay=5)
+def reload_dictionaries(
+    table_name_builder: TableNameBuilder,
+    dictionaries: list[ClickHouseDictionary],
+):
+    for dictionary in dictionaries:
+        logged_query(
+            f"""
+            SYSTEM RELOAD DICTIONARY {table_name_builder.dst_table(dictionary)}
+            """,
+        )
+
+
+@retry(delay=5)  # REPLACE partition is a copy, so this is idempotent.
 def replace_project_partitions(
     table_name_builder: TableNameBuilder,
-    project_guids: list[str],
     clickhouse_tables: list[ClickHouseTable],
+    project_guids: list[str],
 ) -> None:
     for clickhouse_table in clickhouse_tables:
         for project_guid in project_guids:
@@ -368,92 +492,113 @@ def replace_project_partitions(
             )
 
 
-# note this is NOT idempotent
-def exchange_entity(
+# Note this is NOT idempotent, as running the swap twice will
+# result in the tables not being swapped.
+def exchange_tables(
     table_name_builder,
-    clickhouse_entity: ClickHouseEntity,
+    clickhouse_tables: list[ClickHouseTable],
 ) -> None:
-    logged_query(
-        f"""
-        EXCHANGE {'DICTIONARIES' if isinstance(clickhouse_entity, ClickHouseDictionary) else 'TABLES'} {table_name_builder.staging_dst_table(clickhouse_entity)} AND {table_name_builder.dst_table(clickhouse_entity)}
-        """,
-    )
+    for clickhouse_table in clickhouse_tables:
+        logged_query(
+            f"""
+            EXCHANGE TABLES {table_name_builder.staging_dst_table(clickhouse_table)} AND {table_name_builder.dst_table(clickhouse_table)}
+            """,
+        )
 
 
 @retry()
-def direct_insert(
-    clickhouse_table: ClickHouseTable,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    run_id: str,
+def direct_insert_annotations(
+    table_name_builder: TableNameBuilder,
     **_,
 ) -> None:
-    table_name_builder = TableNameBuilder(
-        reference_genome,
-        dataset_type,
-        run_id,
-    )
-    key = max_src_key(
-        table_name_builder,
-        clickhouse_table,
-    )
-    if not key:
-        msg = f'Skipping direct insert of {table_name_builder.dst_table(clickhouse_table)} since src table is empty'
-        logger.info(msg)
-        return
-    if MIGRATION_RUN_ID not in run_id and dst_key_exists(
-        table_name_builder,
-        clickhouse_table,
-        key,
-    ):
-        msg = f'Skipping direct insert of {table_name_builder.dst_table(clickhouse_table)} since {clickhouse_table.key_field}={key} already exists'
-        logger.info(msg)
-        return
+    dst_table = table_name_builder.dst_table(ClickHouseTable.ANNOTATIONS_MEMORY)
+    src_table = table_name_builder.src_table(ClickHouseTable.ANNOTATIONS_MEMORY)
+    drop_staging_db()
     logged_query(
         f"""
-        INSERT INTO {table_name_builder.dst_table(clickhouse_table)}
+        CREATE DATABASE {STAGING_CLICKHOUSE_DATABASE}
+        """,
+    )
+    # NB: Unfortunately there's a bug(?) or inaccuracy if this is attempted without an intermediate
+    # temporary table, likely due to writing to a table and joining against it at the same time.
+    logged_query(
+        f"""
+        CREATE TABLE {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys` ENGINE = Set AS (
+            SELECT {ClickHouseTable.ANNOTATIONS_MEMORY.key_field}
+            FROM {src_table} src
+            LEFT ANTI JOIN {dst_table} dst
+            ON {ClickHouseTable.ANNOTATIONS_MEMORY.join_condition}
+        )
+        """,
+    )
+    for (
+        clickhouse_table
+    ) in ClickHouseTable.for_dataset_type_disk_backed_annotations_tables(
+        table_name_builder.dataset_type,
+    ):
+        disk_backed_dst_table = table_name_builder.dst_table(clickhouse_table)
+        disk_backed_src_table = table_name_builder.src_table(clickhouse_table)
+        logged_query(
+            f"""
+            INSERT INTO {disk_backed_dst_table}
+            SELECT {clickhouse_table.select_fields}
+            FROM {disk_backed_src_table} WHERE {clickhouse_table.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
+            """,
+        )
+    logged_query(
+        f"""
+        INSERT INTO {dst_table}
+        SELECT {ClickHouseTable.ANNOTATIONS_MEMORY.select_fields}
+        FROM {src_table} WHERE {ClickHouseTable.ANNOTATIONS_MEMORY.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
+        """,
+    )
+    drop_staging_db()
+
+
+@retry()
+def direct_insert_all_keys(
+    clickhouse_table: ClickHouseTable,
+    table_name_builder: TableNameBuilder,
+    **_,
+) -> None:
+    dst_table = table_name_builder.dst_table(clickhouse_table)
+    src_table = table_name_builder.src_table(clickhouse_table)
+    logged_query(
+        f"""
+        INSERT INTO {dst_table}
         SELECT {clickhouse_table.select_fields}
-        FROM {table_name_builder.src_table(clickhouse_table)}
-        ORDER BY {clickhouse_table.key_field} ASC
+        FROM {src_table}
         """,
     )
 
 
 @retry()
-def atomic_entries_insert(
-    _clickhouse_table: ClickHouseTable,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    run_id: str,
+def atomic_insert_entries(
+    table_name_builder: TableNameBuilder,
     project_guids: list[str],
     family_guids: list[str],
     **_,
 ) -> None:
-    table_name_builder = TableNameBuilder(
-        reference_genome,
-        dataset_type,
-        run_id,
-    )
+    dataset_type = table_name_builder.dataset_type
     drop_staging_db()
     create_staging_tables(
         table_name_builder,
-        [
-            ClickHouseTable.ENTRIES,
-            ClickHouseTable.PROJECT_GT_STATS,
-            ClickHouseTable.GT_STATS,
-        ],
+        ClickHouseTable.for_dataset_type_atomic_insert_entries(dataset_type),
     )
     create_staging_non_table_entities(
         table_name_builder,
         [
-            ClickHouseMaterializedView.ENTRIES_TO_PROJECT_GT_STATS_MV,
-            ClickHouseMaterializedView.PROJECT_GT_STATS_TO_GT_STATS_MV,
-            ClickHouseDictionary.GT_STATS_DICT,
+            *ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries(
+                dataset_type,
+            ),
         ],
     )
     stage_existing_project_partitions(
         table_name_builder,
         project_guids,
+        ClickHouseTable.for_dataset_type_atomic_insert_entries_project_partitioned(
+            dataset_type,
+        ),
     )
     delete_existing_families_from_staging_entries(
         table_name_builder,
@@ -462,55 +607,84 @@ def atomic_entries_insert(
     insert_new_entries(
         table_name_builder,
     )
-    optimize_tables(
+    optimize_entries(
+        table_name_builder,
+    )
+    validate_family_guid_counts(
         table_name_builder,
         project_guids,
-        [
-            ClickHouseTable.ENTRIES,
-            ClickHouseTable.PROJECT_GT_STATS,
-        ],
+        family_guids,
     )
-    refresh_staged_gt_stats(
+    refresh_materialized_views(
         table_name_builder,
+        ClickHouseMaterializedView.for_dataset_type_atomic_insert_entries_refreshable(
+            dataset_type,
+        ),
+        staging=True,
     )
     replace_project_partitions(
         table_name_builder,
+        ClickHouseTable.for_dataset_type_atomic_insert_entries_project_partitioned(
+            dataset_type,
+        ),
         project_guids,
-        [
-            ClickHouseTable.ENTRIES,
-            ClickHouseTable.PROJECT_GT_STATS,
-        ],
     )
-    exchange_entity(
+    exchange_tables(
         table_name_builder,
-        ClickHouseTable.GT_STATS,
-    )
-    # Very important nuance here... the staged GT_STATS dict
-    # source table is the production GT_STATS table, so the
-    # dictionary reload must happen 'after' the preceeding
-    # exchange entity statement.  I (bpb) made several
-    # attempts to have a staging dictionary source
-    # a staging gt_stats table, but ran into issues with
-    # the dictionary "EXCHANGE" leaving the query source
-    # unmodified.  We ended up with a production dictionary
-    # pointing at a staging source and a staging dictionary
-    # pointing at a production source... which is not desired
-    # behavior.
-    reload_staged_gt_stats_dict(
-        table_name_builder,
-    )
-    exchange_entity(
-        table_name_builder,
-        ClickHouseDictionary.GT_STATS_DICT,
+        ClickHouseTable.for_dataset_type_atomic_insert_entries_unpartitioned(
+            dataset_type,
+        ),
     )
     drop_staging_db()
 
 
-def get_clickhouse_client(increased_timeout: bool = False) -> Client:
+def load_complete_run(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+    project_guids: list[str],
+    family_guids: list[str],
+):
+    msg = f'Attempting load of run: {reference_genome.value}/{dataset_type.value}/{run_id}'
+    logger.info(msg)
+    table_name_builder = TableNameBuilder(
+        reference_genome,
+        dataset_type,
+        run_id,
+    )
+    for clickhouse_table in ClickHouseTable.for_dataset_type(dataset_type):
+        clickhouse_table.insert(
+            table_name_builder=table_name_builder,
+            project_guids=project_guids,
+            family_guids=family_guids,
+        )
+    reload_dictionaries(
+        table_name_builder,
+        ClickHouseDictionary.for_dataset_type(dataset_type),
+    )
+    refresh_materialized_views(
+        table_name_builder,
+        ClickHouseMaterializedView.for_dataset_type_refreshable(
+            dataset_type,
+        ),
+    )
+
+
+def get_clickhouse_client(
+    timeout: int | None = None,
+) -> Client:
     return Client(
         host=Env.CLICKHOUSE_SERVICE_HOSTNAME,
         port=Env.CLICKHOUSE_SERVICE_PORT,
-        user=Env.CLICKHOUSE_USER,
-        **{'password': Env.CLICKHOUSE_PASSWORD} if Env.CLICKHOUSE_PASSWORD else {},
-        **{'send_receive_timeout': 1800} if increased_timeout else {},
+        user=Env.CLICKHOUSE_WRITER_USER,
+        password=Env.CLICKHOUSE_WRITER_PASSWORD,
+        **{'send_receive_timeout': timeout} if timeout else {},
+        **{
+            'settings': {
+                'send_timeout': timeout,
+                'receive_timeout': timeout,
+            },
+        }
+        if timeout
+        else {},
     )

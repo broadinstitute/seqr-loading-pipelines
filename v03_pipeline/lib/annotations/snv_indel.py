@@ -51,26 +51,6 @@ def DP(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     )
 
 
-def gt_stats(
-    ht: hl.Table,
-    lookup_ht: hl.Table,
-    **_: Any,
-) -> hl.Expression:
-    row = lookup_ht[ht.key]
-    ref_samples = hl.sum(hl.flatten(row.project_stats.ref_samples))
-    het_samples = hl.sum(hl.flatten(row.project_stats.het_samples))
-    hom_samples = hl.sum(hl.flatten(row.project_stats.hom_samples))
-    AC = ref_samples * N_ALT_REF + het_samples * N_ALT_HET + hom_samples * N_ALT_HOM
-    AN = 2 * (ref_samples + het_samples + hom_samples)
-    hom = hom_samples
-    return hl.Struct(
-        AC=AC,
-        AN=AN,
-        AF=hl.float32(AC / AN),
-        hom=hom,
-    )
-
-
 def gnomad_non_coding_constraint(
     ht: hl.Table,
     gnomad_non_coding_constraint_ht: hl.Table,

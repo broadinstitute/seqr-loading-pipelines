@@ -1,64 +1,76 @@
 #!/usr/bin/env python3
-import datetime
 import os
+import re
 import time
 
 import luigi
+import luigi.execution_summary
 
 from v03_pipeline.api.model import LoadingPipelineRequest
 from v03_pipeline.lib.logger import get_logger
-from v03_pipeline.lib.model import FeatureFlag
-from v03_pipeline.lib.paths import (
-    loading_pipeline_queue_path,
-    project_pedigree_path,
+from v03_pipeline.lib.misc.runs import get_oldest_queue_path
+from v03_pipeline.lib.misc.slack import (
+    safe_post_to_slack_failure,
+    safe_post_to_slack_success,
 )
-from v03_pipeline.lib.tasks.trigger_hail_backend_reload import TriggerHailBackendReload
 from v03_pipeline.lib.tasks.write_success_file import WriteSuccessFileTask
 
 logger = get_logger(__name__)
 
 
+def process_queue(local_scheduler=False):
+    run_id = None
+    try:
+        latest_queue_path = get_oldest_queue_path()
+        if latest_queue_path is None:
+            return
+        with open(latest_queue_path) as f:
+            lpr = LoadingPipelineRequest.model_validate_json(f.read())
+        run_id = re.search(
+            r'request_(\d{8}-\d{6}-\d{6})\.json',
+            os.path.basename(latest_queue_path),
+        ).group(1)
+        for attempt_id in range(3):
+            luigi_task_result = luigi.build(
+                [
+                    WriteSuccessFileTask(
+                        run_id=run_id,
+                        attempt_id=attempt_id,
+                        **lpr.model_dump(),
+                    ),
+                ],
+                detailed_summary=True,
+                local_scheduler=local_scheduler,
+            )
+            if luigi_task_result.status in {
+                luigi.execution_summary.LuigiStatusCode.SUCCESS,
+                luigi.execution_summary.LuigiStatusCode.SUCCESS_WITH_RETRY,
+            }:
+                break
+        else:
+            raise RuntimeError(luigi_task_result.status.value[1])  # noqa: TRY301
+        safe_post_to_slack_success(
+            run_id,
+            lpr,
+        )
+    except Exception as e:
+        logger.exception('Unhandled Exception')
+        if run_id is not None:
+            safe_post_to_slack_failure(
+                run_id,
+                lpr,
+                e,
+            )
+    finally:
+        if latest_queue_path is not None and os.path.exists(latest_queue_path):
+            os.remove(latest_queue_path)
+        logger.info('Looking for more work')
+        time.sleep(1)
+
+
 def main():
     while True:
-        try:
-            if not os.path.exists(loading_pipeline_queue_path()):
-                continue
-            with open(loading_pipeline_queue_path()) as f:
-                lpr = LoadingPipelineRequest.model_validate_json(f.read())
-            project_pedigree_paths = [
-                project_pedigree_path(
-                    lpr.reference_genome,
-                    lpr.dataset_type,
-                    lpr.sample_type,
-                    project_guid,
-                )
-                for project_guid in lpr.projects_to_run
-            ]
-            run_id = datetime.datetime.now(datetime.UTC).strftime(
-                '%Y%m%d-%H%M%S',
-            )
-            loading_run_task_params = {
-                'project_guids': lpr.projects_to_run,
-                'project_pedigree_paths': project_pedigree_paths,
-                'run_id': run_id,
-                **{k: v for k, v in lpr.model_dump().items() if k != 'projects_to_run'},
-            }
-            if FeatureFlag.SHOULD_TRIGGER_HAIL_BACKEND_RELOAD:
-                tasks = [
-                    TriggerHailBackendReload(**loading_run_task_params),
-                ]
-            else:
-                tasks = [
-                    WriteSuccessFileTask(**loading_run_task_params),
-                ]
-            luigi.build(tasks)
-        except Exception:
-            logger.exception('Unhandled Exception')
-        finally:
-            if os.path.exists(loading_pipeline_queue_path()):
-                os.remove(loading_pipeline_queue_path())
-            logger.info('Waiting for work')
-            time.sleep(1)
+        process_queue()
 
 
 if __name__ == '__main__':

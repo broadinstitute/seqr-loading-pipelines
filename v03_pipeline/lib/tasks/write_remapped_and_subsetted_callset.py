@@ -21,6 +21,7 @@ from v03_pipeline.lib.misc.sv import overwrite_male_non_par_calls
 from v03_pipeline.lib.misc.validation import SeqrValidationError
 from v03_pipeline.lib.model.feature_flag import FeatureFlag
 from v03_pipeline.lib.paths import (
+    project_pedigree_path,
     relatedness_check_table_path,
     remapped_and_subsetted_callset_path,
 )
@@ -56,7 +57,12 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         return super().complete() and hl.eval(
             hl.read_matrix_table(self.output().path).globals.remap_pedigree_hash
             == remap_pedigree_hash(
-                self.project_pedigree_paths[self.project_i],
+                project_pedigree_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.sample_type,
+                    self.project_guids[self.project_i],
+                ),
             ),
         )
 
@@ -73,7 +79,14 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
     def requires(self) -> list[luigi.Task]:
         requirements = [
             self.clone(ValidateCallsetTask),
-            RawFileTask(self.project_pedigree_paths[self.project_i]),
+            RawFileTask(
+                project_pedigree_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.sample_type,
+                    self.project_guids[self.project_i],
+                ),
+            ),
         ]
         if (
             FeatureFlag.CHECK_SEX_AND_RELATEDNESS
@@ -206,7 +219,12 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             mt = overwrite_male_non_par_calls(mt, loadable_families)
         return mt.select_globals(
             remap_pedigree_hash=remap_pedigree_hash(
-                self.project_pedigree_paths[self.project_i],
+                project_pedigree_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.sample_type,
+                    self.project_guids[self.project_i],
+                ),
             ),
             family_samples=(
                 {

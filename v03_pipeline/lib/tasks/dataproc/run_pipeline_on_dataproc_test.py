@@ -45,8 +45,8 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
             sample_type=SampleType.WGS,
             callset_path='test_callset',
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=['test_pedigree'],
             run_id='manual__2024-04-03',
+            attempt_id=0,
         )
         worker.add(task)
         worker.run()
@@ -54,7 +54,7 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
         mock_logger.error.assert_has_calls(
             [
                 call(
-                    'Job RunPipelineTask-manual__2024-04-03 entered ERROR state',
+                    'Job RunPipelineTask-manual__2024-04-03-0 entered ERROR state',
                 ),
             ],
         )
@@ -78,8 +78,8 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
             sample_type=SampleType.WGS,
             callset_path='test_callset',
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=['test_pedigree'],
             run_id='manual__2024-04-04',
+            attempt_id=0,
         )
         worker.add(task)
         worker.run()
@@ -109,8 +109,8 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
             sample_type=SampleType.WGS,
             callset_path='test_callset',
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=['test_pedigree'],
             run_id='manual__2024-04-05',
+            attempt_id=1,
         )
         worker.add(task)
         worker.run()
@@ -118,7 +118,7 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
         mock_logger.info.assert_has_calls(
             [
                 call(
-                    'Waiting for job completion RunPipelineTask-manual__2024-04-05',
+                    'Waiting for job completion RunPipelineTask-manual__2024-04-05-1',
                 ),
             ],
         )
@@ -149,8 +149,8 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
             sample_type=SampleType.WGS,
             callset_path='test_callset',
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=['test_pedigree'],
             run_id='manual__2024-04-06',
+            attempt_id=0,
         )
         worker.add(task)
         worker.run()

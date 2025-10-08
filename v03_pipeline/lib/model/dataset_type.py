@@ -5,6 +5,7 @@ import hail as hl
 
 from v03_pipeline.lib.annotations import gcnv, mito, shared, snv_indel, sv
 from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.model.environment import Env
 
 MITO_MIN_HOM_THRESHOLD = 0.95
 ZERO = 0.0
@@ -177,14 +178,6 @@ class DatasetType(StrEnum):
             ),
         )
 
-    @property
-    def has_lookup_table(self) -> bool:
-        return self in {DatasetType.SNV_INDEL, DatasetType.MITO}
-
-    @property
-    def gt_stats_from_hl_call_stats(self) -> bool:
-        return self == DatasetType.SV
-
     def has_gencode_ensembl_to_refseq_id_mapping(
         self,
         reference_genome: ReferenceGenome,
@@ -226,25 +219,6 @@ class DatasetType(StrEnum):
     @property
     def veppable(self) -> bool:
         return self == DatasetType.SNV_INDEL
-
-    @property
-    def lookup_table_fields_and_genotype_filter_fns(
-        self,
-    ) -> dict[str, Callable[[hl.StructExpression], hl.Expression]]:
-        return {
-            DatasetType.SNV_INDEL: {
-                'ref_samples': lambda s: s.GT.is_hom_ref(),
-                'het_samples': lambda s: s.GT.is_het(),
-                'hom_samples': lambda s: s.GT.is_hom_var(),
-            },
-            DatasetType.MITO: {
-                'ref_samples': lambda s: hl.is_defined(s.HL) & (s.HL == ZERO),
-                'heteroplasmic_samples': lambda s: (
-                    (s.HL < MITO_MIN_HOM_THRESHOLD) & (s.HL > ZERO)
-                ),
-                'homoplasmic_samples': lambda s: s.HL >= MITO_MIN_HOM_THRESHOLD,
-            },
-        }[self]
 
     def formatting_annotation_fns(
         self,
@@ -361,26 +335,13 @@ class DatasetType(StrEnum):
     @property
     def variant_frequency_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
         return {
-            DatasetType.SNV_INDEL: [
-                snv_indel.gt_stats,
-            ],
-            DatasetType.MITO: [
-                mito.gt_stats,
-            ],
             DatasetType.GCNV: [
                 gcnv.gt_stats,
             ],
-            DatasetType.SV: [
-                sv.gt_stats,
-            ],
-        }[self]
+        }.get(self, [])
 
     @property
     def should_send_to_allele_registry(self):
-        return self == DatasetType.SNV_INDEL
-
-    @property
-    def requires_dataproc(self):
         return self == DatasetType.SNV_INDEL
 
     @property
@@ -416,3 +377,9 @@ class DatasetType(StrEnum):
     @property
     def re_key_by_seqr_internal_truth_vid(self) -> None:
         return self == DatasetType.SV
+
+    @property
+    def dataproc_preemptibles(self) -> int | None:
+        if self == DatasetType.SNV_INDEL:
+            return Env.GCLOUD_DATAPROC_SECONDARY_WORKERS
+        return 1

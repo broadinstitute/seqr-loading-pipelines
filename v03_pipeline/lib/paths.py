@@ -7,15 +7,12 @@ from v03_pipeline.lib.model import (
     AccessControl,
     DatasetType,
     Env,
-    FeatureFlag,
-    PipelineVersion,
     ReferenceGenome,
     SampleType,
 )
 from v03_pipeline.lib.model.constants import LOCAL_DISK_MOUNT_PATH
 from v03_pipeline.lib.reference_datasets.reference_dataset import (
     ReferenceDataset,
-    ReferenceDatasetQuery,
 )
 
 
@@ -24,13 +21,6 @@ def pipeline_prefix(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> str:
-    if FeatureFlag.INCLUDE_PIPELINE_VERSION_IN_PREFIX:
-        return os.path.join(
-            root,
-            PipelineVersion.V3_1.value,
-            reference_genome.value,
-            dataset_type.value,
-        )
     return os.path.join(
         root,
         reference_genome.value,
@@ -48,12 +38,6 @@ def _v03_reference_dataset_prefix(
         if access_control == AccessControl.PRIVATE
         else root
     )
-    if FeatureFlag.INCLUDE_PIPELINE_VERSION_IN_PREFIX:
-        return os.path.join(
-            root,
-            PipelineVersion.V3_1.value,
-            reference_genome.value,
-        )
     return os.path.join(
         root,
         reference_genome.value,
@@ -73,9 +57,7 @@ def _callset_path_hash(callset_path: str) -> str:
         else:
             # f.modification_time is None for directories
             key = callset_path + str(
-                max(
-                    (f.modification_time if f.modification_time else 0) for f in shards
-                ),
+                sum((f.size if f.size else 0) for f in shards),
             )
     except FileNotFoundError:
         key = callset_path
@@ -92,7 +74,7 @@ def family_table_path(
 ) -> str:
     return os.path.join(
         pipeline_prefix(
-            Env.HAIL_SEARCH_DATA_DIR,
+            Env.PIPELINE_DATA_DIR,
             reference_genome,
             dataset_type,
         ),
@@ -181,7 +163,7 @@ def project_table_path(
 ) -> str:
     return os.path.join(
         pipeline_prefix(
-            Env.HAIL_SEARCH_DATA_DIR,
+            Env.PIPELINE_DATA_DIR,
             reference_genome,
             dataset_type,
         ),
@@ -257,27 +239,13 @@ def remapped_and_subsetted_callset_path(
     )
 
 
-def lookup_table_path(
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-) -> str:
-    return os.path.join(
-        pipeline_prefix(
-            Env.HAIL_SEARCH_DATA_DIR,
-            reference_genome,
-            dataset_type,
-        ),
-        'lookup.ht',
-    )
-
-
 def runs_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> str:
     return os.path.join(
         pipeline_prefix(
-            Env.HAIL_SEARCH_DATA_DIR,
+            Env.PIPELINE_DATA_DIR,
             reference_genome,
             dataset_type,
         ),
@@ -316,22 +284,15 @@ def valid_reference_dataset_path(
     )
 
 
-def valid_reference_dataset_query_path(
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    reference_dataset_query: ReferenceDatasetQuery,
-    root=None,
-) -> str | None:
-    if not root:
-        root = Env.REFERENCE_DATASETS_DIR
+def ancestry_model_rf_path() -> str:
     return os.path.join(
         _v03_reference_dataset_prefix(
-            root,
-            reference_dataset_query.access_control,
-            reference_genome,
+            Env.REFERENCE_DATASETS_DIR,
+            AccessControl.PUBLIC,
+            ReferenceGenome.GRCh38,
         ),
-        dataset_type.value,
-        f'{reference_dataset_query.value}.ht',
+        DatasetType.SNV_INDEL,
+        'ancestry_imputation_model.onnx',
     )
 
 
@@ -341,7 +302,7 @@ def variant_annotations_table_path(
 ) -> str:
     return os.path.join(
         pipeline_prefix(
-            Env.HAIL_SEARCH_DATA_DIR,
+            Env.PIPELINE_DATA_DIR,
             reference_genome,
             dataset_type,
         ),
@@ -355,26 +316,11 @@ def variant_annotations_vcf_path(
 ) -> str:
     return os.path.join(
         pipeline_prefix(
-            Env.HAIL_SEARCH_DATA_DIR,
+            Env.PIPELINE_DATA_DIR,
             reference_genome,
             dataset_type,
         ),
         'annotations.vcf.bgz',
-    )
-
-
-def new_clinvar_variants_parquet_path(
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    run_id: str,
-) -> str:
-    return os.path.join(
-        runs_path(
-            reference_genome,
-            dataset_type,
-        ),
-        run_id,
-        'new_clinvar_variants.parquet',
     )
 
 
@@ -438,13 +384,6 @@ def new_variants_table_path(
     )
 
 
-def clinvar_dataset_path(reference_genome: ReferenceGenome, etag: str) -> str:
-    return os.path.join(
-        Env.HAIL_TMP_DIR,
-        f'clinvar-{reference_genome.value}-{etag}.ht',
-    )
-
-
 def project_pedigree_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
@@ -463,11 +402,23 @@ def project_pedigree_path(
     )
 
 
-def loading_pipeline_queue_path() -> str:
+def loading_pipeline_queue_dir() -> str:
+    """
+    Returns the directory where loading pipeline requests are queued.
+    """
     return os.path.join(
         LOCAL_DISK_MOUNT_PATH,
         'loading_pipeline_queue',
-        'request.json',
+    )
+
+
+def loading_pipeline_queue_path(run_id: str) -> str:
+    """
+    Returns a new path for a loading pipeline queue request file.
+    """
+    return os.path.join(
+        loading_pipeline_queue_dir(),
+        f'request_{run_id}.json',
     )
 
 
@@ -514,3 +465,7 @@ def clickhouse_load_fail_file_path(
         run_id,
         '_CLICKHOUSE_LOAD_FAIL',
     )
+
+
+def db_id_to_gene_id_path() -> str:
+    return os.path.join(Env.LOADING_DATASETS_DIR, 'db_id_to_gene_id.csv.gz')
