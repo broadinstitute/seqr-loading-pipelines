@@ -10,6 +10,7 @@ from v03_pipeline.api.model import (
     DeleteFamiliesRequest,
     LoadingPipelineRequest,
     PipelineRunnerRequest,
+    RebuildGtStatsRequest,
 )
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.clickhouse import (
@@ -119,10 +120,22 @@ def run_delete_families(dpr: DeleteFamiliesRequest, run_id: str, *_: Any):
             )
 
 
+def rebuild_gt_stats(rgsr: RebuildGtStatsRequest, run_id: str, *_: Any):
+    for dataset_type in DatasetType:
+        for reference_genome in dataset_type.reference_genomes:
+            rebuild_gt_stats(
+                reference_genome,
+                dataset_type,
+                run_id,
+                **rgsr.model_dump(exclude='request_type'),
+            )
+
+
 REQUEST_HANDLER_MAP: dict[
     type[PipelineRunnerRequest],
     Callable[[PipelineRunnerRequest, str, ...], None],
 ] = {
     LoadingPipelineRequest: run_loading_pipeline,
     DeleteFamiliesRequest: run_delete_families,
+    RebuildGtStatsRequest: rebuild_gt_stats,
 }

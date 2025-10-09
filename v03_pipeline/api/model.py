@@ -51,3 +51,10 @@ class DeleteFamiliesRequest(PipelineRunnerRequest):
         min_length=1,
         frozen=True,
     )
+
+
+class RebuildGtStatsRequest(PipelineRunnerRequest):
+    project_guids: list[str] = Field(
+        min_length=1,
+        frozen=True,
+    )

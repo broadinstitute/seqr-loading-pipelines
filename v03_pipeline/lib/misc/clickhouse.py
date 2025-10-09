@@ -147,12 +147,9 @@ class ClickHouseDictionary(StrEnum):
         cls,
         dataset_type: DatasetType,
     ) -> list['ClickHouseDictionary']:
-        return {
-            DatasetType.SNV_INDEL: list(cls),
-            DatasetType.MITO: [ClickHouseDictionary.GT_STATS_DICT],
-            DatasetType.SV: [ClickHouseDictionary.GT_STATS_DICT],
-            DatasetType.GCNV: [],
-        }[dataset_type]
+        if dataset_type == DatasetType.GCNV:
+            return []
+        return list(cls)
 
 
 class ClickHouseMaterializedView(StrEnum):
@@ -162,9 +159,9 @@ class ClickHouseMaterializedView(StrEnum):
 
     @classmethod
     def for_dataset_type_refreshable(cls, dataset_type: DatasetType):
-        if dataset_type in {DatasetType.SNV_INDEL, DatasetType.MITO}:
-            return [ClickHouseMaterializedView.CLINVAR_ALL_VARIANTS_TO_CLINVAR_MV]
-        return []
+        if dataset_type in {DatasetType.SV, DatasetType.GCNV}:
+            return []
+        return [ClickHouseMaterializedView.CLINVAR_ALL_VARIANTS_TO_CLINVAR_MV]
 
     @classmethod
     def for_dataset_type_atomic_entries_update(
@@ -271,31 +268,41 @@ def create_staging_tables(
         )
 
 
+def get_create_mv_statements(
+    table_name_builder: TableNameBuilder,
+    clickhouse_mv: ClickHouseMaterializedView,
+) -> tuple[str, str]:
+    return logged_query(
+        """
+        SELECT create_table_query, as_select FROM system.tables
+        WHERE
+        engine = 'MaterializedView'
+        AND database = %(database)s
+        AND name = %(name)s
+        """,
+        {
+            'database': Env.CLICKHOUSE_DATABASE,
+            'name': table_name_builder.dst_table(clickhouse_mv)
+            .split('.')[1]
+            .replace('`', ''),
+        },
+    )[0]
+
+
 def create_staging_materialized_views(
     table_name_builder: TableNameBuilder,
     clickhouse_mvs: list[ClickHouseMaterializedView],
 ):
     for clickhouse_mv in clickhouse_mvs:
-        create_mv_statement = logged_query(
-            """
-            SELECT create_table_query FROM system.tables
-            WHERE
-            engine = 'MaterializedView'
-            AND database = %(database)s
-            AND name = %(name)s
-            """,
-            {
-                'database': Env.CLICKHOUSE_DATABASE,
-                'name': table_name_builder.dst_table(clickhouse_mv)
-                .split('.')[1]
-                .replace('`', ''),
-            },
-        )[0][0]
-        create_mv_statement = create_mv_statement.replace(
+        create_table_statement = get_create_mv_statements(
+            table_name_builder,
+            clickhouse_mv,
+        )[0]
+        create_table_statement = create_table_statement.replace(
             table_name_builder.dst_prefix,
             table_name_builder.staging_dst_prefix,
         )
-        logged_query(create_mv_statement)
+        logged_query(create_table_statement)
 
 
 # Note that this function is NOT idemptotent.  Clickhouse permits
@@ -573,6 +580,39 @@ def direct_insert_all_keys(
     )
 
 
+# This is a smattering of shared operations that lacks a better name :/
+def finalize_refresh_flow(
+    table_name_builder: TableNameBuilder,
+    project_guids: list[str],
+):
+    dataset_type = table_name_builder.dataset_type
+    refresh_materialized_views(
+        table_name_builder,
+        ClickHouseMaterializedView.for_dataset_type_atomic_entries_update_refreshable(
+            dataset_type,
+        ),
+        staging=True,
+    )
+    replace_project_partitions(
+        table_name_builder,
+        ClickHouseTable.for_dataset_type_atomic_entries_update_project_partitioned(
+            dataset_type,
+        ),
+        project_guids,
+    )
+    exchange_tables(
+        table_name_builder,
+        ClickHouseTable.for_dataset_type_atomic_entries_update_unpartitioned(
+            dataset_type,
+        ),
+    )
+    drop_staging_db()
+    reload_dictionaries(
+        table_name_builder,
+        ClickHouseDictionary.for_dataset_type(dataset_type),
+    )
+
+
 @retry()
 def atomic_insert_entries(
     table_name_builder: TableNameBuilder,
@@ -614,27 +654,7 @@ def atomic_insert_entries(
         project_guids,
         family_guids,
     )
-    refresh_materialized_views(
-        table_name_builder,
-        ClickHouseMaterializedView.for_dataset_type_atomic_entries_update_refreshable(
-            dataset_type,
-        ),
-        staging=True,
-    )
-    replace_project_partitions(
-        table_name_builder,
-        ClickHouseTable.for_dataset_type_atomic_entries_update_project_partitioned(
-            dataset_type,
-        ),
-        project_guids,
-    )
-    exchange_tables(
-        table_name_builder,
-        ClickHouseTable.for_dataset_type_atomic_entries_update_unpartitioned(
-            dataset_type,
-        ),
-    )
-    drop_staging_db()
+    finalize_refresh_flow(table_name_builder, project_guids)
 
 
 def load_complete_run(
@@ -657,10 +677,6 @@ def load_complete_run(
             project_guids=project_guids,
             family_guids=family_guids,
         )
-    reload_dictionaries(
-        table_name_builder,
-        ClickHouseDictionary.for_dataset_type(dataset_type),
-    )
     refresh_materialized_views(
         table_name_builder,
         ClickHouseMaterializedView.for_dataset_type_refreshable(
@@ -698,6 +714,7 @@ def delete_family_guids(
         msg = f'No data exists for {reference_genome.value} & {dataset_type.value} so skipping'
         logger.info(msg)
         return
+    project_guids = [project_guid]
     create_staging_tables(
         table_name_builder,
         ClickHouseTable.for_dataset_type_atomic_entries_update(dataset_type),
@@ -710,7 +727,7 @@ def delete_family_guids(
     )
     stage_existing_project_partitions(
         table_name_builder,
-        [project_guid],
+        project_guids,
         ClickHouseTable.for_dataset_type_atomic_entries_update_project_partitioned(
             dataset_type,
         ),
@@ -722,31 +739,64 @@ def delete_family_guids(
     optimize_entries(
         table_name_builder,
     )
-    refresh_materialized_views(
+    finalize_refresh_flow(table_name_builder, project_guids)
+
+
+def rebuild_gt_stats(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+    project_guids: list[str],
+) -> None:
+    if ClickHouseDictionary.GT_STATS_DICT not in ClickHouseDictionary.for_dataset_type(
+        dataset_type,
+    ):
+        msg = f'Skipping gt stats rebuild for {reference_genome.value}/{dataset_type.value} {project_guids[:10]}...'
+        logger.info(msg)
+        return
+    msg = f'Attempting rebuild gt stats for {reference_genome.value}/{dataset_type.value} {project_guids[:10]}...'
+    logger.info(msg)
+    table_name_builder = TableNameBuilder(
+        reference_genome,
+        dataset_type,
+        run_id,
+    )
+    create_staging_tables(
         table_name_builder,
-        ClickHouseMaterializedView.for_dataset_type_atomic_entries_update_refreshable(
+        ClickHouseTable.for_dataset_type_atomic_entries_update(dataset_type),
+    )
+    create_staging_materialized_views(
+        table_name_builder,
+        ClickHouseMaterializedView.for_dataset_type_atomic_entries_update(
             dataset_type,
         ),
-        staging=True,
     )
-    replace_project_partitions(
+    stage_existing_project_partitions(
         table_name_builder,
+        project_guids,
         ClickHouseTable.for_dataset_type_atomic_entries_update_project_partitioned(
             dataset_type,
         ),
-        [project_guid],
     )
-    exchange_tables(
+    for project_guid in project_guids:
+        logged_query(
+            f"""
+            ALTER TABLE {table_name_builder.staging_dst_table(ClickHouseTable.PROJECT_GT_STATS)}
+            DROP PARTITION %(project_guid)s
+            """,
+            {'project_guid': project_guid},
+        )
+    select_statement = get_create_mv_statements(
         table_name_builder,
-        ClickHouseTable.for_dataset_type_atomic_entries_update_unpartitioned(
-            dataset_type,
-        ),
+        ClickHouseMaterializedView.ENTRIES_TO_PROJECT_GT_STATS_MV,
+    )[1]
+    logged_query(
+        f"""
+        INSERT INTO {table_name_builder.staging_dst_table(ClickHouseTable.PROJECT_GT_STATS)}
+        {select_statement}
+        """,
     )
-    drop_staging_db()
-    reload_dictionaries(
-        table_name_builder,
-        ClickHouseDictionary.for_dataset_type(dataset_type),
-    )
+    finalize_refresh_flow(table_name_builder, project_guids)
 
 
 def get_clickhouse_client(
