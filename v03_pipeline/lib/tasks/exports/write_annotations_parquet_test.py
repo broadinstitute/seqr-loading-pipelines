@@ -32,6 +32,7 @@ TEST_RUN_ID = 'manual__2024-04-03'
 
 class WriteAnnotationsParquetTest(MockedDatarootTestCase):
     def setUp(self) -> None:
+        super().setUp()
         copy_project_pedigree_to_mocked_dir(
             TEST_PEDIGREE_3_REMAP,
             ReferenceGenome.GRCh38,
@@ -39,7 +40,6 @@ class WriteAnnotationsParquetTest(MockedDatarootTestCase):
             SampleType.WGS,
             'R0113_test_project',
         )
-        super().setUp()
         ht = hl.read_table(
             TEST_SNV_INDEL_ANNOTATIONS,
         )
@@ -89,13 +89,13 @@ class WriteAnnotationsParquetTest(MockedDatarootTestCase):
             variant_annotations_parquet_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
-                TEST_RUN_ID,
             ),
         )
         export_json = convert_ndarray_to_list(df.head(1).to_dict('records'))
         export_json[0]['sortedTranscriptConsequences'] = [
             export_json[0]['sortedTranscriptConsequences'][0],
         ]
+        print(export_json)
         self.assertEqual(
             export_json,
             [
@@ -165,27 +165,65 @@ class WriteAnnotationsParquetTest(MockedDatarootTestCase):
                     },
                     'sortedMotifFeatureConsequences': [
                         {
-                            'consequenceTerms': ['TF_binding_site_variant'],
                             'motifFeatureId': 'ENSM00493959715',
-                        },
+                            'consequenceTerms': ['TF_binding_site_variant'],
+                        }
                     ],
                     'sortedRegulatoryFeatureConsequences': [
                         {
+                            'regulatoryFeatureId': 'ENSR00000344437',
                             'biotype': 'CTCF_binding_site',
                             'consequenceTerms': ['regulatory_region_variant'],
-                            'regulatoryFeatureId': 'ENSR00000344437',
-                        },
+                        }
                     ],
                     'sortedTranscriptConsequences': [
                         {
-                            'alphamissensePathogenicity': None,
-                            'canonical': 1,
-                            'consequenceTerms': ['missense_variant'],
-                            'extendedIntronicSpliceRegionVariant': False,
-                            'fiveutrConsequence': None,
+                            'aminoAcids': 'S/L',
+                            'canonical': 1.0,
+                            'codons': 'tCg/tTg',
                             'geneId': 'ENSG00000187634',
-                        },
+                            'hgvsc': 'ENST00000616016.5:c.1049C>T',
+                            'hgvsp': 'ENSP00000478421.2:p.Ser350Leu',
+                            'transcriptId': 'ENST00000616016',
+                            'maneSelect': 'NM_001385641.1',
+                            'manePlusClinical': None,
+                            'exon': {'index': 6, 'total': 14},
+                            'intron': None,
+                            'refseqTranscriptId': 'NM_001385641.1',
+                            'alphamissense': {'pathogenicity': None},
+                            'loftee': {'isLofNagnag': None, 'lofFilters': None},
+                            'spliceregion': {
+                                'extended_intronic_splice_region_variant': False
+                            },
+                            'utrannotator': {
+                                'existingInframeOorfs': None,
+                                'existingOutofframeOorfs': None,
+                                'existingUorfs': None,
+                                'fiveutrAnnotation': {
+                                    'type': 'OutOfFrame_oORF',
+                                    'KozakContext': 'CGCATGC',
+                                    'KozakStrength': 'Weak',
+                                    'DistanceToCDS': 41,
+                                    'CapDistanceToStart': None,
+                                    'DistanceToStop': None,
+                                    'Evidence': None,
+                                    'AltStop': None,
+                                    'AltStopDistanceToCDS': None,
+                                    'FrameWithCDS': None,
+                                    'StartDistanceToCDS': None,
+                                    'newSTOPDistanceToCDS': None,
+                                    'alt_type': None,
+                                    'alt_type_length': None,
+                                    'ref_StartDistanceToCDS': None,
+                                    'ref_type': None,
+                                    'ref_type_length': None,
+                                },
+                                'fiveutrConsequence': None,
+                            },
+                            'biotype': 'protein_coding',
+                            'consequenceTerms': ['missense_variant'],
+                        }
                     ],
-                },
+                }
             ],
         )
