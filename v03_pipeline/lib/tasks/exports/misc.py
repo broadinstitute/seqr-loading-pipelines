@@ -90,9 +90,10 @@ def export_parquet_filterable_transcripts_fields(
 def drop_unexported_fields(ht: hl.Table) -> hl.Table:
     if hasattr(ht, 'clinvar'):
         ht = ht.drop('clinvar')
-        ht = ht.annotate_globals(
-            enums=ht.globals.enums.drop('clinvar'),
-        )
+        if hasattr(ht.globals.enums, 'clinvar'):
+            ht = ht.annotate_globals(
+                enums=ht.globals.enums.drop('clinvar'),
+            )
     return ht
 
 
