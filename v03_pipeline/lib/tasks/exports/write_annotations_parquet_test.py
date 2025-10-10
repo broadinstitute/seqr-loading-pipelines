@@ -95,7 +95,6 @@ class WriteAnnotationsParquetTest(MockedDatarootTestCase):
         export_json[0]['sortedTranscriptConsequences'] = [
             export_json[0]['sortedTranscriptConsequences'][0],
         ]
-        print(export_json)
         self.assertEqual(
             export_json,
             [
@@ -167,14 +166,14 @@ class WriteAnnotationsParquetTest(MockedDatarootTestCase):
                         {
                             'motifFeatureId': 'ENSM00493959715',
                             'consequenceTerms': ['TF_binding_site_variant'],
-                        }
+                        },
                     ],
                     'sortedRegulatoryFeatureConsequences': [
                         {
                             'regulatoryFeatureId': 'ENSR00000344437',
                             'biotype': 'CTCF_binding_site',
                             'consequenceTerms': ['regulatory_region_variant'],
-                        }
+                        },
                     ],
                     'sortedTranscriptConsequences': [
                         {
@@ -193,7 +192,7 @@ class WriteAnnotationsParquetTest(MockedDatarootTestCase):
                             'alphamissense': {'pathogenicity': None},
                             'loftee': {'isLofNagnag': None, 'lofFilters': None},
                             'spliceregion': {
-                                'extended_intronic_splice_region_variant': False
+                                'extended_intronic_splice_region_variant': False,
                             },
                             'utrannotator': {
                                 'existingInframeOorfs': None,
@@ -222,8 +221,8 @@ class WriteAnnotationsParquetTest(MockedDatarootTestCase):
                             },
                             'biotype': 'protein_coding',
                             'consequenceTerms': ['missense_variant'],
-                        }
+                        },
                     ],
-                }
+                },
             ],
         )
