@@ -4,6 +4,7 @@ import luigi.util
 
 from v03_pipeline.lib.paths import (
     variant_annotations_parquet_path,
+    variant_annotations_table_path,
 )
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
