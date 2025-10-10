@@ -64,7 +64,7 @@ def get_cluster_config(
                 },
             },
             'worker_config': {
-                'num_instances': 2,
+                'num_instances': 3,
                 'machine_type_uri': INSTANCE_TYPE,
                 'disk_config': {
                     'boot_disk_type': 'pd-standard',
