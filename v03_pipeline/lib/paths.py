@@ -323,6 +323,21 @@ def variant_annotations_vcf_path(
     )
 
 
+def variant_annotations_parquet_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+) -> str:
+    return os.path.join(
+        runs_path(
+            reference_genome,
+            dataset_type,
+        ),
+        run_id,
+        'annotations.parquet',
+    )
+
+
 def new_entries_parquet_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
