@@ -16,7 +16,7 @@ from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
 from v03_pipeline.lib.tasks.dataproc.misc import get_cluster_name
 
 DEBIAN_IMAGE = '2.2.5-debian12'
-DISK_SIZE_GB = 750
+DISK_SIZE_GB = 600
 HAIL_VERSION = hl.version().split('-')[0]
 INSTANCE_TYPE = 'n1-highmem-8'
 PKGS = '|'.join(
@@ -64,7 +64,7 @@ def get_cluster_config(
                 },
             },
             'worker_config': {
-                'num_instances': 3,
+                'num_instances': 2,
                 'machine_type_uri': INSTANCE_TYPE,
                 'disk_config': {
                     'boot_disk_type': 'pd-standard',
