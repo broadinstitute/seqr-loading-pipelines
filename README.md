@@ -31,9 +31,9 @@ Core logic and shared libraries.
 - `core` defines key constants/enums/config.
 - `reference_datasets` manages parsing of raw reference sources into hail tables.
 - `tasks` specifies the Luigi defined pipeline.  Note that Luigi pipelines are defined by their requirements, so
-are only readable in reverse.
+the pipeline is defined, effectively, in reverse.
 	- `WriteSuccessFile` is the last task, defining a `requires()` method that runs the pipeline either locally or on scalable compute.
-	- `WriteImportedCallset` is the first task, importing a VCF into a Hail Matrix table, an "imported callset"
+	- `WriteImportedCallset` is the first task, importing a VCF into a Hail Matrix table, an "imported callset".
 - `test` holds a few utilities used by the tests, which are dispersed throughout the rest of the repository.
 - `paths.py` defines paths for all intermediate and output files of the pipeline.
 
@@ -71,4 +71,7 @@ nosetests v03_pipeline/lib/misc/math_test.py
 ruff format .
 ruff check .
 ```
+
+
+## 🚶‍♂️Walkthrough of the Pipeline
 
