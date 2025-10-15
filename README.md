@@ -42,7 +42,7 @@ Static configuration and test files.
 
 ---
 
-## ⚙️ Setup for local development
+## ⚙️ Setup for Local Development
 The production pipeline runs with python `3.11`.
 
 ### Clone the repo and install python requirements.
@@ -59,19 +59,28 @@ curl https://clickhouse.com/ | sh
 ./clickhouse server --config-file=./seqr-loading-pipelines/v03_pipeline/var/clickhouse_config/test-clickhouse.xml
 ```
 
-### [Run the tests](https://github.com/broadinstitute/seqr-loading-pipelines/blob/main/.github/workflows/unit-tests.yml#L66-L73)
+### [Run the Tests](https://github.com/broadinstitute/seqr-loading-pipelines/blob/main/.github/workflows/unit-tests.yml#L66-L73)
 
-### Run a specific test
+### Run an Individual Test
 ```bash
 nosetests v03_pipeline/lib/misc/math_test.py
 ```
 
-### Run formatting and linting
+### Formatting and Linting
 ```bash
 ruff format .
 ruff check .
 ```
 
+## 🚪 Schema Entrypoints
+- The expected fields and types are defined in `dataset_type.py` as the `col_fields`, `entry_fields`, and `row_fields` properties.  Examples
+of the SNV_INDEL/MITO/SV/GCNV callset schemas may be found in the tests.
+- The VEP schema is defined in JSON within the vep*.json config files, then parsed into hail in `lib/annotations/vep.py`.
+- Examples of exported parquets may be found in `lib/tasks/exports/*_parquet_test.py`
 
-## 🚶‍♂️Walkthrough of the Pipeline
 
+## 🚶‍♂️ ClickHouse Loader Walkthrough
+- The Clickhouse Loader follows the pattern established in the [Making a Large Data Load Resilient](https://clickhouse.com/blog/supercharge-your-clickhouse-data-loads-part3) blog 
+	- Rows are first loaded into a `staging` database that copies the production `TABLE`s and `MATERIALIZED VIEWS`.
+	- After all `entries` are inserted, we validate the inserted row count and finalize the per-project allele frequency aggregation.
+	- Partitions are atomically moved from the `staging` environment to production. 
