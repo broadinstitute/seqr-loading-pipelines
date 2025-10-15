@@ -1,3 +1,6 @@
+> ⚠️ **Note:** This folder is **no longer maintained**.  
+> Contents are kept for archival/reference purposes only and may be outdated or incomplete.
+
 # seqr pipeline-runner docker image
 
 This folder contains the files necessary to build a docker image that can be used by local seqr installation to run 
