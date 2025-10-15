@@ -3,8 +3,8 @@ import uuid
 
 import luigi
 
-from v03_pipeline.lib.model import DatasetType, FeatureFlag, ReferenceGenome
-from v03_pipeline.lib.model.constants import MIGRATION_RUN_ID
+from v03_pipeline.lib.core import DatasetType, FeatureFlag, ReferenceGenome
+from v03_pipeline.lib.core.constants import MIGRATION_RUN_ID
 from v03_pipeline.lib.tasks import (
     MigrateAllProjectsToClickHouseOnDataprocTask,
     MigrateAllProjectsToClickHouseTask,

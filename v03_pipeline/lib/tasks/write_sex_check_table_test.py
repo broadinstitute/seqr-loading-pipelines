@@ -5,7 +5,7 @@ import google.cloud.bigquery
 import hail as hl
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.paths import sex_check_table_path, tdr_metrics_path
 from v03_pipeline.lib.tasks.write_sex_check_table import (
     WriteSexCheckTableTask,

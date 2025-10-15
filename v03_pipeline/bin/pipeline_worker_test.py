@@ -5,7 +5,7 @@ from unittest.mock import patch
 import luigi
 
 from v03_pipeline.bin.pipeline_worker import process_queue
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.paths import loading_pipeline_queue_dir
 from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase

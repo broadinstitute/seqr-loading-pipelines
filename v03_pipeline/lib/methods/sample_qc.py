@@ -10,7 +10,7 @@ from gnomad.sample_qc.pipeline import filter_rows_for_qc
 from gnomad.utils.filtering import filter_to_autosomes
 from gnomad_qc.v4.sample_qc.assign_ancestry import assign_pop_with_per_pop_probs
 
-from v03_pipeline.lib.model import SampleType
+from v03_pipeline.lib.core import SampleType
 
 GNOMAD_FILTER_MIN_AF = 0.001
 GNOMAD_FILTER_MIN_CALLRATE = 0.99

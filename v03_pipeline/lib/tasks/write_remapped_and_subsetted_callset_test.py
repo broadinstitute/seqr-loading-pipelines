@@ -6,7 +6,7 @@ import hail as hl
 import luigi.worker
 
 from v03_pipeline.lib.misc.io import remap_pedigree_hash
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.paths import (
     relatedness_check_table_path,
     sex_check_table_path,

@@ -11,7 +11,7 @@ from v03_pipeline.lib.misc.family_loading_failures import (
 )
 from v03_pipeline.lib.misc.io import import_pedigree
 from v03_pipeline.lib.misc.pedigree import Family, Sample, parse_pedigree_ht_to_families
-from v03_pipeline.lib.model import Sex
+from v03_pipeline.lib.core import Sex
 
 TEST_SEX_CHECK_1 = 'v03_pipeline/var/test/sex_check/test_sex_check_1.ht'
 TEST_PEDIGREE_6 = 'v03_pipeline/var/test/pedigrees/test_pedigree_6.tsv'

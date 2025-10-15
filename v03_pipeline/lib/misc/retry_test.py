@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from v03_pipeline.lib.misc.retry import retry
-from v03_pipeline.lib.model import DatasetType
+from v03_pipeline.lib.core import DatasetType
 
 
 class TestRetryDecorator(unittest.TestCase):

@@ -4,8 +4,8 @@ from enum import StrEnum
 import hail as hl
 
 from v03_pipeline.lib.annotations import gcnv, mito, shared, snv_indel, sv
-from v03_pipeline.lib.model.definitions import ReferenceGenome
-from v03_pipeline.lib.model.environment import Env
+from v03_pipeline.lib.core.definitions import ReferenceGenome
+from v03_pipeline.lib.core.environment import Env
 
 MITO_MIN_HOM_THRESHOLD = 0.95
 ZERO = 0.0

@@ -8,7 +8,7 @@ from v03_pipeline.lib.misc.family_entries import (
     deglobalize_ids,
     globalize_ids,
 )
-from v03_pipeline.lib.model import DatasetType
+from v03_pipeline.lib.core import DatasetType
 
 
 class FamilyEntriesTest(unittest.TestCase):

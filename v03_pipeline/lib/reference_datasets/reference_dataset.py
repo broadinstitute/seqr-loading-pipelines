@@ -11,7 +11,7 @@ from v03_pipeline.lib.misc.validation import (
     validate_allele_type,
     validate_no_duplicate_variants,
 )
-from v03_pipeline.lib.model import (
+from v03_pipeline.lib.core import (
     AccessControl,
     DatasetType,
     FeatureFlag,

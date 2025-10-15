@@ -12,7 +12,7 @@ from v03_pipeline.api.model import (
 )
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.runs import is_queue_full, new_run_id
-from v03_pipeline.lib.model.environment import Env
+from v03_pipeline.lib.core.environment import Env
 from v03_pipeline.lib.paths import (
     loading_pipeline_queue_dir,
     loading_pipeline_queue_path,

@@ -13,7 +13,7 @@ from v03_pipeline.lib.misc.io import (
     split_multi_hts,
 )
 from v03_pipeline.lib.misc.validation import SeqrValidationError
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome
 
 TEST_IMPUTED_SEX = 'v03_pipeline/var/test/sex_check/test_imputed_sex.tsv'
 TEST_IMPUTED_SEX_UNEXPECTED_VALUE = (

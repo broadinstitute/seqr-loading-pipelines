@@ -2,7 +2,7 @@ import unittest
 from pathlib import Path
 
 from v03_pipeline.api.model import DeleteFamiliesRequest, LoadingPipelineRequest
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 
 CALLSET_PATH = str(Path('v03_pipeline/var/test/callsets/1kg_30variants.vcf').resolve())
 

@@ -18,7 +18,7 @@ from v03_pipeline.lib.misc.clickhouse import (
     load_complete_run,
 )
 from v03_pipeline.lib.misc.retry import retry
-from v03_pipeline.lib.model import DatasetType, FeatureFlag, ReferenceGenome
+from v03_pipeline.lib.core import DatasetType, FeatureFlag, ReferenceGenome
 from v03_pipeline.lib.paths import (
     clickhouse_load_success_file_path,
     metadata_for_run_path,

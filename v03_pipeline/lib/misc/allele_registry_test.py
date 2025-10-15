@@ -12,7 +12,7 @@ from v03_pipeline.lib.misc.allele_registry import (
     register_alleles,
     register_alleles_in_chunks,
 )
-from v03_pipeline.lib.model import ReferenceGenome
+from v03_pipeline.lib.core import ReferenceGenome
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_SERVER_URL = 'http://reg.test.genome.network/alleles?file=vcf&fields=none+@id'

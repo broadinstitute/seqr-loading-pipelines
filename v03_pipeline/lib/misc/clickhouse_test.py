@@ -28,8 +28,8 @@ from v03_pipeline.lib.misc.clickhouse import (
     replace_project_partitions,
     stage_existing_project_partitions,
 )
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome
-from v03_pipeline.lib.model.environment import Env
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome
+from v03_pipeline.lib.core.environment import Env
 from v03_pipeline.lib.paths import (
     new_entries_parquet_path,
     new_transcripts_parquet_path,

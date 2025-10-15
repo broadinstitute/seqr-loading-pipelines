@@ -1,7 +1,7 @@
 import luigi
 import luigi.util
 
-from v03_pipeline.lib.model.feature_flag import FeatureFlag
+from v03_pipeline.lib.core.feature_flag import FeatureFlag
 from v03_pipeline.lib.paths import pipeline_run_success_file_path
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,

@@ -1,6 +1,6 @@
 import unittest
 
-from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.core.definitions import ReferenceGenome
 
 
 class TestReferenceGenomeProperties(unittest.TestCase):

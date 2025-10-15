@@ -7,7 +7,7 @@ from v03_pipeline.lib.annotations.vep import (
     transcript_consequences_sort,
     vep_85_transcript_consequences_select,
 )
-from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.core.definitions import ReferenceGenome
 
 
 def GT(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802

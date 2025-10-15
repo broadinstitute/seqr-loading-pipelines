@@ -2,7 +2,7 @@ import shutil
 
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.paths import relatedness_check_table_path
 from v03_pipeline.lib.tasks.write_relatedness_check_tsv import (
     WriteRelatednessCheckTsvTask,

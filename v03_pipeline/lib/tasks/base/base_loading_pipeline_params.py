@@ -1,6 +1,6 @@
 import luigi
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome
 
 
 class BaseLoadingPipelineParams(luigi.Task):

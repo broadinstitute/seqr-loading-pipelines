@@ -5,7 +5,7 @@ import hail as hl
 import luigi.worker
 
 from v03_pipeline.lib.misc.io import import_vcf
-from v03_pipeline.lib.model import (
+from v03_pipeline.lib.core import (
     DatasetType,
     ReferenceGenome,
     SampleType,

@@ -9,7 +9,7 @@ from pip._internal.operations import freeze as pip_freeze
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.gcp import get_service_account_credentials
-from v03_pipeline.lib.model import DatasetType, Env, FeatureFlag, ReferenceGenome
+from v03_pipeline.lib.core import DatasetType, Env, FeatureFlag, ReferenceGenome
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )

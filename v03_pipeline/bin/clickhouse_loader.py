@@ -12,7 +12,7 @@ from v03_pipeline.lib.misc.clickhouse import (
     load_complete_run,
 )
 from v03_pipeline.lib.misc.runs import get_run_ids
-from v03_pipeline.lib.model import FeatureFlag
+from v03_pipeline.lib.core import FeatureFlag
 from v03_pipeline.lib.paths import (
     clickhouse_load_fail_file_path,
 )

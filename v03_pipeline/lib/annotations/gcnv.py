@@ -5,7 +5,7 @@ import hail as hl
 from v03_pipeline.lib.annotations import expression_helpers, liftover
 from v03_pipeline.lib.annotations.enums import SV_CONSEQUENCE_RANKS, SV_TYPES
 from v03_pipeline.lib.misc.gcnv import parse_gcnv_genes
-from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.core.definitions import ReferenceGenome
 
 SV_CONSEQUENCE_RANKS_LOOKUP = hl.dict(
     hl.enumerate(SV_CONSEQUENCE_RANKS, index_first=False),

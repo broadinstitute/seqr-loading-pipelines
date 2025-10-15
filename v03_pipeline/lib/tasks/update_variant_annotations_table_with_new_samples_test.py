@@ -20,7 +20,7 @@ from v03_pipeline.lib.annotations.enums import (
 )
 from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.misc.validation import validate_expected_contig_frequency
-from v03_pipeline.lib.model import (
+from v03_pipeline.lib.core import (
     DatasetType,
     ReferenceGenome,
     SampleType,

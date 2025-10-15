@@ -8,7 +8,7 @@ from v03_pipeline.lib.misc.family_entries import (
     deduplicate_by_most_non_ref_calls,
     deglobalize_ids,
 )
-from v03_pipeline.lib.model import SampleType
+from v03_pipeline.lib.core import SampleType
 from v03_pipeline.lib.paths import (
     metadata_for_run_path,
     new_entries_parquet_path,

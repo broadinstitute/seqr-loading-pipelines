@@ -9,7 +9,7 @@ from v03_pipeline.lib.misc.sv import (
     deduplicate_merged_sv_concordance_calls,
     overwrite_male_non_par_calls,
 )
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, Sex
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome, Sex
 
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 ANNOTATIONS_HT = hl.Table.parallelize(

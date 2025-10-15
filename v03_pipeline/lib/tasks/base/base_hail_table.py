@@ -3,7 +3,7 @@ import luigi
 
 from v03_pipeline.lib.annotations.liftover import remove_liftover
 from v03_pipeline.lib.logger import get_logger
-from v03_pipeline.lib.model import Env
+from v03_pipeline.lib.core import Env
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )

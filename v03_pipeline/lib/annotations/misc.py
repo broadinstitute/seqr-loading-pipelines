@@ -13,8 +13,8 @@ from v03_pipeline.lib.annotations.enums import (
     SV_TYPES,
     TRANSCRIPT_CONSEQUENCE_TERMS,
 )
-from v03_pipeline.lib.model import DatasetType
-from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.core import DatasetType
+from v03_pipeline.lib.core.definitions import ReferenceGenome
 from v03_pipeline.lib.paths import valid_reference_dataset_path
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 

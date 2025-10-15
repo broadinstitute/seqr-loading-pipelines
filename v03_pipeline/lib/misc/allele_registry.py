@@ -11,7 +11,7 @@ from requests import HTTPError
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.requests import requests_retry_session
-from v03_pipeline.lib.model import Env, ReferenceGenome
+from v03_pipeline.lib.core import Env, ReferenceGenome
 
 MAX_VARIANTS_PER_REQUEST = 1000000
 ALLELE_REGISTRY_URL = 'https://reg.genome.network/alleles?file=vcf&fields=none+@id+genomicAlleles+externalRecords.{}.id'

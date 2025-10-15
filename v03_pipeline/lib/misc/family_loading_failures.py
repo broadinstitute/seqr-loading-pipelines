@@ -4,7 +4,7 @@ import hail as hl
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.pedigree import Family, Relation, Sample
-from v03_pipeline.lib.model import Sex
+from v03_pipeline.lib.core import Sex
 
 logger = get_logger(__name__)
 
