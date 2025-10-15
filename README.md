@@ -45,7 +45,7 @@ Static configuration and test files.
 ## ⚙️ Setup for Local Development
 The production pipeline runs with python `3.11`.
 
-### Clone the repo and install python requirements.
+### Clone the repo and install python requirements
 ```bash
 git clone https://github.com/broadinstitute/seqr-loading-pipelines.git
 cd seqr-loading-pipelines
