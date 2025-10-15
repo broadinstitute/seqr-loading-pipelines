@@ -2,13 +2,13 @@ import unittest
 
 import hail as hl
 
+from v03_pipeline.lib.core import DatasetType
 from v03_pipeline.lib.misc.family_entries import (
     compute_callset_family_entries_ht,
     deduplicate_by_most_non_ref_calls,
     deglobalize_ids,
     globalize_ids,
 )
-from v03_pipeline.lib.core import DatasetType
 
 
 class FamilyEntriesTest(unittest.TestCase):

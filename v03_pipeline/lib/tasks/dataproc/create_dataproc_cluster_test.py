@@ -6,8 +6,8 @@ import google.api_core.exceptions
 import google.cloud.dataproc_v1.types.clusters
 import luigi
 
-from v03_pipeline.lib.misc.gcp import SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE
 from v03_pipeline.lib.core import DatasetType, ReferenceGenome
+from v03_pipeline.lib.misc.gcp import SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE
 from v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster import (
     CreateDataprocClusterTask,
 )

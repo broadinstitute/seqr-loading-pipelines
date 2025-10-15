@@ -2,11 +2,11 @@ import hail as hl
 import luigi
 import luigi.util
 
-from v03_pipeline.lib.misc.allele_registry import register_alleles_in_chunks
-from v03_pipeline.lib.misc.io import checkpoint
 from v03_pipeline.lib.core import (
     Env,
 )
+from v03_pipeline.lib.misc.allele_registry import register_alleles_in_chunks
+from v03_pipeline.lib.misc.io import checkpoint
 from v03_pipeline.lib.paths import (
     new_variants_table_path,
 )

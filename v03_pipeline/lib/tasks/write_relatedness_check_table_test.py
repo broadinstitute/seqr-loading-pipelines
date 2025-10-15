@@ -4,12 +4,12 @@ from unittest.mock import patch
 import hail as hl
 import luigi.worker
 
-from v03_pipeline.lib.misc.io import import_vcf
 from v03_pipeline.lib.core import (
     DatasetType,
     ReferenceGenome,
     SampleType,
 )
+from v03_pipeline.lib.misc.io import import_vcf
 from v03_pipeline.lib.paths import (
     imported_callset_path,
     relatedness_check_table_path,

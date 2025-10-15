@@ -6,13 +6,13 @@ import time
 import hailtop.fs as hfs
 
 from v03_pipeline.api.request_handlers import fetch_run_metadata, write_success_file
+from v03_pipeline.lib.core import FeatureFlag
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.clickhouse import (
     drop_staging_db,
     load_complete_run,
 )
 from v03_pipeline.lib.misc.runs import get_run_ids
-from v03_pipeline.lib.core import FeatureFlag
 from v03_pipeline.lib.paths import (
     clickhouse_load_fail_file_path,
 )

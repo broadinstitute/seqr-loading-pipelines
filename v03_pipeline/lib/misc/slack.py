@@ -3,8 +3,8 @@ import json
 from slacker import Slacker
 
 from v03_pipeline.api.model import PipelineRunnerRequest
-from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.core import Env, FeatureFlag
+from v03_pipeline.lib.logger import get_logger
 
 DATAPROC_URL = 'https://console.cloud.google.com/dataproc/jobs?project={gcloud_project}'
 SLACK_FAILURE_MESSAGE_PREFIX = ':failed: Pipeline Runner Request Failed :failed:'

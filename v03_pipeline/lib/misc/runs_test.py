@@ -1,7 +1,7 @@
 import os
 
-from v03_pipeline.lib.misc.runs import get_run_ids
 from v03_pipeline.lib.core import DatasetType, ReferenceGenome
+from v03_pipeline.lib.misc.runs import get_run_ids
 from v03_pipeline.lib.paths import (
     clickhouse_load_fail_file_path,
     clickhouse_load_success_file_path,

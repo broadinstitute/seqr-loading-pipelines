@@ -7,15 +7,15 @@ from typing import Union
 import hail as hl
 
 from v03_pipeline.lib.annotations import snv_indel, sv
-from v03_pipeline.lib.misc.validation import (
-    validate_allele_type,
-    validate_no_duplicate_variants,
-)
 from v03_pipeline.lib.core import (
     AccessControl,
     DatasetType,
     FeatureFlag,
     ReferenceGenome,
+)
+from v03_pipeline.lib.misc.validation import (
+    validate_allele_type,
+    validate_no_duplicate_variants,
 )
 from v03_pipeline.lib.reference_datasets import dbnsfp
 from v03_pipeline.lib.reference_datasets.misc import (
