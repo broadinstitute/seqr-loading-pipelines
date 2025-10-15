@@ -61,12 +61,12 @@ curl https://clickhouse.com/ | sh
 
 ### [Run the tests](https://github.com/broadinstitute/seqr-loading-pipelines/blob/main/.github/workflows/unit-tests.yml#L66-L73)
 
-### [Run a specific test]
+### Run a specific test
 ```bash
 nosetests v03_pipeline/lib/misc/math_test.py
 ```
 
-### [Run formatting and linting]
+### Run formatting and linting
 ```bash
 ruff format .
 ruff check .
