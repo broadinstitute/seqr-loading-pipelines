@@ -3,7 +3,7 @@ import os
 
 import hailtop.fs as hfs
 
-from v03_pipeline.lib.model import (
+from v03_pipeline.lib.core import (
     AccessControl,
     DatasetType,
     Env,

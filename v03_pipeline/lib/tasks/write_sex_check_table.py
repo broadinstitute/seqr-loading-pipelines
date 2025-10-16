@@ -2,9 +2,9 @@ import hail as hl
 import hailtop.fs as hfs
 import luigi
 
+from v03_pipeline.lib.core.feature_flag import FeatureFlag
 from v03_pipeline.lib.methods.sex_check import compute_sex_check_ht
 from v03_pipeline.lib.misc.io import import_imputed_sex
-from v03_pipeline.lib.model.feature_flag import FeatureFlag
 from v03_pipeline.lib.paths import (
     imported_callset_path,
     sex_check_table_path,

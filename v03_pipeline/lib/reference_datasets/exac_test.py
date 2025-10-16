@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import hail as hl
 
-from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.core.definitions import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 
 EXAC_PATH = 'v03_pipeline/var/test/reference_datasets/raw/exac.vcf'

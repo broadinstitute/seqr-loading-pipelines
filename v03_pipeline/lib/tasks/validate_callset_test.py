@@ -3,7 +3,7 @@ import shutil
 
 import luigi.worker
 
-from v03_pipeline.lib.model import (
+from v03_pipeline.lib.core import (
     DatasetType,
     ReferenceGenome,
     SampleType,

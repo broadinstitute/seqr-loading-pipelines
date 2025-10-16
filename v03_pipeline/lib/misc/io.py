@@ -9,10 +9,10 @@ from string import Template
 import hail as hl
 import hailtop.fs as hfs
 
+from v03_pipeline.lib.core import DatasetType, Env, ReferenceGenome, Sex
 from v03_pipeline.lib.misc.gcnv import parse_gcnv_genes
 from v03_pipeline.lib.misc.nested_field import parse_nested_field
 from v03_pipeline.lib.misc.validation import SeqrValidationError
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, Sex
 
 BIALLELIC = 2
 B_PER_MB = 1 << 20  # 1024 * 1024

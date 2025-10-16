@@ -9,7 +9,7 @@ from v03_pipeline.lib.annotations.enums import (
     SV_TYPE_DETAILS,
     SV_TYPES,
 )
-from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.core.definitions import ReferenceGenome
 
 CONSEQ_PREDICTED_PREFIX = 'info.PREDICTED_'
 CONSEQ_PREDICTED_GENE_COLS = {

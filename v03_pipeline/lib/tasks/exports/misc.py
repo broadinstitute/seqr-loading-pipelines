@@ -15,8 +15,8 @@ from v03_pipeline.lib.annotations.enums import (
     SV_TYPES,
     TRANSCRIPT_CONSEQUENCE_TERMS,
 )
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome
 from v03_pipeline.lib.misc.nested_field import parse_nested_field
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 
 

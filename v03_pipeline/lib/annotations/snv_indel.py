@@ -13,7 +13,7 @@ from v03_pipeline.lib.annotations.vep import (
     transcript_consequences_sort,
     vep_110_transcript_consequences_select,
 )
-from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.core.definitions import ReferenceGenome
 
 MOTIF_CONSEQUENCE_TERMS_LOOKUP = hl.dict(
     hl.enumerate(MOTIF_CONSEQUENCE_TERMS, index_first=False),

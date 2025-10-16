@@ -6,7 +6,7 @@ import google.api_core.exceptions
 import google.cloud.dataproc_v1.types.jobs
 import luigi
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.dataproc.run_pipeline_on_dataproc import (
     RunPipelineOnDataprocTask,
 )

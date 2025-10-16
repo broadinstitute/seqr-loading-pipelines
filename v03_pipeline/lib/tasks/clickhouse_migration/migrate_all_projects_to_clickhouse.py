@@ -2,7 +2,7 @@ import hailtop.fs as hfs
 import luigi
 import luigi.util
 
-from v03_pipeline.lib.model import SampleType
+from v03_pipeline.lib.core import SampleType
 from v03_pipeline.lib.paths import (
     project_table_path,
 )

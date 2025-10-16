@@ -4,9 +4,9 @@ from collections import defaultdict
 
 import hailtop.fs as hfs
 
+from v03_pipeline.lib.core.dataset_type import DatasetType
+from v03_pipeline.lib.core.environment import Env
 from v03_pipeline.lib.misc.retry import retry
-from v03_pipeline.lib.model.dataset_type import DatasetType
-from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import (
     clickhouse_load_fail_file_path,
     clickhouse_load_success_file_path,

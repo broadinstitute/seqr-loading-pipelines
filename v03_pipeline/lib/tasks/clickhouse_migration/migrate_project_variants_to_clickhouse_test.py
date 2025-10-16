@@ -3,7 +3,7 @@ import hailtop.fs as hfs
 import luigi.worker
 import pandas as pd
 
-from v03_pipeline.lib.model import (
+from v03_pipeline.lib.core import (
     DatasetType,
     ReferenceGenome,
     SampleType,

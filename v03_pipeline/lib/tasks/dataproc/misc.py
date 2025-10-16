@@ -2,8 +2,8 @@ import re
 
 import luigi
 
-from v03_pipeline.lib.model import Env, ReferenceGenome
-from v03_pipeline.lib.model.constants import (
+from v03_pipeline.lib.core import Env, ReferenceGenome
+from v03_pipeline.lib.core.constants import (
     MIGRATION_RUN_ID,
 )
 

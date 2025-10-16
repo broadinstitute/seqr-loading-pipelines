@@ -2,7 +2,7 @@ import hail as hl
 import luigi
 import luigi.util
 
-from v03_pipeline.lib.model import SampleType
+from v03_pipeline.lib.core import SampleType
 from v03_pipeline.lib.paths import (
     new_variants_table_path,
     project_table_path,

@@ -4,7 +4,7 @@ from aiohttp import web_exceptions
 from aiohttp.test_utils import AioHTTPTestCase
 
 from v03_pipeline.api.app import init_web_app
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 CALLSET_PATH = str(Path('v03_pipeline/var/test/callsets/1kg_30variants.vcf').resolve())

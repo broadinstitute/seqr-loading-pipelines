@@ -2,7 +2,7 @@ from collections.abc import Callable
 
 import hail as hl
 
-from v03_pipeline.lib.model import ReferenceGenome
+from v03_pipeline.lib.core import ReferenceGenome
 
 
 def global_idx_field(reference_genome: ReferenceGenome) -> str:

@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import Mock, patch
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.dataproc.misc import to_kebab_str_args
 from v03_pipeline.lib.tasks.dataproc.run_pipeline_on_dataproc import (
     RunPipelineOnDataprocTask,

@@ -4,7 +4,7 @@ import tempfile
 import hail as hl
 import requests
 
-from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.core.definitions import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.misc import copy_to_cloud_storage
 
 RENAME = {

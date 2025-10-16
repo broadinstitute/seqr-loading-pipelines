@@ -1,7 +1,7 @@
 import hailtop.fs as hfs
 from pydantic import AliasChoices, BaseModel, Field, field_validator
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 
 VALID_FILE_TYPES = ['vcf', 'vcf.gz', 'vcf.bgz', 'mt']
 

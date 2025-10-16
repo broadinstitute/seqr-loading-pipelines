@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 import hail as hl
 
 from v03_pipeline.lib.annotations import shared, snv_indel
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome
 from v03_pipeline.lib.vep import run_vep
 from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VEP_DATA
 

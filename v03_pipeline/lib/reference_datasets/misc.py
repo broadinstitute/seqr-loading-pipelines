@@ -9,10 +9,10 @@ import hail as hl
 import hailtop.fs as hfs
 import requests
 
+from v03_pipeline.lib.core.dataset_type import DatasetType
+from v03_pipeline.lib.core.definitions import ReferenceGenome
+from v03_pipeline.lib.core.environment import Env
 from v03_pipeline.lib.misc.io import split_multi_hts
-from v03_pipeline.lib.model.dataset_type import DatasetType
-from v03_pipeline.lib.model.definitions import ReferenceGenome
-from v03_pipeline.lib.model.environment import Env
 
 BIALLELIC = 2
 
