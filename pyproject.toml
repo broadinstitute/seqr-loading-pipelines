@@ -8,7 +8,6 @@ include-package-data = true
 
 [tool.setuptools.package-data]
 "v03_pipeline.var" = [
-    "db_id_to_gene_id.csv.gz",
     "liftover/*.over.chain.gz"
 ]
 
