@@ -3,7 +3,7 @@
 [![Code Build](https://github.com/broadinstitute/seqr-loading-pipelines/actions/workflows/unit-tests.yml/badge.svg?branch=main)](https://github.com/broadinstitute/seqr-loading-pipelines/actions/workflows/unit-tests.yml)
 [![Docker Build](https://github.com/broadinstitute/seqr-loading-pipelines/actions/workflows/prod-release.yml/badge.svg?branch=main)](https://github.com/broadinstitute/seqr-loading-pipelines/actions/workflows/prod-release.yml)
 
-*This repository contains pipelines and infrastructure for loading genomic data from VCF -> ClickHouse to support queries by _seqr_ application*
+*This repository contains pipelines and infrastructure for loading genomic data from VCF -> ClickHouse to support queries by the _seqr_ application*
 
 ---
 
