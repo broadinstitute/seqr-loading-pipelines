@@ -83,4 +83,5 @@ of the SNV_INDEL/MITO/SV/GCNV callset schemas may be found in the tests.
 - The Clickhouse Loader follows the pattern established in the [Making a Large Data Load Resilient](https://clickhouse.com/blog/supercharge-your-clickhouse-data-loads-part3) blog 
 	- Rows are first loaded into a `staging` database that copies the production `TABLE`s and `MATERIALIZED VIEWS`.
 	- After all `entries` are inserted, we validate the inserted row count and finalize the per-project allele frequency aggregation.
-	- Partitions are atomically moved from the `staging` environment to production. 
+	- Partitions are atomically moved from the `staging` environment to production.
+    - Failures will write a _CLICKHOUSE_LOAD_FAIL file to the run directory. 
