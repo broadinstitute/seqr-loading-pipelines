@@ -20,7 +20,7 @@ from v03_pipeline.lib.paths import (
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget
-from v03_pipeline.lib.tasks.write_pipeline_errors_for_run import (
+from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
     with_persisted_validation_errors,
 )
 

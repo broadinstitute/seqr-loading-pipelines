@@ -22,7 +22,7 @@ from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset import (
     UpdatedReferenceDatasetTask,
 )
 from v03_pipeline.lib.tasks.write_imported_callset import WriteImportedCallsetTask
-from v03_pipeline.lib.tasks.write_pipeline_errors_for_run import (
+from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
     WriteValidationErrorsForRunTask,
 )
 

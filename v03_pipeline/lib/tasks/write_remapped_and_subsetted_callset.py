@@ -29,7 +29,7 @@ from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunPa
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, RawFileTask
 from v03_pipeline.lib.tasks.validate_callset import ValidateCallsetTask
-from v03_pipeline.lib.tasks.write_pipeline_errors_for_run import (
+from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
     with_persisted_validation_errors,
 )
 from v03_pipeline.lib.tasks.write_relatedness_check_tsv import (

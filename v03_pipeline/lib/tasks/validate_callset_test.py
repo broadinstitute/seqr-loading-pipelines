@@ -15,7 +15,7 @@ from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDatas
 from v03_pipeline.lib.tasks.validate_callset import (
     ValidateCallsetTask,
 )
-from v03_pipeline.lib.tasks.write_pipeline_errors_for_run import (
+from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
     WriteValidationErrorsForRunTask,
 )
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
