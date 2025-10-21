@@ -1,4 +1,5 @@
 import json
+import traceback
 from collections.abc import Callable
 from typing import Any
 
@@ -20,8 +21,10 @@ from v03_pipeline.lib.misc.clickhouse import (
 )
 from v03_pipeline.lib.misc.retry import retry
 from v03_pipeline.lib.paths import (
+    clickhouse_load_fail_file_path,
     clickhouse_load_success_file_path,
     metadata_for_run_path,
+    pipeline_errors_for_run_path,
 )
 from v03_pipeline.lib.tasks.write_success_file import WriteSuccessFileTask
 
@@ -68,6 +71,56 @@ def write_success_file(
     logger.info(msg)
 
 
+def clickhouse_load_run(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+):
+    try:
+        project_guids, family_guids = fetch_run_metadata(
+            reference_genome,
+            dataset_type,
+            run_id,
+        )
+        load_complete_run(
+            reference_genome,
+            dataset_type,
+            run_id,
+            project_guids,
+            family_guids,
+        )
+        write_success_file(reference_genome, dataset_type, run_id)
+    except Exception as e:
+        logger.exception('Unhandled Exception')
+        with hfs.open(
+            clickhouse_load_fail_file_path(
+                reference_genome,
+                dataset_type,
+                run_id,
+            ),
+            'w',
+        ) as f:
+            f.write('')
+        pipeline_errors_json = {
+            'project_guids': project_guids,
+            'error_messages': ['Failed during ClickHouse Load'],
+            'traceback': {
+                'error': str(e),
+                'type': type(e).__name__,
+                'traceback': traceback.format_exc(),
+            },
+        }
+        with hfs.open(
+            pipeline_errors_for_run_path(
+                reference_genome,
+                dataset_type,
+                run_id,
+            ),
+            'w',
+        ) as f:
+            json.dump(pipeline_errors_json, f)
+
+
 def run_loading_pipeline(
     lpr: LoadingPipelineRequest,
     run_id: str,
@@ -94,19 +147,11 @@ def run_loading_pipeline(
     else:
         raise RuntimeError(luigi_task_result.status.value[1])
     if FeatureFlag.CLICKHOUSE_LOADER_DISABLED:
-        project_guids, family_guids = fetch_run_metadata(
+        clickhouse_load_run(
             lpr.reference_genome,
             lpr.dataset_type,
             run_id,
         )
-        load_complete_run(
-            lpr.reference_genome,
-            lpr.dataset_type,
-            run_id,
-            project_guids,
-            family_guids,
-        )
-        write_success_file(lpr.reference_genome, lpr.dataset_type, run_id)
 
 
 def run_delete_families(dpr: DeleteFamiliesRequest, run_id: str, *_: Any):
