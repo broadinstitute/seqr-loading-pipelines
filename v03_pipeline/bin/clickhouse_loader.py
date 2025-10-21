@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
+import json
 import signal
 import sys
 import time
+import traceback
 
 import hailtop.fs as hfs
 
@@ -15,6 +17,7 @@ from v03_pipeline.lib.misc.clickhouse import (
 from v03_pipeline.lib.misc.runs import get_run_ids
 from v03_pipeline.lib.paths import (
     clickhouse_load_fail_file_path,
+    pipeline_errors_for_run_path,
 )
 
 logger = get_logger(__name__)
@@ -32,7 +35,12 @@ signal.signal(signal.SIGTERM, signal_handler)
 
 
 def main():
-    reference_genome, dataset_type, run_id = None, None, None
+    reference_genome, dataset_type, run_id, project_guids = (
+        None,
+        None,
+        None,
+        None,
+    )
     while True:
         if FeatureFlag.CLICKHOUSE_LOADER_DISABLED:
             logger.info('Waiting for work...')
@@ -70,7 +78,7 @@ def main():
                         family_guids,
                     )
                     write_success_file(reference_genome, dataset_type, run_id)
-        except Exception:
+        except Exception as e:
             logger.exception('Unhandled Exception')
             if reference_genome and dataset_type and run_id:
                 with hfs.open(
@@ -82,6 +90,24 @@ def main():
                     'w',
                 ) as f:
                     f.write('')
+                pipeline_errors_json = {
+                    'project_guids': project_guids,
+                    'error_messages': ['Failed during ClickHouse Load'],
+                    'traceback': {
+                        'error': str(e),
+                        'type': type(e).__name__,
+                        'traceback': traceback.format_exc(),
+                    },
+                }
+                with hfs.open(
+                    pipeline_errors_for_run_path(
+                        reference_genome,
+                        dataset_type,
+                        run_id,
+                    ),
+                    'w',
+                ) as f:
+                    json.dump(pipeline_errors_json, f)
         finally:
             reference_genome, dataset_type, run_id = None, None, None
             logger.info('Waiting for work...')

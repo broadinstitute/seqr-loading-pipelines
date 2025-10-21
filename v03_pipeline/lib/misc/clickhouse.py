@@ -245,7 +245,6 @@ def logged_query(query, params=None, timeout: int | None = None):
     return client.execute(query, params)
 
 
-@retry(delay=1)
 def drop_staging_db():
     logged_query(f'DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};')
 
@@ -430,7 +429,7 @@ def insert_new_entries(
     )
 
 
-@retry(tries=5)
+@retry(tries=2)
 def optimize_entries(
     table_name_builder: TableNameBuilder,
 ) -> None:
@@ -477,7 +476,7 @@ def optimize_entries(
             safely_optimized = True
 
 
-@retry(delay=5)
+@retry(tries=2)
 def refresh_materialized_views(
     table_name_builder,
     materialized_views: list[ClickHouseMaterializedView],
@@ -493,11 +492,10 @@ def refresh_materialized_views(
             f"""
             SYSTEM WAIT VIEW {table_name_builder.staging_dst_table(materialized_view) if staging else table_name_builder.dst_table(materialized_view)}
             """,
-            timeout=600,
+            timeout=900,
         )
 
 
-@retry(delay=5)
 def validate_family_guid_counts(
     table_name_builder: TableNameBuilder,
     project_guids: list[str],
@@ -537,7 +535,6 @@ def validate_family_guid_counts(
         raise ValueError(msg)
 
 
-@retry(delay=5)
 def reload_dictionaries(
     table_name_builder: TableNameBuilder,
     dictionaries: list[ClickHouseDictionary],
@@ -550,7 +547,6 @@ def reload_dictionaries(
         )
 
 
-@retry(delay=5)  # REPLACE partition is a copy, so this is idempotent.
 def replace_project_partitions(
     table_name_builder: TableNameBuilder,
     clickhouse_tables: list[ClickHouseTable],
@@ -586,7 +582,6 @@ def exchange_tables(
         )
 
 
-@retry()
 def direct_insert_annotations(
     table_name_builder: TableNameBuilder,
     **_,
@@ -635,7 +630,6 @@ def direct_insert_annotations(
     drop_staging_db()
 
 
-@retry()
 def direct_insert_all_keys(
     clickhouse_table: ClickHouseTable,
     table_name_builder: TableNameBuilder,
@@ -685,7 +679,6 @@ def finalize_refresh_flow(
     )
 
 
-@retry()
 def atomic_insert_entries(
     table_name_builder: TableNameBuilder,
     project_guids: list[str],
@@ -729,6 +722,7 @@ def atomic_insert_entries(
     finalize_refresh_flow(table_name_builder, project_guids)
 
 
+@retry()
 def load_complete_run(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
@@ -757,6 +751,7 @@ def load_complete_run(
     )
 
 
+@retry()
 def delete_family_guids(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
@@ -814,6 +809,7 @@ def delete_family_guids(
     finalize_refresh_flow(table_name_builder, project_guids)
 
 
+@retry()
 def rebuild_gt_stats(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,

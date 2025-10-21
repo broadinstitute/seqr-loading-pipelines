@@ -22,7 +22,7 @@ from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset import (
     UpdatedReferenceDatasetTask,
 )
 from v03_pipeline.lib.tasks.write_imported_callset import WriteImportedCallsetTask
-from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
+from v03_pipeline.lib.tasks.write_pipeline_errors_for_run import (
     WriteValidationErrorsForRunTask,
 )
 
@@ -115,16 +115,16 @@ class ValidateCallsetTask(BaseUpdateTask):
             except SeqrValidationError as e:
                 validation_exceptions.append(e)
         if validation_exceptions:
-            write_validation_errors_for_run_task = self.clone(
+            write_pipeline_errors_for_run_task = self.clone(
                 WriteValidationErrorsForRunTask,
                 error_messages=[e.msg for e in validation_exceptions],
                 error_body={
                     k: v for e in validation_exceptions for k, v in e.error_body.items()
                 },
             )
-            write_validation_errors_for_run_task.run()
+            write_pipeline_errors_for_run_task.run()
             raise SeqrValidationError(
-                write_validation_errors_for_run_task.to_single_error_message(),
+                write_pipeline_errors_for_run_task.to_single_error_message(),
             )
         return mt.select_globals(
             callset_path=self.callset_path,

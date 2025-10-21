@@ -12,13 +12,13 @@ from v03_pipeline.lib.paths import (
     imported_callset_path,
     metadata_for_run_path,
     new_variants_table_path,
+    pipeline_errors_for_run_path,
     project_pedigree_path,
     project_table_path,
     relatedness_check_table_path,
     remapped_and_subsetted_callset_path,
     sex_check_table_path,
     tdr_metrics_path,
-    validation_errors_for_run_path,
     variant_annotations_table_path,
 )
 
@@ -70,14 +70,14 @@ class TestPaths(unittest.TestCase):
             '/var/seqr/seqr-loading-temp/GRCh38/SNV_INDEL/relatedness_check/f92b8ab6b5b8c41fa20d7d49a5626b96dcd2ba79fa6f61eab7ffb80d550d951c.ht',
         )
 
-    def test_validation_errors_for_run_path(self) -> None:
+    def test_pipeline_errors_for_run_path(self) -> None:
         self.assertEqual(
-            validation_errors_for_run_path(
+            pipeline_errors_for_run_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 'manual__2023-06-26T18:30:09.349671+00:00',
             ),
-            '/var/seqr/pipeline-data/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/validation_errors.json',
+            '/var/seqr/pipeline-data/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/errors.json',
         )
 
     def test_metadata_for_run_path(self) -> None:

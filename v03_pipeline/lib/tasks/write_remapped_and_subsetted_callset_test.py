@@ -11,11 +11,11 @@ from v03_pipeline.lib.paths import (
     relatedness_check_table_path,
     sex_check_table_path,
 )
+from v03_pipeline.lib.tasks.write_pipeline_errors_for_run import (
+    WriteValidationErrorsForRunTask,
+)
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
-)
-from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
-    WriteValidationErrorsForRunTask,
 )
 from v03_pipeline.lib.test.misc import copy_project_pedigree_to_mocked_dir
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase

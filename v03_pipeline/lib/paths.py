@@ -124,7 +124,7 @@ def imported_callset_path(
     )
 
 
-def validation_errors_for_run_path(
+def pipeline_errors_for_run_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     run_id: str,
@@ -135,7 +135,7 @@ def validation_errors_for_run_path(
             dataset_type,
         ),
         run_id,
-        'validation_errors.json',
+        'errors.json',
     )
 
 
