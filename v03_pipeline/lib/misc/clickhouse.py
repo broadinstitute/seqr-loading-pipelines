@@ -792,6 +792,10 @@ def rebuild_gt_stats(
         table_name_builder,
         ClickHouseMaterializedView.ENTRIES_TO_PROJECT_GT_STATS_MV,
     )[1]
+    select_statement = select_statement.replace(
+        table_name_builder.dst_prefix,
+        table_name_builder.staging_dst_prefix,
+    )
     logged_query(
         f"""
         INSERT INTO {table_name_builder.staging_dst_table(ClickHouseTable.PROJECT_GT_STATS)}
