@@ -715,6 +715,7 @@ def delete_family_guids(
         logger.info(msg)
         return
     project_guids = [project_guid]
+    drop_staging_db()
     create_staging_tables(
         table_name_builder,
         ClickHouseTable.for_dataset_type_atomic_entries_update(dataset_type),
@@ -761,6 +762,7 @@ def rebuild_gt_stats(
         dataset_type,
         run_id,
     )
+    drop_staging_db()
     create_staging_tables(
         table_name_builder,
         ClickHouseTable.for_dataset_type_atomic_entries_update(dataset_type),
