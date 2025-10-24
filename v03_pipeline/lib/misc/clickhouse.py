@@ -361,6 +361,7 @@ def insert_new_entries(
         """,
     )
 
+
 @retry(tries=2)
 def optimize_entries(
     table_name_builder: TableNameBuilder,
@@ -406,6 +407,7 @@ def optimize_entries(
             time.sleep(Env.CLICKHOUSE_OPTIMIZE_TABLE_WAIT_S)
         else:
             safely_optimized = True
+
 
 @retry(tries=2)
 def refresh_materialized_views(
@@ -464,6 +466,7 @@ def validate_family_guid_counts(
     if src_family_counts != dst_family_counts:
         msg = 'Loaded Row counts are different than expected.'
         raise ValueError(msg)
+
 
 @retry(tries=2)
 def reload_dictionaries(
@@ -647,6 +650,7 @@ def atomic_insert_entries(
     )
     finalize_refresh_flow(table_name_builder, project_guids)
 
+
 @retry()
 def load_complete_run(
     reference_genome: ReferenceGenome,
@@ -674,6 +678,7 @@ def load_complete_run(
             dataset_type,
         ),
     )
+
 
 @retry()
 def delete_family_guids(
@@ -732,6 +737,7 @@ def delete_family_guids(
         table_name_builder,
     )
     finalize_refresh_flow(table_name_builder, project_guids)
+
 
 @retry()
 def rebuild_gt_stats(
