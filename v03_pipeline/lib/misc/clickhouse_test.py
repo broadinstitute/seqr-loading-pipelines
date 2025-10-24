@@ -23,6 +23,7 @@ from v03_pipeline.lib.misc.clickhouse import (
     insert_new_entries,
     load_complete_run,
     logged_query,
+    normalize_partition,
     optimize_entries,
     rebuild_gt_stats,
     refresh_materialized_views,
@@ -426,6 +427,13 @@ class ClickhouseTest(MockedDatarootTestCase):
         client = get_clickhouse_client()
         result = client.execute('SELECT 1')
         self.assertEqual(result[0][0], 1)
+
+    def test_normalize_partition(self):
+        self.assertEqual(normalize_partition('project_d'), ('project_d',))
+        self.assertEqual(
+            normalize_partition("('project_d', 0)"),
+            ('project_d', 0),
+        )
 
     def test_table_name_builder(self):
         table_name_builder = TableNameBuilder(
@@ -1152,3 +1160,56 @@ class ClickhouseTest(MockedDatarootTestCase):
             """,
         )
         self.assertCountEqual(gt_stats, [(1, 0)])
+
+    def test_repartitioned_entries_table(self):
+        client = get_clickhouse_client()
+        client.execute(
+            f"""
+            REPLACE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries` (
+                `key` UInt32,
+                `project_guid` LowCardinality(String),
+                `family_guid` String,
+                `xpos` UInt64 CODEC(Delta(8), ZSTD(1)),
+                `sample_type` Enum8('WES' = 0, 'WGS' = 1),
+                `is_annotated_in_any_gene` Boolean,
+                `geneId_ids` Array(UInt32),
+                `calls` Array(
+                    Tuple(
+                        sampleId String,
+                        gt Nullable(Enum8('REF' = 0, 'HET' = 1, 'HOM' = 2)),
+                    )
+                ),
+                `sign` Int8,
+                `n_partitions` UInt8 MATERIALIZED 2,
+                `partition_id` UInt8 MATERIALIZED farmHash64(family_guid) % n_partitions,
+                PROJECTION xpos_projection
+                (
+                    SELECT *
+                    ORDER BY is_annotated_in_any_gene, xpos
+                )
+            )
+            ENGINE = CollapsingMergeTree(sign)
+            PARTITION BY (project_guid, partition_id)
+            ORDER BY (project_guid, family_guid, key)
+            SETTINGS deduplicate_merge_projection_mode = 'rebuild';
+            """,
+        )
+        load_complete_run(
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            TEST_RUN_ID,
+            ['project_d'],
+            ['family_d1', 'family_d2', 'family_d3'],
+        )
+        project_gt_stats = client.execute(
+            f"""
+            SELECT project_guid, sum(het_samples), sum(hom_samples)
+            FROM
+            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/project_gt_stats`
+            GROUP BY project_guid
+            """,
+        )
+        self.assertCountEqual(
+            project_gt_stats,
+            [('project_d', 1, 1)],
+        )
