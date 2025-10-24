@@ -153,15 +153,8 @@ class ClickHouseDictionary(StrEnum):
 
 
 class ClickHouseMaterializedView(StrEnum):
-    CLINVAR_ALL_VARIANTS_TO_CLINVAR_MV = 'clinvar_all_variants_to_clinvar_mv'
     ENTRIES_TO_PROJECT_GT_STATS_MV = 'entries_to_project_gt_stats_mv'
     PROJECT_GT_STATS_TO_GT_STATS_MV = 'project_gt_stats_to_gt_stats_mv'
-
-    @classmethod
-    def for_dataset_type_refreshable(cls, dataset_type: DatasetType):
-        if dataset_type in {DatasetType.SV, DatasetType.GCNV}:
-            return []
-        return [ClickHouseMaterializedView.CLINVAR_ALL_VARIANTS_TO_CLINVAR_MV]
 
     @classmethod
     def for_dataset_type_atomic_entries_update(
@@ -230,6 +223,38 @@ class TableNameBuilder:
         if path.startswith('gs://'):
             return f"gcs({GCS_NAMED_COLLECTION}, url='{path.replace('gs://', GOOGLE_XML_API_PATH)}')"
         return f"file('{path}', 'Parquet')"
+
+
+class ClickhouseReferenceData(StrEnum):
+    CLINVAR = 'clinvar'
+
+    @classmethod
+    def for_dataset_type(cls, dataset_type: DatasetType):
+        if dataset_type in {DatasetType.SV, DatasetType.GCNV}:
+            return []
+        return [ClickhouseReferenceData.CLINVAR]
+
+    def search_is_join_table(self):
+        return self == ClickhouseReferenceData.CLINVAR
+
+    def all_variants_path(self, table_name_builder: TableNameBuilder) -> str:
+        return (
+            f'{table_name_builder.dst_prefix}/reference_data/{self.name}/all_variants'
+        )
+
+    def seqr_variants_path(self, table_name_builder: TableNameBuilder) -> str:
+        return (
+            f'{table_name_builder.dst_prefix}/reference_data/{self.name}/seqr_variants'
+        )
+
+    def search_path(self, table_name_builder: TableNameBuilder) -> str:
+        return f'{table_name_builder.dst_prefix}/reference_data/{self.name}'
+
+    def seqr_variants_to_search_mv_path(
+        self,
+        table_name_builder: TableNameBuilder,
+    ) -> str:
+        return f'{table_name_builder.dst_prefix}/reference_data/{self.name}/seqr_variants_to_search_mv'
 
 
 def logged_query(query, params=None, timeout: int | None = None):
@@ -672,12 +697,39 @@ def load_complete_run(
             project_guids=project_guids,
             family_guids=family_guids,
         )
-    refresh_materialized_views(
-        table_name_builder,
-        ClickHouseMaterializedView.for_dataset_type_refreshable(
-            dataset_type,
-        ),
-    )
+    for clickhouse_reference_data in ClickhouseReferenceData.for_dataset_type(
+        dataset_type,
+    ):
+        logged_query(
+            f"""
+            INSERT INTO {clickhouse_reference_data.seqr_variants_path(table_name_builder)}
+            SELECT
+                DISTINCT ON (key)
+                dst.key as key,
+                COLUMNS('src.*') EXCEPT(version, variantId)
+            FROM {clickhouse_reference_data.all_variants_path(table_name_builder)} src
+            INNER JOIN {ClickHouseTable.KEY_LOOKUP.dst_table(table_name_builder)} dst
+            ON {ClickHouseTable.KEY_LOOKUP.join_condition}
+            """,
+        )
+        if clickhouse_reference_data.search_is_join_table:
+            logged_query(
+                f"""
+                SYSTEM REFRESH VIEW {clickhouse_reference_data.seqr_variants_to_search_mv_path(table_name_builder)}
+                """,
+            )
+            logged_query(
+                f"""
+                SYSTEM WAIT VIEW {clickhouse_reference_data.seqr_variants_to_search_mv_path(table_name_builder)}
+                """,
+                timeout=300,
+            )
+        else:
+            logged_query(
+                f"""
+                SYSTEM RELOAD DICTIONARY {clickhouse_reference_data.search_path(table_name_builder)}
+                """,
+            )
 
 
 @retry()
