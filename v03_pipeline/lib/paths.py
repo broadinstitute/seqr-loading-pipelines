@@ -411,12 +411,29 @@ def loading_pipeline_queue_dir() -> str:
     )
 
 
+def loading_pipeline_deadletter_queue_dir() -> str:
+    return os.path.join(
+        Env.LOCAL_DISK_MOUNT_PATH,
+        'loading_pipeline_deadletter_queue',
+    )
+
+
 def loading_pipeline_queue_path(run_id: str) -> str:
     """
     Returns a new path for a loading pipeline queue request file.
     """
     return os.path.join(
         loading_pipeline_queue_dir(),
+        f'request_{run_id}.json',
+    )
+
+
+def loading_pipeline_deadletter_queue_path(run_id: str) -> str:
+    """
+    Returns a new path for a loading pipeline queue request file.
+    """
+    return os.path.join(
+        loading_pipeline_deadletter_queue_dir(),
         f'request_{run_id}.json',
     )
 
