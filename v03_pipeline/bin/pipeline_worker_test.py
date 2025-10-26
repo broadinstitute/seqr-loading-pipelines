@@ -100,6 +100,6 @@ class PipelineWorkerTest(MockedDatarootTestCase):
                 loading_pipeline_deadletter_queue_dir(),
                 'request_20250918-200704-123456.json',
             ),
-            'w',
+            'r',
         ) as f:
             self.assertEqual(json.load(f)['request_type'], 'LoadingPipelineRequest')
