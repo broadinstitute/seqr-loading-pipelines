@@ -2,7 +2,7 @@ from collections.abc import Generator
 
 
 def split_ranges(max_value: int, n: int = 5) -> Generator[tuple]:
-    step = max_value
+    step = max_value // n
     start = 0
     for _ in range(n):
         end = start + step
