@@ -430,46 +430,37 @@ def refresh_materialized_views(
 
 
 def validate_family_guid_counts(
-    src_table_name: str,
-    dst_table_name: str,
+    table_name_builder: TableNameBuilder,
     project_guids: list[str],
-    family_guids: list[str] | None,
+    family_guids: list[str],
 ) -> None:
-    if family_guids:
-        query = Template(
-            """
-            SELECT family_guid, COUNT(*)
-            FROM $table_name
-            WHERE project_guid in %(project_guids)s
-            AND family_guid in %(family_guids)s
-            GROUP BY 1
-            """,
-        )
-        params = {'family_guids': family_guids, 'project_guids': project_guids}
-    else:
-        query = Template(
-            """
-            SELECT family_guid, COUNT(*)
-            FROM $table_name
-            WHERE project_guid in %(project_guids)s
-            GROUP BY 1
-            """,
-        )
-        params = {'project_guids': project_guids}
+    query = Template(
+        """
+        SELECT family_guid, COUNT(*)
+        FROM $table_name
+        WHERE project_guid in %(project_guids)s
+        AND family_guid in %(family_guids)s
+        GROUP BY 1
+        """,
+    )
     src_family_counts = dict(
         logged_query(
             query.substitute(
-                table_name=src_table_name,
+                table_name=table_name_builder.src_table(
+                    ClickHouseTable.ENTRIES,
+                ),
             ),
-            params,
+            {'family_guids': family_guids, 'project_guids': project_guids},
         ),
     )
     dst_family_counts = dict(
         logged_query(
             query.substitute(
-                table_name=dst_table_name,
+                table_name=table_name_builder.staging_dst_table(
+                    ClickHouseTable.ENTRIES,
+                ),
             ),
-            params,
+            {'family_guids': family_guids, 'project_guids': project_guids},
         ),
     )
     if src_family_counts != dst_family_counts:
@@ -653,12 +644,7 @@ def atomic_insert_entries(
         table_name_builder,
     )
     validate_family_guid_counts(
-        table_name_builder.src_table(
-            ClickHouseTable.ENTRIES,
-        ),
-        table_name_builder.staging_dst_table(
-            ClickHouseTable.ENTRIES,
-        ),
+        table_name_builder,
         project_guids,
         family_guids,
     )
@@ -787,7 +773,9 @@ def rebuild_gt_stats(
     stage_existing_project_partitions(
         table_name_builder,
         project_guids,
-        [ClickHouseTable.PROJECT_GT_STATS],
+        ClickHouseTable.for_dataset_type_atomic_entries_update_project_partitioned(
+            dataset_type,
+        ),
     )
     for project_guid in project_guids:
         logged_query(
@@ -797,24 +785,19 @@ def rebuild_gt_stats(
             """,
             {'project_guid': project_guid},
         )
+    select_statement = get_create_mv_statements(
+        table_name_builder,
+        ClickHouseMaterializedView.ENTRIES_TO_PROJECT_GT_STATS_MV,
+    )[1]
+    select_statement = select_statement.replace(
+        table_name_builder.dst_prefix,
+        table_name_builder.staging_dst_prefix,
+    )
     logged_query(
         f"""
-        INSERT INTO {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)}
-        SELECT *
-        FROM {table_name_builder.dst_table(ClickHouseTable.ENTRIES)}
-        WHERE project_guid in %(project_guids)s
+        INSERT INTO {table_name_builder.staging_dst_table(ClickHouseTable.PROJECT_GT_STATS)}
+        {select_statement}
         """,
-        {'project_guids': project_guids},
-    )
-    validate_family_guid_counts(
-        table_name_builder.staging_dst_table(
-            ClickHouseTable.ENTRIES,
-        ),
-        table_name_builder.dst_table(
-            ClickHouseTable.ENTRIES,
-        ),
-        project_guids,
-        family_guids=None,
     )
     finalize_refresh_flow(table_name_builder, project_guids)
 
