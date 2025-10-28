@@ -12,6 +12,7 @@ from clickhouse_driver import Client
 from v03_pipeline.lib.core import DatasetType, ReferenceGenome
 from v03_pipeline.lib.core.environment import Env
 from v03_pipeline.lib.logger import get_logger
+from v03_pipeline.lib.misc.math import split_ranges
 from v03_pipeline.lib.misc.retry import retry
 from v03_pipeline.lib.paths import (
     new_entries_parquet_path,
@@ -793,12 +794,27 @@ def rebuild_gt_stats(
         table_name_builder.dst_prefix,
         table_name_builder.staging_dst_prefix,
     )
-    logged_query(
+    # NB: encountered OOMs with large projects, necessitating sharding the insertion query.
+    max_key = logged_query(
         f"""
-        INSERT INTO {table_name_builder.staging_dst_table(ClickHouseTable.PROJECT_GT_STATS)}
-        {select_statement}
+        SELECT max(key) FROM {table_name_builder.dst_table(ClickHouseTable.GT_STATS)}
         """,
-    )
+    )[0][0]
+    for range_start, range_end in split_ranges(max_key):
+        logged_query(
+            f"""
+            INSERT INTO {
+                table_name_builder.staging_dst_table(ClickHouseTable.PROJECT_GT_STATS)
+            }
+            {
+                select_statement.replace(
+                    'ARRAY JOIN calls',
+                    'ARRAY JOIN calls WHERE key >= %(range_start)s and key <= %(range_end)',
+                )
+            }
+            """,
+            {'range_start': range_start, 'range_end': range_end},
+        )
     finalize_refresh_flow(table_name_builder, project_guids)
 
 
