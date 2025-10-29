@@ -5,6 +5,7 @@ from collections.abc import Generator
 def split_ranges(max_value: int, n: int = 5) -> Generator[tuple[int, int], None, None]:
     if max_value < n:
         yield (0, max_value)
+        return
     step = math.ceil(max_value / n)
     start, end = 0, step
     while start < max_value:
