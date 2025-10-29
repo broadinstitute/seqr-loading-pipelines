@@ -19,6 +19,10 @@ from v03_pipeline.lib.misc.slack import (
     safe_post_to_slack_failure,
     safe_post_to_slack_success,
 )
+from v03_pipeline.lib.paths import (
+    loading_pipeline_deadletter_queue_dir,
+    loading_pipeline_deadletter_queue_path,
+)
 
 logger = get_logger(__name__)
 
@@ -73,6 +77,9 @@ def process_queue(local_scheduler=False):
                 prr,
                 e,
             )
+            os.makedirs(loading_pipeline_deadletter_queue_dir(), exist_ok=True)
+            with open(loading_pipeline_deadletter_queue_path(run_id), 'w') as f:
+                f.write(prr.model_dump_json())
     finally:
         if latest_queue_path is not None and os.path.exists(latest_queue_path):
             os.remove(latest_queue_path)
