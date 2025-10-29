@@ -800,7 +800,7 @@ def rebuild_gt_stats(
         SELECT max(key) FROM {table_name_builder.dst_table(ClickHouseTable.GT_STATS)}
         """,
     )[0][0]
-    for (range_start, range_end) in split_ranges(max_key):
+    for range_start, range_end in split_ranges(max_key):
         logged_query(
             f"""
             INSERT INTO {
