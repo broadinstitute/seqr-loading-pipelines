@@ -14,14 +14,14 @@ from v03_pipeline.lib.paths import metadata_for_run_path
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )
-from v03_pipeline.lib.tasks.write_success_file import WriteSuccessFile
+from v03_pipeline.lib.tasks.write_success_file import WriteSuccessFileTask
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class LoadCompleteRunToClickhouse(luigi.Task):
     def requires(self) -> luigi.Task:
         # Note retries happen within the ClickHouse Load
-        return [self.clone(WriteSuccessFile, attempt_id=0)]
+        return [self.clone(WriteSuccessFileTask, attempt_id=0)]
 
     def complete(self):
         table_name_builder = TableNameBuilder(
