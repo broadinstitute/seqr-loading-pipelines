@@ -1,5 +1,6 @@
-from collections.abc import Generator
 import math
+from collections.abc import Generator
+
 
 def split_ranges(max_value: int, n: int = 5) -> Generator[tuple[int, int], None, None]:
     if max_value < n:
@@ -10,6 +11,7 @@ def split_ranges(max_value: int, n: int = 5) -> Generator[tuple[int, int], None,
         yield (start, min(end, max_value))
         start += step
         end += step
+
 
 def constrain(
     number: int | float,

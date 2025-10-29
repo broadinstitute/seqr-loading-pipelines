@@ -809,7 +809,7 @@ def rebuild_gt_stats(
             {
                 select_statement.replace(
                     'GROUP BY project_guid',
-                    'WHERE key >= %(range_start)s and key <= %(range_end) GROUP BY project_guid',
+                    'WHERE key >= %(range_start)s AND key <= %(range_end)s GROUP BY project_guid',
                 )
             }
             """,
