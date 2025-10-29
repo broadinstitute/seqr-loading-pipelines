@@ -93,7 +93,7 @@ def main(max_insert_threads: int, project_guids: list[str]):
             SELECT * FROM `GRCh38/SNV_INDEL/entries
             WHERE project_guid=%(project_guid)s
             SETTINGS max_insert_threads=%(max_insert_threads)s
-            """, # noqa: S608
+            """,  # noqa: S608
             {'project_guid': project_guid, 'max_insert_threads': max_insert_threads},
         )
 
