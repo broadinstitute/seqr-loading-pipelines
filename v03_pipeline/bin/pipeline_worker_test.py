@@ -27,12 +27,12 @@ class MyFailingTask(luigi.Task):
 
 class PipelineWorkerTest(MockedDatarootTestCase):
     @patch('v03_pipeline.lib.misc.slack._safe_post_to_slack')
-    @patch('v03_pipeline.api.request_handlers.WriteSuccessFileTask')
+    @patch('v03_pipeline.api.request_handlers.WriteClickhouseLoadSuccessFileTask')
     @patch('v03_pipeline.bin.pipeline_worker.logger')
     def test_process_queue(
         self,
         mock_logger,
-        mock_write_success_file_task,
+        mock_write_clickhouse_load_success_file_task,
         mock_safe_post_to_slack,
     ):
         raw_request = {
@@ -43,7 +43,7 @@ class PipelineWorkerTest(MockedDatarootTestCase):
             'reference_genome': ReferenceGenome.GRCh38.value,
             'dataset_type': DatasetType.SNV_INDEL.value,
         }
-        mock_write_success_file_task.return_value = MockCompleteTask()
+        mock_write_clickhouse_load_success_file_task.return_value = MockCompleteTask()
         os.makedirs(
             loading_pipeline_queue_dir(),
             exist_ok=True,
@@ -62,12 +62,12 @@ class PipelineWorkerTest(MockedDatarootTestCase):
         )
 
     @patch('v03_pipeline.lib.misc.slack._safe_post_to_slack')
-    @patch('v03_pipeline.api.request_handlers.WriteSuccessFileTask')
+    @patch('v03_pipeline.api.request_handlers.WriteClickhouseLoadSuccessFileTask')
     @patch('v03_pipeline.bin.pipeline_worker.logger')
     def test_process_failure(
         self,
         mock_logger,
-        mock_write_success_file_task,
+        mock_write_clickhouse_load_success_file_task,
         mock_safe_post_to_slack,
     ):
         raw_request = {
@@ -78,7 +78,7 @@ class PipelineWorkerTest(MockedDatarootTestCase):
             'reference_genome': ReferenceGenome.GRCh38.value,
             'dataset_type': DatasetType.SNV_INDEL.value,
         }
-        mock_write_success_file_task.return_value = MyFailingTask()
+        mock_write_clickhouse_load_success_file_task.return_value = MyFailingTask()
         os.makedirs(
             loading_pipeline_queue_dir(),
             exist_ok=True,
