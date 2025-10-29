@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
+import json
 import signal
 import sys
 import time
 
 import hailtop.fs as hfs
 
-from v03_pipeline.api.request_handlers import fetch_run_metadata, write_success_file
-from v03_pipeline.lib.core import FeatureFlag
+from v03_pipeline.lib.core import DatasetType, FeatureFlag, ReferenceGenome
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.clickhouse import (
     drop_staging_db,
@@ -15,6 +15,8 @@ from v03_pipeline.lib.misc.clickhouse import (
 from v03_pipeline.lib.misc.runs import get_run_ids
 from v03_pipeline.lib.paths import (
     clickhouse_load_fail_file_path,
+    clickhouse_load_success_file_path,
+    metadata_for_run_path,
 )
 
 logger = get_logger(__name__)
@@ -29,6 +31,26 @@ def signal_handler(*_):
 
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
+
+
+def fetch_run_metadata(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+) -> tuple[list[str], list[str]]:
+    # Run metadata
+    with hfs.open(
+        metadata_for_run_path(
+            reference_genome,
+            dataset_type,
+            run_id,
+        ),
+        'r',
+    ) as f:
+        metadata_json = json.load(f)
+        project_guids = metadata_json['project_guids']
+        family_guids = list(metadata_json['family_samples'].keys())
+    return project_guids, family_guids
 
 
 def main():
@@ -69,7 +91,15 @@ def main():
                         project_guids,
                         family_guids,
                     )
-                    write_success_file(reference_genome, dataset_type, run_id)
+                    with hfs.open(
+                        clickhouse_load_success_file_path(
+                            reference_genome,
+                            dataset_type,
+                            run_id,
+                        ),
+                        'w',
+                    ) as f:
+                        f.write('')
         except Exception:
             logger.exception('Unhandled Exception')
             if reference_genome and dataset_type and run_id:
