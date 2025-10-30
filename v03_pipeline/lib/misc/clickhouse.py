@@ -1,6 +1,7 @@
 import ast
 import functools
 import hashlib
+import math
 import os
 import time
 from collections.abc import Callable
@@ -13,7 +14,6 @@ from clickhouse_driver import Client
 from v03_pipeline.lib.core import DatasetType, ReferenceGenome
 from v03_pipeline.lib.core.environment import Env
 from v03_pipeline.lib.logger import get_logger
-from v03_pipeline.lib.misc.math import split_ranges
 from v03_pipeline.lib.misc.retry import retry
 from v03_pipeline.lib.paths import (
     new_entries_parquet_path,
@@ -877,7 +877,9 @@ def rebuild_gt_stats(
         SELECT max(key) FROM {table_name_builder.dst_table(ClickHouseTable.GT_STATS)}
         """,
     )[0][0]
-    for range_start, range_end in split_ranges(max_key):
+    step = math.ceil(max_key / 5)
+    for range_start in range(0, max_key, step):
+        range_end = min(range_start + step, max_key + 1)
         logged_query(
             f"""
             INSERT INTO {
@@ -886,7 +888,7 @@ def rebuild_gt_stats(
             {
                 select_statement.replace(
                     'GROUP BY project_guid',
-                    'WHERE key >= %(range_start)s AND key <= %(range_end)s GROUP BY project_guid',
+                    'WHERE key >= %(range_start)s AND key < %(range_end)s GROUP BY project_guid',
                 )
             }
             """,
