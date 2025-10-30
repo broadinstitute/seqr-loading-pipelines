@@ -1,6 +1,7 @@
 import math
 from collections.abc import Generator
 
+
 def constrain(
     number: int | float,
     lower_bound: int | float,
