@@ -21,6 +21,7 @@
 ####################################################
 import argparse
 
+from v03_pipeline.lib.core.environment import Env
 from v03_pipeline.lib.misc.clickhouse import (
     logged_query,
     normalize_partition,
@@ -57,7 +58,7 @@ def main(max_insert_threads: int, project_guids: list[str]):
     logged_query(
         f"""
         CREATE TABLE IF NOT EXISTS {DATABASE_NAME}.`GRCh38/SNV_INDEL/repartitioned_entries`
-        AS {DATABASE_NAME}.`GRCh38/SNV_INDEL/entries` PARTITION BY (project_guid, partition_id)
+        AS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries` PARTITION BY (project_guid, partition_id)
         """,
     )
     logged_query(
@@ -72,8 +73,8 @@ def main(max_insert_threads: int, project_guids: list[str]):
     )
     if not project_guids:
         project_guids = logged_query(
-            """
-            SELECT DISTINCT project_guid from seqr.`GRCh38/SNV_INDEL/gt_stats`
+            f"""
+            SELECT DISTINCT project_guid from {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
             """,
         )
     for project_guid in project_guids:
@@ -90,10 +91,10 @@ def main(max_insert_threads: int, project_guids: list[str]):
         logged_query(
             f"""
             INSERT INTO {DATABASE_NAME}.`GRCh38/SNV_INDEL/repartitioned_entries`
-            SELECT * FROM `GRCh38/SNV_INDEL/entries
+            SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries
             WHERE project_guid=%(project_guid)s
             SETTINGS max_insert_threads=%(max_insert_threads)s
-            """,  # noqa: S608
+            """,
             {'project_guid': project_guid, 'max_insert_threads': max_insert_threads},
         )
 
