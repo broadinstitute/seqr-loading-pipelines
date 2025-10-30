@@ -1,5 +1,3 @@
-
-
 def constrain(
     number: int | float,
     lower_bound: int | float,
