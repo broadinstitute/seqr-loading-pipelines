@@ -2,7 +2,7 @@ import unittest
 
 from v03_pipeline.lib.core.environment import Env
 from v03_pipeline.lib.misc.clickhouse import get_clickhouse_client
-from v03_pipeline.ops.repartion_clickhouse_grch38_snv_indel import main
+from v03_pipeline.ops.repartition_clickhouse_grch38_snv_indel import main
 
 
 class RepartitionGRCh38SnvIndelTest(unittest.TestCase):
