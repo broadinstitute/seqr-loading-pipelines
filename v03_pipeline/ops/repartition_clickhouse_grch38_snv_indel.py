@@ -27,7 +27,7 @@ from v03_pipeline.lib.misc.clickhouse import (
     normalize_partition,
 )
 
-DATABASE_NAME = 'staging_grch38_snvindel_repartition'
+REPARTITION_DATABASE_NAME = 'staging_grch38_snvindel_repartition'
 
 
 def get_partitions_for_project(project_guid: str):
@@ -38,12 +38,12 @@ def get_partitions_for_project(project_guid: str):
         WHERE
             database = %(database)s
             AND table = %(table)s
-            AND partition like %(project_guids)s
+            AND partition like %(project_guid)s
         """,
         {
-            'database': DATABASE_NAME,
+            'database': REPARTITION_DATABASE_NAME,
             'table': 'GRCh38/SNV_INDEL/repartitioned_entries',
-            'project_guid': project_guid,
+            'project_guid': f'%{project_guid}%',
         },
     )
     return [normalize_partition(row[0]) for row in rows]
@@ -52,46 +52,39 @@ def get_partitions_for_project(project_guid: str):
 def main(max_insert_threads: int, project_guids: list[str]):
     logged_query(
         f"""
-        CREATE DATABASE IF NOT EXISTS {DATABASE_NAME};
+        CREATE DATABASE IF NOT EXISTS {REPARTITION_DATABASE_NAME};
         """,
     )
     logged_query(
         f"""
-        CREATE TABLE IF NOT EXISTS {DATABASE_NAME}.`GRCh38/SNV_INDEL/repartitioned_entries`
+        CREATE TABLE IF NOT EXISTS {REPARTITION_DATABASE_NAME}.`GRCh38/SNV_INDEL/repartitioned_entries`
         AS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries` PARTITION BY (project_guid, partition_id)
         """,
     )
-    logged_query(
-        f"""
-        ALTER TABLE {DATABASE_NAME}.`GRCh38/SNV_INDEL/repartitioned_entries` ADD COLUMN `n_partitions` UInt8 MATERIALIZED dictGetOrDefault('GRCh38/SNV_INDEL/project_partitions_dict', 'n_partitions', project_guid, 1) AFTER `sign`;
-        """,
-    )
-    logged_query(
-        f"""
-        ALTER TABLE {DATABASE_NAME}.`GRCh38/SNV_INDEL/repartitioned_entries` ADD COLUMN `partition_id` UInt8 MATERIALIZED farmHash64(family_guid) % n_partitions AFTER `n_partitions`;
-        """,
-    )
     if not project_guids:
-        project_guids = logged_query(
-            f"""
-            SELECT DISTINCT project_guid from {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
+        project_guids = [
+            x[0]
+            for x in logged_query(
+                f"""
+            SELECT DISTINCT project_guid from {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries`
             """,
-        )
+            )
+        ]
     for project_guid in project_guids:
         for partition in get_partitions_for_project(
             project_guid,
         ):
             logged_query(
                 f"""
-                ALTER TABLE {DATABASE_NAME}.`GRCh38/SNV_INDEL/repartitioned_entries`
+                ALTER TABLE {REPARTITION_DATABASE_NAME}.`GRCh38/SNV_INDEL/repartitioned_entries`
                 DROP PARTITION %(partition)s
                 """,
                 {'partition': partition},
             )
         logged_query(
             f"""
-            INSERT INTO {DATABASE_NAME}.`GRCh38/SNV_INDEL/repartitioned_entries`
-            SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries
+            INSERT INTO {REPARTITION_DATABASE_NAME}.`GRCh38/SNV_INDEL/repartitioned_entries`
+            SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries`
             WHERE project_guid=%(project_guid)s
             SETTINGS max_insert_threads=%(max_insert_threads)s
             """,
