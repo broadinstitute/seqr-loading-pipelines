@@ -2,7 +2,10 @@ import unittest
 
 from v03_pipeline.lib.core.environment import Env
 from v03_pipeline.lib.misc.clickhouse import get_clickhouse_client
-from v03_pipeline.ops.repartition_clickhouse_grch38_snv_indel import main, REPARTITION_DATABASE_NAME
+from v03_pipeline.ops.repartition_clickhouse_grch38_snv_indel import (
+    REPARTITION_DATABASE_NAME,
+    main,
+)
 
 
 class RepartitionGRCh38SnvIndelTest(unittest.TestCase):
@@ -83,7 +86,7 @@ class RepartitionGRCh38SnvIndelTest(unittest.TestCase):
         res = client.execute(
             f"""
             SELECT *, n_partitions, partition_id FROM {REPARTITION_DATABASE_NAME}.`GRCh38/SNV_INDEL/repartitioned_entries`
-            """
+            """,
         )
         self.assertCountEqual(
             res,
@@ -105,7 +108,7 @@ class RepartitionGRCh38SnvIndelTest(unittest.TestCase):
         res = client.execute(
             f"""
             SELECT *, n_partitions, partition_id FROM {REPARTITION_DATABASE_NAME}.`GRCh38/SNV_INDEL/repartitioned_entries`
-            """
+            """,
         )
         self.assertCountEqual(
             res,
