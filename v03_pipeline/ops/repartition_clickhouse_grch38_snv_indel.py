@@ -103,7 +103,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--project-guids',
         nargs='+',
-        required=True,
+        required=False,
         help='Optionally provide an override list of project guids: --project-guids proj1 proj2 proj3',
     )
     args = parser.parse_args()
