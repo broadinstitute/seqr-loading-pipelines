@@ -87,13 +87,26 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         *_: Mock,
     ) -> None:
         mock_client = mock_cluster_controller.return_value
-        mock_client.get_cluster.side_effect = google.api_core.exceptions.NotFound(
-            'cluster not found',
-        )
-        operation = mock_client.create_cluster.return_value
-        operation.done.side_effect = [False, True]
-        operation.result.side_effect = Exception('SpinupFailed')
-
+        mock_client.get_cluster.side_effect = [
+            google.api_core.exceptions.NotFound(
+                'cluster not found',
+            ),
+            google.api_core.exceptions.NotFound(
+                'cluster not found',
+            ),
+            SimpleNamespace(
+                status=SimpleNamespace(
+                    state=google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.CREATING,
+                ),
+            ),
+            SimpleNamespace(
+                status=SimpleNamespace(
+                    state=google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.ERROR,
+                ),
+                cluster_name='dataproc-cluster-5',
+                cluster_uuid='12345',
+            ),
+        ]
         worker = luigi.worker.Worker()
         task = CreateDataprocClusterTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -101,9 +114,10 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
             run_id='4',
         )
         worker.add(task)
-        worker.run()
-        self.assertFalse(task.complete())
+        luigi_task_result = worker.run()
+        self.assertEqual(luigi_task_result, False)
         mock_logger.info.assert_has_calls([call('Waiting for cluster spinup')])
+        
 
     @patch('v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster.logger')
     def test_spinup_cluster_doesnt_exist_success(
@@ -113,15 +127,27 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         *_: Mock,
     ) -> None:
         mock_client = mock_cluster_controller.return_value
-        mock_client.get_cluster.side_effect = google.api_core.exceptions.NotFound(
-            'cluster not found',
-        )
-        operation = mock_client.create_cluster.return_value
-        operation.done.side_effect = [False, True]
-        operation.result.return_value = SimpleNamespace(
-            cluster_name='dataproc-cluster-5',
-            cluster_uuid='12345',
-        )
+        mock_client.get_cluster.side_effect = [
+            google.api_core.exceptions.NotFound(
+                'cluster not found',
+            ),
+            google.api_core.exceptions.NotFound(
+                'cluster not found',
+            ),
+            SimpleNamespace(
+                status=SimpleNamespace(
+                    state=google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.CREATING,
+                ),
+            ),
+            SimpleNamespace(
+                status=SimpleNamespace(
+                    state=google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.RUNNING,
+                ),
+                cluster_name='dataproc-cluster-5',
+                cluster_uuid='12345',
+            ),
+        ]
+        mock_client.create_cluster.side_effect = None
         worker = luigi.worker.Worker()
         task = CreateDataprocClusterTask(
             reference_genome=ReferenceGenome.GRCh38,
