@@ -117,7 +117,6 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         luigi_task_result = worker.run()
         self.assertEqual(luigi_task_result, False)
         mock_logger.info.assert_has_calls([call('Waiting for cluster spinup')])
-        
 
     @patch('v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster.logger')
     def test_spinup_cluster_doesnt_exist_success(

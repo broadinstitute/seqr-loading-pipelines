@@ -1,8 +1,9 @@
 import hailtop.fs as hfs
-from pydantic import AliasChoices, BaseModel, Field, field_validator
+from pydantic import AliasChoices, BaseModel, Field, conint, field_validator
 
 from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 
+MAX_LOADING_PIPELINE_ATTEMPTS = 3
 VALID_FILE_TYPES = ['vcf', 'vcf.gz', 'vcf.bgz', 'mt']
 
 
@@ -15,6 +16,7 @@ class PipelineRunnerRequest(BaseModel, frozen=True):
 
 
 class LoadingPipelineRequest(PipelineRunnerRequest):
+    attempt_id: conint(ge=0, le=MAX_LOADING_PIPELINE_ATTEMPTS - 1) = 0
     callset_path: str
     project_guids: list[str] = Field(
         min_length=1,
@@ -27,6 +29,12 @@ class LoadingPipelineRequest(PipelineRunnerRequest):
     skip_validation: bool = False
     skip_check_sex_and_relatedness: bool = False
     skip_expect_tdr_metrics: bool = False
+
+    def incr_attempt(self):
+        if self.attempt_id + 1 >= MAX_LOADING_PIPELINE_ATTEMPTS:
+            return False
+        self.attempt_id += 1
+        return True
 
     @field_validator('callset_path')
     @classmethod
