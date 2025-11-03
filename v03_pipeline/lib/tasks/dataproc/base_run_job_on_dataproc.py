@@ -67,6 +67,8 @@ class BaseRunJobOnDataprocTask(luigi.Task):
 
     def complete(self) -> bool:
         job = self.safely_get_job()
+        if not job:
+            return False
         if job.status.state in FAILURE_STATUSES:
             msg = f'Job {self.job_id} entered {job.status.state.name} state'
             logger.error(msg)
@@ -113,7 +115,7 @@ class BaseRunJobOnDataprocTask(luigi.Task):
                 job.status.state
                 == google.cloud.dataproc_v1.types.jobs.JobStatus.State.DONE
             ):
-                msg = f'Job {self.job} is complete'
+                msg = f'Job {self.job_id} is complete'
                 logger.info(msg)
                 break
             if job.status.state in FAILURE_STATUSES:

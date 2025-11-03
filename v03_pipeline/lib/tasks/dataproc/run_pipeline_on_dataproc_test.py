@@ -108,7 +108,7 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
             ),
             SimpleNamespace(
                 status=SimpleNamespace(
-                    state=google.cloud.dataproc_v1.types.jobs.JobStatus.State.FAILED,
+                    state=google.cloud.dataproc_v1.types.jobs.JobStatus.State.ERROR,
                 ),
             ),
         ]
@@ -123,8 +123,8 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
             attempt_id=1,
         )
         worker.add(task)
-        worker.run()
-        self.assertFalse(task.complete())
+        luigi_task_result = worker.run()
+        self.assertEqual(luigi_task_result, False)
         mock_logger.info.assert_has_calls(
             [
                 call(
@@ -133,8 +133,10 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
             ],
         )
 
+    @patch('v03_pipeline.lib.tasks.dataproc.base_run_job_on_dataproc.logger')
     def test_job_success(
         self,
+        mock_logger: Mock,
         mock_job_controller_client: Mock,
         mock_create_dataproc_cluster: Mock,
     ) -> None:
@@ -170,4 +172,9 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
         )
         worker.add(task)
         worker.run()
-        self.assertTrue(task.complete())
+        mock_logger.info.assert_has_calls(
+            [
+                call('Waiting for Job completion RunPipelineTask-manual__2024-04-06-0',),
+                call('Job RunPipelineTask-manual__2024-04-06-0 is complete'),
+            ],
+        )
