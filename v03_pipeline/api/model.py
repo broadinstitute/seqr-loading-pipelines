@@ -7,7 +7,7 @@ MAX_LOADING_PIPELINE_ATTEMPTS = 3
 VALID_FILE_TYPES = ['vcf', 'vcf.gz', 'vcf.bgz', 'mt']
 
 
-class PipelineRunnerRequest(BaseModel, frozen=True):
+class PipelineRunnerRequest(BaseModel):
     request_type: str
 
     def __init_subclass__(cls, **kwargs):
@@ -31,7 +31,7 @@ class LoadingPipelineRequest(PipelineRunnerRequest):
     skip_expect_tdr_metrics: bool = False
 
     def incr_attempt(self):
-        if self.attempt_id + 1 >= MAX_LOADING_PIPELINE_ATTEMPTS:
+        if self.attempt_id == (MAX_LOADING_PIPELINE_ATTEMPTS - 1):
             return False
         self.attempt_id += 1
         return True

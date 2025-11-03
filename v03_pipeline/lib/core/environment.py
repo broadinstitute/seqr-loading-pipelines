@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 # NB: using os.environ.get inside the dataclass defaults gives a lint error.
-LOCAL_DISK_MOUNT_PATH = os.environ.get('LOCAL_DISK_MOUNT_PATH', '/var/seqr')
+LOCAL_DISK_MOUNT_DIR = os.environ.get('LOCAL_DISK_MOUNT_DIR', '/var/seqr')
 HAIL_TMP_DIR = os.environ.get('HAIL_TMP_DIR', '/tmp')  # noqa: S108
 PIPELINE_DATA_DIR = os.environ.get(
     'PIPELINE_DATA_DIR',
@@ -78,7 +78,7 @@ class Env:
     GCLOUD_ZONE: str | None = GCLOUD_ZONE
     GCLOUD_REGION: str | None = GCLOUD_REGION
     HAIL_TMP_DIR: str = HAIL_TMP_DIR
-    LOCAL_DISK_MOUNT_PATH: str = LOCAL_DISK_MOUNT_PATH
+    LOCAL_DISK_MOUNT_DIR: str = LOCAL_DISK_MOUNT_DIR
     PIPELINE_DATA_DIR: str = PIPELINE_DATA_DIR
     LOADING_DATASETS_DIR: str = LOADING_DATASETS_DIR
     LOADING_QUEUE_LIMIT: int = LOADING_QUEUE_LIMIT

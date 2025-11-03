@@ -8,7 +8,6 @@ import time
 
 from v03_pipeline.api.model import (
     PipelineRunnerRequest,
-    MAX_LOADING_PIPELINE_ATTEMPTS,
 )
 from v03_pipeline.api.request_handlers import REQUEST_HANDLER_MAP
 from v03_pipeline.lib.logger import get_logger
@@ -23,7 +22,7 @@ from v03_pipeline.lib.misc.slack import (
 from v03_pipeline.lib.paths import (
     loading_pipeline_deadletter_queue_dir,
     loading_pipeline_deadletter_queue_path,
-    loading_pipeline_queue_dir,
+    loading_pipeline_queue_path,
 )
 
 logger = get_logger(__name__)
@@ -67,6 +66,7 @@ def process_queue(local_scheduler=False):
             return
         prr, run_id = parse_latest_queue_path(latest_queue_path)
         REQUEST_HANDLER_MAP[type(prr)](prr, run_id, local_scheduler)
+        os.remove(latest_queue_path)
         safe_post_to_slack_success(
             run_id,
             prr,
@@ -75,7 +75,7 @@ def process_queue(local_scheduler=False):
         logger.exception('Unhandled Exception')
         if run_id is not None:
             if hasattr(prr, 'attempt_id') and prr.incr_attempt():
-                with open(loading_pipeline_queue_dir(), 'w') as f:
+                with open(loading_pipeline_queue_path(run_id), 'w') as f:
                     f.write(prr.model_dump_json())
             else:
                 safe_post_to_slack_failure(
@@ -87,8 +87,6 @@ def process_queue(local_scheduler=False):
                 with open(loading_pipeline_deadletter_queue_path(run_id), 'w') as f:
                     f.write(prr.model_dump_json())
     finally:
-        if latest_queue_path is not None and os.path.exists(latest_queue_path):
-            os.remove(latest_queue_path)
         logger.info('Looking for more work')
         time.sleep(1)
 
