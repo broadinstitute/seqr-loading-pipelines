@@ -89,6 +89,7 @@ def main(max_insert_threads: int, project_guids: list[str]):
             SETTINGS max_insert_threads=%(max_insert_threads)s
             """,
             {'project_guid': project_guid, 'max_insert_threads': max_insert_threads},
+            timeout=99999,
         )
 
 
