@@ -174,7 +174,9 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
         worker.run()
         mock_logger.info.assert_has_calls(
             [
-                call('Waiting for Job completion RunPipelineTask-manual__2024-04-06-0',),
+                call(
+                    'Waiting for Job completion RunPipelineTask-manual__2024-04-06-0',
+                ),
                 call('Job RunPipelineTask-manual__2024-04-06-0 is complete'),
             ],
         )
