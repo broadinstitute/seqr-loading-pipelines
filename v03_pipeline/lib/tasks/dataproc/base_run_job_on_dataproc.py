@@ -15,6 +15,11 @@ from v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster import (
 )
 from v03_pipeline.lib.tasks.dataproc.misc import get_cluster_name, to_kebab_str_args
 
+FAILURE_STATUSES = {
+    google.cloud.dataproc_v1.types.jobs.JobStatus.State.CANCELLED,
+    google.cloud.dataproc_v1.types.jobs.JobStatus.State.ERROR,
+    google.cloud.dataproc_v1.types.jobs.JobStatus.State.ATTEMPT_FAILURE,
+}
 SEQR_PIPELINE_RUNNER_BUILD = f'gs://seqr-pipeline-runner-builds/{Env.DEPLOYMENT_TYPE}/{Env.PIPELINE_RUNNER_APP_VERSION}'
 TIMEOUT_S = 172800  # 2 days
 
@@ -44,7 +49,9 @@ class BaseRunJobOnDataprocTask(luigi.Task):
     def requires(self) -> [luigi.Task]:
         return [self.clone(CreateDataprocClusterTask)]
 
-    def complete(self) -> bool:
+    def safely_get_job(
+        self,
+    ):
         try:
             job = self.client.get_job(
                 request={
@@ -54,12 +61,15 @@ class BaseRunJobOnDataprocTask(luigi.Task):
                 },
             )
         except google.api_core.exceptions.NotFound:
+            return None
+        else:
+            return job
+
+    def complete(self) -> bool:
+        job = self.safely_get_job()
+        if not job:
             return False
-        if job.status.state in {
-            google.cloud.dataproc_v1.types.jobs.JobStatus.State.CANCELLED,
-            google.cloud.dataproc_v1.types.jobs.JobStatus.State.ERROR,
-            google.cloud.dataproc_v1.types.jobs.JobStatus.State.ATTEMPT_FAILURE,
-        }:
+        if job.status.state in FAILURE_STATUSES:
             msg = f'Job {self.job_id} entered {job.status.state.name} state'
             logger.error(msg)
             logger.error(job.status.details)
@@ -68,43 +78,52 @@ class BaseRunJobOnDataprocTask(luigi.Task):
         )
 
     def run(self):
-        operation = self.client.submit_job_as_operation(
-            request={
-                'project_id': Env.GCLOUD_PROJECT,
-                'region': Env.GCLOUD_REGION,
-                'job': {
-                    'reference': {
-                        'job_id': self.job_id,
-                    },
-                    'placement': {
-                        'cluster_name': get_cluster_name(
-                            self.reference_genome,
-                            self.run_id,
-                        ),
-                    },
-                    'pyspark_job': {
-                        'main_python_file_uri': f'{SEQR_PIPELINE_RUNNER_BUILD}/bin/run_task.py',
-                        'args': [
-                            self.task.task_family,
-                            '--local-scheduler',
-                            *to_kebab_str_args(self),
-                        ],
-                        'python_file_uris': [
-                            f'{SEQR_PIPELINE_RUNNER_BUILD}/pyscripts.zip',
-                        ],
+        job = self.safely_get_job()
+        if not job:
+            self.client.submit_job_as_operation(
+                request={
+                    'project_id': Env.GCLOUD_PROJECT,
+                    'region': Env.GCLOUD_REGION,
+                    'job': {
+                        'reference': {
+                            'job_id': self.job_id,
+                        },
+                        'placement': {
+                            'cluster_name': get_cluster_name(
+                                self.reference_genome,
+                                self.run_id,
+                            ),
+                        },
+                        'pyspark_job': {
+                            'main_python_file_uri': f'{SEQR_PIPELINE_RUNNER_BUILD}/bin/run_task.py',
+                            'args': [
+                                self.task.task_family,
+                                '--local-scheduler',
+                                *to_kebab_str_args(self),
+                            ],
+                            'python_file_uris': [
+                                f'{SEQR_PIPELINE_RUNNER_BUILD}/pyscripts.zip',
+                            ],
+                        },
                     },
                 },
-            },
-        )
+            )
         wait_s = 0
         while wait_s < TIMEOUT_S:
-            if operation.done():
-                operation.result()  # Will throw on failure!
-                msg = f'Finished {self.job_id}'
+            job = self.safely_get_job()
+            if (
+                job.status.state
+                == google.cloud.dataproc_v1.types.jobs.JobStatus.State.DONE
+            ):
+                msg = f'Job {self.job_id} is complete'
                 logger.info(msg)
                 break
+            if job.status.state in FAILURE_STATUSES:
+                msg = f'Job {self.job_id} entered {job.status.state.name} state'
+                logger.error(msg)
+                raise RuntimeError(msg)
             logger.info(
-                f'Waiting for job completion {self.job_id}',
+                f'Waiting for Job completion {self.job_id}',
             )
             time.sleep(3)
             wait_s += 3

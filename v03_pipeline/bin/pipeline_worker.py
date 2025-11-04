@@ -19,6 +19,11 @@ from v03_pipeline.lib.misc.slack import (
     safe_post_to_slack_failure,
     safe_post_to_slack_success,
 )
+from v03_pipeline.lib.paths import (
+    loading_pipeline_deadletter_queue_dir,
+    loading_pipeline_deadletter_queue_path,
+    loading_pipeline_queue_path,
+)
 
 logger = get_logger(__name__)
 
@@ -61,28 +66,35 @@ def process_queue(local_scheduler=False):
             return
         prr, run_id = parse_latest_queue_path(latest_queue_path)
         REQUEST_HANDLER_MAP[type(prr)](prr, run_id, local_scheduler)
+        os.remove(latest_queue_path)
         safe_post_to_slack_success(
             run_id,
             prr,
         )
     except Exception as e:
         logger.exception('Unhandled Exception')
-        if run_id is not None:
-            safe_post_to_slack_failure(
-                run_id,
-                prr,
-                e,
-            )
-    finally:
-        if latest_queue_path is not None and os.path.exists(latest_queue_path):
-            os.remove(latest_queue_path)
-        logger.info('Looking for more work')
-        time.sleep(1)
+        if run_id is None:
+            return
+        if hasattr(prr, 'attempt_id') and prr.incr_attempt():
+            with open(loading_pipeline_queue_path(run_id), 'w') as f:
+                f.write(prr.model_dump_json())
+            return
+        safe_post_to_slack_failure(
+            run_id,
+            prr,
+            e,
+        )
+        os.makedirs(loading_pipeline_deadletter_queue_dir(), exist_ok=True)
+        with open(loading_pipeline_deadletter_queue_path(run_id), 'w') as f:
+            f.write(prr.model_dump_json())
+        os.remove(latest_queue_path)
 
 
 def main():
     while True:
         process_queue()
+        logger.info('Looking for more work')
+        time.sleep(1)
 
 
 if __name__ == '__main__':
