@@ -78,15 +78,16 @@ def process_queue(local_scheduler=False):
         if hasattr(prr, 'attempt_id') and prr.incr_attempt():
             with open(loading_pipeline_queue_path(run_id), 'w') as f:
                 f.write(prr.model_dump_json())
-        else:
-            safe_post_to_slack_failure(
-                run_id,
-                prr,
-                e,
-            )
-            os.makedirs(loading_pipeline_deadletter_queue_dir(), exist_ok=True)
-            with open(loading_pipeline_deadletter_queue_path(run_id), 'w') as f:
-                f.write(prr.model_dump_json())
+            return
+        safe_post_to_slack_failure(
+            run_id,
+            prr,
+            e,
+        )
+        os.makedirs(loading_pipeline_deadletter_queue_dir(), exist_ok=True)
+        with open(loading_pipeline_deadletter_queue_path(run_id), 'w') as f:
+            f.write(prr.model_dump_json())
+        os.remove(latest_queue_path)
 
 
 def main():
