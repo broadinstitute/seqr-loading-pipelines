@@ -433,6 +433,7 @@ def insert_new_entries(
 @retry(tries=2)
 def optimize_entries(
     table_name_builder: TableNameBuilder,
+    project_guids: list[str],
 ) -> None:
     safely_optimized = False
     while not safely_optimized:
@@ -466,10 +467,22 @@ def optimize_entries(
                 logger.info('Decrs exist and merges are running, so waiting')
             else:
                 logger.info('Decrs exist and no merges are running, so optimizing')
+                partitions = get_partitions_for_projects(
+                    table_name_builder,
+                    ClickHouseTable.ENTRIES,
+                    project_guids,
+                    staging=True,
+                )
+                table_name = table_name_builder.staging_dst_table(
+                    ClickHouseTable.ENTRIES,
+                )
+                optimize_statements = [
+                    f'OPTIMIZE TABLE {table_name} PARTITION {partition} FINAL'
+                    for partition in partitions
+                ]
+                parallel_optimize_sql = '\nPARALLEL WITH\n'.join(optimize_statements)
                 logged_query(
-                    f"""
-                    OPTIMIZE TABLE {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)} FINAL
-                    """,
+                    parallel_optimize_sql,
                     timeout=OPTIMIZE_TABLE_TIMEOUT_S,
                 )
             time.sleep(Env.CLICKHOUSE_OPTIMIZE_TABLE_WAIT_S)
@@ -715,6 +728,7 @@ def atomic_insert_entries(
     )
     optimize_entries(
         table_name_builder,
+        project_guids,
     )
     validate_family_guid_counts(
         table_name_builder,
@@ -808,6 +822,7 @@ def delete_family_guids(
     )
     optimize_entries(
         table_name_builder,
+        project_guids,
     )
     finalize_refresh_flow(table_name_builder, project_guids)
 
