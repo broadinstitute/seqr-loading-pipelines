@@ -200,10 +200,34 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         client.execute(
             f"""
-            CREATE MATERIALIZED VIEW {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/clinvar_all_variants_to_clinvar_mv`
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/reference_data/clinvar/all_variants (
+                `variantId` String,
+                `alleleId` Nullable(UInt32),
+                `pathogenicity` Enum8(
+                    'Pathogenic' = 0,
+                    'Pathogenic/Likely_pathogenic' = 1
+                )
+            )
+            """,
+        )
+        client.execute(
+            f"""
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/reference_data/clinvar/seqr_variants (
+                `key` UInt32,
+                `alleleId` Nullable(UInt32),
+                `pathogenicity` Enum8(
+                    'Pathogenic' = 0,
+                    'Pathogenic/Likely_pathogenic' = 1
+                )
+            )
+            """,
+        )
+        client.execute(
+            f"""
+            CREATE MATERIALIZED VIEW {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/reference_data/clinvar/seqr_variants_to_search_mv
             REFRESH EVERY 10 YEAR ENGINE = Null
-            AS SELECT *
-            FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup`
+            AS SELECT DISTINCT ON (key) *
+            FROM `$reference_genome/$dataset_type/reference_data/clinvar/seqr_variants`
             """,
         )
         client.execute(

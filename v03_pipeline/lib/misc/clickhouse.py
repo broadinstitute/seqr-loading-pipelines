@@ -793,9 +793,9 @@ def load_complete_run(
             SELECT
                 DISTINCT ON (key)
                 dst.key as key,
-                COLUMNS('src.*') EXCEPT(version, variantId)
+                COLUMNS('.*') EXCEPT(version, variantId, key)
             FROM {clickhouse_reference_data.all_variants_path(table_name_builder)} src
-            INNER JOIN {ClickHouseTable.KEY_LOOKUP.dst_table(table_name_builder)} dst
+            INNER JOIN {table_name_builder.dst_table(ClickHouseTable.KEY_LOOKUP)} dst
             ON {ClickHouseTable.KEY_LOOKUP.join_condition}
             """,
         )
