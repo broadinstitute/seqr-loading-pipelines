@@ -208,6 +208,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'Pathogenic/Likely_pathogenic' = 1
                 )
             )
+            PRIMARY KEY `variantId`
             """,
         )
         client.execute(
@@ -220,6 +221,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'Pathogenic/Likely_pathogenic' = 1
                 )
             )
+            PRIMARY KEY `key`
             """,
         )
         client.execute(
