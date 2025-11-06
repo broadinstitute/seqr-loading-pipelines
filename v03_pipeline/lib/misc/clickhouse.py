@@ -241,22 +241,22 @@ class ClickhouseReferenceData(StrEnum):
 
     def all_variants_path(self, table_name_builder: TableNameBuilder) -> str:
         return (
-            f'{table_name_builder.dst_prefix}/reference_data/{self.name}/all_variants'
+            f'{table_name_builder.dst_prefix}/reference_data/{self.name}/all_variants`'
         )
 
     def seqr_variants_path(self, table_name_builder: TableNameBuilder) -> str:
         return (
-            f'{table_name_builder.dst_prefix}/reference_data/{self.name}/seqr_variants'
+            f'{table_name_builder.dst_prefix}/reference_data/{self.name}/seqr_variants`'
         )
 
     def search_path(self, table_name_builder: TableNameBuilder) -> str:
-        return f'{table_name_builder.dst_prefix}/reference_data/{self.name}'
+        return f'{table_name_builder.dst_prefix}/reference_data/{self.name}`'
 
     def seqr_variants_to_search_mv_path(
         self,
         table_name_builder: TableNameBuilder,
     ) -> str:
-        return f'{table_name_builder.dst_prefix}/reference_data/{self.name}/seqr_variants_to_search_mv'
+        return f'{table_name_builder.dst_prefix}/reference_data/{self.name}/seqr_variants_to_search_mv`'
 
 
 def logged_query(query, params=None, timeout: int | None = None):
