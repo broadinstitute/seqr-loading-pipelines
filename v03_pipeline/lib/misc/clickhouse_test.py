@@ -229,7 +229,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             CREATE MATERIALIZED VIEW {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/reference_data/clinvar/seqr_variants_to_search_mv`
             REFRESH EVERY 10 YEAR ENGINE = Null
             AS SELECT DISTINCT ON (key) *
-            FROM `$reference_genome/$dataset_type/reference_data/clinvar/seqr_variants`
+            FROM `GRCh38/SNV_INDEL/reference_data/clinvar/seqr_variants`
             """,
         )
         client.execute(
