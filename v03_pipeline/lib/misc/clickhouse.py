@@ -245,9 +245,7 @@ class ClickhouseReferenceData(StrEnum):
         )
 
     def seqr_variants_path(self, table_name_builder: TableNameBuilder) -> str:
-        return (
-            f'{table_name_builder.dst_prefix}/reference_data/{self.value}/seqr_variants`'
-        )
+        return f'{table_name_builder.dst_prefix}/reference_data/{self.value}/seqr_variants`'
 
     def search_path(self, table_name_builder: TableNameBuilder) -> str:
         return f'{table_name_builder.dst_prefix}/reference_data/{self.value}`'
