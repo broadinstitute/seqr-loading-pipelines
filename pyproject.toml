@@ -19,11 +19,46 @@ include = ["v03_pipeline*"]
 exclude = ["v03_pipeline.bin", "v03_pipeline.deploy", "v03_pipeline*test*"]
 namespaces = false
 
-[tool.mypy]
-packages = 'v03_pipeline'
-python_version = "3.11"
-ignore_missing_imports = true
-strict = true
+dependencies = [
+    "hail==0.2.133",
+    "luigi==3.5.2",
+    "gnomad==0.8.0",
+    "aiofiles==24.1.0",
+    "pydantic==2.8.2",
+    "clickhouse-driver==0.2.9",
+    "slacker==0.14.0",
+    "ipywidgets==8.0.6",  # matches pinned version in hail init_notebook.py
+    "ipykernel==6.22.0",  # matches pinned version in hail init_notebook.py
+    "notebook==6.5.6",    # matches pinned version in hail init_notebook.py
+    "nbconvert==7.3.1",   # matches pinned version in hail init_notebook.py
+    # Git/URL installs (PEP 508 direct references)
+    "gnomad-qc @ git+https://github.com/broadinstitute/gnomad_qc.git@v4.1",
+    "onnxconverter-common @ git+https://github.com/microsoft/onnxconverter-common.git@f7a8eb699caa6f6a78d3bdfbcaf5dfbd43569ebd",
+]
+
+[dependency-groups]
+prod = [
+    "sqlalchemy<2.0.0" # This is required for the Luigi UI but nothing else.
+]
+dev = [
+    "coverage>=7.2.2",
+    "nose-py3>=1.6.3", # bug in regular nose here: https://github.com/nose-devs/nose/issues/1099#issuecomment-577647469
+    "responses>=0.23.1",
+    "ruff>=0.1.8",
+    "shellcheck-py>=0.10.0",
+    "pysam",
+    "pyarrow",
+]
+dataproc = [
+    # These requirements are in a separate file to 
+    # accomadate a pinned protobuf in the hail library
+    # itself.  Several of these packages have a dependency
+    # on a newer version of protobuf and we run into
+    # terrible conflicts.
+    "google-cloud-dataproc==5.16.0",
+    "google-cloud-bigquery==3.29.0",
+    "google-api-python-client==2.159.0",
+]
 
 [tool.ruff]
 extend-exclude = [
