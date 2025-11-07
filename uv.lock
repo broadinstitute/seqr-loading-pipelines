@@ -3077,6 +3077,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pip"
+version = "23.2.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ba/19/e63fb4e0d20e48bd2167bb7e857abc0e21679e24805ba921a224df8977c0/pip-23.2.1.tar.gz", hash = "sha256:fb0bd5435b3200c602b5bf61d2d43c2f13c02e29c1707567ae7fbc514eb9faf2", size = 2109449, upload-time = "2023-07-22T09:17:34.056Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/50/c2/e06851e8cc28dcad7c155f4753da8833ac06a5c704c109313b8d5a62968a/pip-23.2.1-py3-none-any.whl", hash = "sha256:7ccf472345f20d35bdc9d1841ff5f313260c2c33fe417f48c30ac46cccabf5be", size = 2086091, upload-time = "2023-07-22T09:17:31.548Z" },
+]
+
+[[package]]
 name = "platformdirs"
 version = "4.5.0"
 source = { registry = "https://pypi.org/simple" }
@@ -4242,6 +4251,7 @@ dependencies = [
     { name = "nbconvert" },
     { name = "notebook" },
     { name = "onnxconverter-common" },
+    { name = "pip" },
     { name = "pydantic" },
     { name = "slacker" },
 ]
@@ -4276,6 +4286,7 @@ requires-dist = [
     { name = "nbconvert", specifier = "==7.3.1" },
     { name = "notebook", specifier = "==6.5.6" },
     { name = "onnxconverter-common", git = "https://github.com/microsoft/onnxconverter-common.git?rev=f7a8eb699caa6f6a78d3bdfbcaf5dfbd43569ebd" },
+    { name = "pip", specifier = "==23.2.1" },
     { name = "pydantic", specifier = "==2.8.2" },
     { name = "slacker", specifier = "==0.14.0" },
 ]
