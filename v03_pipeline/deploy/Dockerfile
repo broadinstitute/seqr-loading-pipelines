@@ -1,6 +1,6 @@
 FROM docker:dind as BUILD
 FROM ghcr.io/astral-sh/uv:python3.11-alpine AS UV_BUILD
-FROM hailgenetics/hail:0.2.133-py3.11
+FROM hailgenetics/hail:0.2.136-py3.11
 COPY --from=BUILD /usr/local/bin/docker /usr/local/bin/docker
 COPY --from=UV_BUILD /usr/local/bin/uv /usr/local/bin/uv
 LABEL maintainer="Broad TGG"
@@ -15,8 +15,7 @@ WORKDIR /v03_pipeline
 
 ## Copy & Install Application Deps 
 COPY pyproject.toml uv.lock .
-RUN uv sync --locked --no-dev
-RUN python3 -m pip install --no-dependencies --no-cache-dir -r ./requirements.txt -r ./requirements-dataproc.txt -r requirements-prod.txt
+RUN uv sync prod --locked --no-dev
 
 # Application Code
 COPY v03_pipeline/api api
