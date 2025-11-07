@@ -56,9 +56,9 @@ jobs:
       - name: Sync dependencies (prod + dataproc)
         run: uv sync --locked 
       - name: Check Ruff Format
-        run: ruff format --check v03_pipeline --diff
+        run: uv run ruff format --check v03_pipeline --diff
       - name: Check Ruff
-        run: ruff check --output-format github
+        run: uv run ruff check --output-format github
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master
         with:
@@ -71,5 +71,5 @@ jobs:
           export PYSPARK_SUBMIT_ARGS='--driver-memory 8G pyspark-shell'
           export CLICKHOUSE_DATABASE=test
           export LOCAL_DISK_MOUNT_PATH=.
-          nosetests --with-coverage --cover-package v03_pipeline v03_pipeline
-          coverage report --omit '*test*' --fail-under=90
+          uv run nosetests --with-coverage --cover-package v03_pipeline v03_pipeline
+          uv run coverage report --omit '*test*' --fail-under=90
