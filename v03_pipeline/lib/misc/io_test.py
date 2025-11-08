@@ -19,9 +19,11 @@ TEST_IMPUTED_SEX = 'v03_pipeline/var/test/sex_check/test_imputed_sex.tsv'
 TEST_IMPUTED_SEX_UNEXPECTED_VALUE = (
     'v03_pipeline/var/test/sex_check/test_imputed_sex_unexpected_value.tsv'
 )
+CORRUPTED_VCF = 'v03_pipeline/var/test/callsets/1kg_corrupt.vcf.gz'
 TEST_INVALID_VCF = 'v03_pipeline/var/test/callsets/improperly_formatted.vcf'
 TEST_PEDIGREE_3_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_3_remap.tsv'
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
+
 
 
 class IOTest(unittest.TestCase):
@@ -78,6 +80,13 @@ class IOTest(unittest.TestCase):
             'Unable to access the VCF in cloud storage',
             import_vcf,
             'bad.vcf',
+            ReferenceGenome.GRCh38,
+        )
+        self.assertRaisesRegex(
+            SeqrValidationError,
+            "Gzip-compressed data is corrupt",
+            import_vcf,
+            CORRUPTED_VCF,
             ReferenceGenome.GRCh38,
         )
         with mock.patch('v03_pipeline.lib.misc.io.hl.read_table') as mock_read_table:
