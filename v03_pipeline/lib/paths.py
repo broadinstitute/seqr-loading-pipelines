@@ -406,7 +406,7 @@ def loading_pipeline_queue_dir() -> str:
     Returns the directory where loading pipeline requests are queued.
     """
     return os.path.join(
-        Env.LOCAL_DISK_MOUNT_PATH,
+        Env.LOCAL_DISK_MOUNT_DIR,
         'loading_pipeline_queue',
     )
 
@@ -414,7 +414,7 @@ def loading_pipeline_queue_dir() -> str:
 # https://en.wikipedia.org/wiki/Dead_letter_queue
 def loading_pipeline_deadletter_queue_dir() -> str:
     return os.path.join(
-        Env.LOCAL_DISK_MOUNT_PATH,
+        Env.LOCAL_DISK_MOUNT_DIR,
         'loading_pipeline_deadletter_queue',
     )
 

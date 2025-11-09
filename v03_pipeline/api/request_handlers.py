@@ -30,32 +30,29 @@ def run_loading_pipeline(
     local_scheduler: bool,
     *_: Any,
 ):
-    for attempt_id in range(3):
-        luigi_task_result = luigi.build(
-            [
-                WriteSuccessFileTask(
+    luigi_task_result = luigi.build(
+        [
+            WriteSuccessFileTask(
+                run_id=run_id,
+                **lpr.model_dump(exclude='request_type'),
+            )
+            if FeatureFlag.CLICKHOUSE_LOADER_DISABLED
+            else (
+                WriteClickhouseLoadSuccessFileTask(
                     run_id=run_id,
-                    attempt_id=attempt_id,
                     **lpr.model_dump(exclude='request_type'),
                 )
-                if FeatureFlag.CLICKHOUSE_LOADER_DISABLED
-                else (
-                    WriteClickhouseLoadSuccessFileTask(
-                        run_id=run_id,
-                        **lpr.model_dump(exclude='request_type'),
-                    )
-                ),
-            ],
-            detailed_summary=True,
-            local_scheduler=local_scheduler,
-        )
-        if luigi_task_result.status in {
-            luigi.execution_summary.LuigiStatusCode.SUCCESS,
-            luigi.execution_summary.LuigiStatusCode.SUCCESS_WITH_RETRY,
-        }:
-            break
-    else:
-        raise RuntimeError(luigi_task_result.status.value[1])
+            ),
+        ],
+        detailed_summary=True,
+        local_scheduler=local_scheduler,
+    )
+    if luigi_task_result.status in {
+        luigi.execution_summary.LuigiStatusCode.SUCCESS,
+        luigi.execution_summary.LuigiStatusCode.SUCCESS_WITH_RETRY,
+    }:
+        return
+    raise RuntimeError(luigi_task_result.status.value[1])
 
 
 def run_delete_families(dpr: DeleteFamiliesRequest, run_id: str, *_: Any):

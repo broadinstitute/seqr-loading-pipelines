@@ -98,6 +98,7 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
                     'skip_check_sex_and_relatedness': False,
                     'skip_validation': False,
                     'skip_expect_tdr_metrics': False,
+                    'attempt_id': 0,
                 },
             },
         )
