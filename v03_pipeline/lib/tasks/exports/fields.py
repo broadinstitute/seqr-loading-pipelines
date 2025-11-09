@@ -366,7 +366,6 @@ def get_variant_id_fields(
         DatasetType.SNV_INDEL: lambda ht: {
             'variantId': ht.variant_id,
             'rsid': ht.rsid,
-            'CAID': ht.CAID,
         },
         DatasetType.MITO: lambda ht: {
             'variantId': ht.variant_id,

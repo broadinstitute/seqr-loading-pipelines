@@ -125,10 +125,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         self.assertFalse(uvatwns_task.complete())
 
     @patch(
-        'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
-    )
-    @patch('v03_pipeline.lib.tasks.update_new_variants_with_caids.Env')
-    @patch(
         'v03_pipeline.lib.tasks.validate_callset.validate_expected_contig_frequency',
         partial(validate_expected_contig_frequency, min_rows_per_contig=25),
     )
@@ -142,71 +138,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         mock_load_gencode_ensembl_to_refseq_id: Mock,
         mock_vep: Mock,
         mock_standard_contigs: Mock,
-        mock_env_caids: Mock,
-        mock_register_alleles: Mock,
     ) -> None:
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_38_VEP_DATA)
         mock_load_gencode_ensembl_to_refseq_id.return_value = hl.dict(
             {'ENST00000327044': 'NM_015658.4'},
         )
-        # make register_alleles return CAIDs for 4 of 30 variants
-        mock_env_caids.CLINGEN_ALLELE_REGISTRY_LOGIN = 'login'
-        mock_env_caids.CLINGEN_ALLELE_REGISTRY_PASSWORD = 'password1'  # noqa: S105
-        mock_register_alleles.side_effect = [
-            iter(
-                [
-                    hl.Table.parallelize(
-                        [
-                            hl.Struct(
-                                locus=hl.Locus(
-                                    contig='chr1',
-                                    position=871269,
-                                    reference_genome='GRCh38',
-                                ),
-                                alleles=['A', 'C'],
-                                CAID='CA1',
-                            ),
-                            hl.Struct(
-                                locus=hl.Locus(
-                                    contig='chr1',
-                                    position=874734,
-                                    reference_genome='GRCh38',
-                                ),
-                                alleles=['C', 'T'],
-                                CAID='CA2',
-                            ),
-                            hl.Struct(
-                                locus=hl.Locus(
-                                    contig='chr1',
-                                    position=876499,
-                                    reference_genome='GRCh38',
-                                ),
-                                alleles=['A', 'G'],
-                                CAID='CA3',
-                            ),
-                            hl.Struct(
-                                locus=hl.Locus(
-                                    contig='chr1',
-                                    position=878314,
-                                    reference_genome='GRCh38',
-                                ),
-                                alleles=['G', 'C'],
-                                CAID='CA4',
-                            ),
-                        ],
-                        hl.tstruct(
-                            locus=hl.tlocus('GRCh38'),
-                            alleles=hl.tarray(hl.tstr),
-                            CAID=hl.tstr,
-                        ),
-                        key=('locus', 'alleles'),
-                    ),
-                ],
-            ),
-            iter(
-                [],
-            ),  # for the second call, there are no new variants, return empty iterator
-        ]
 
         mock_standard_contigs.return_value = {'chr1'}
         # This creates a mock validation table with 1 coding and 1 non-coding variant
@@ -279,26 +215,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         ht = hl.read_table(uvatwns_task_3.output().path)
         self.assertEqual(ht.count(), 30)
         self.assertEqual(
-            [
-                x
-                for x in ht.select(
-                    'CAID',
-                ).collect()
-                if x.locus.position <= 871269  # noqa: PLR2004
-            ],
-            [
-                hl.Struct(
-                    locus=hl.Locus(
-                        contig='chr1',
-                        position=871269,
-                        reference_genome='GRCh38',
-                    ),
-                    alleles=['A', 'C'],
-                    CAID='CA1',
-                ),
-            ],
-        )
-        self.assertEqual(
             ht.globals.updates.collect(),
             [
                 {
@@ -346,7 +262,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     'variant_id',
                     'xpos',
                     'screen',
-                    'CAID',
                 ).collect()
                 if x.locus.position <= 878809  # noqa: PLR2004
             ],
@@ -365,7 +280,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     variant_id='1-871269-A-C',
                     xpos=1000871269,
                     screen=hl.Struct(region_type_ids=[1]),
-                    CAID='CA1',
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -378,7 +292,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     variant_id='1-874734-C-T',
                     xpos=1000874734,
                     screen=hl.Struct(region_type_ids=[]),
-                    CAID='CA2',
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -391,7 +304,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     variant_id='1-876499-A-G',
                     xpos=1000876499,
                     screen=hl.Struct(region_type_ids=[]),
-                    CAID='CA3',
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -404,7 +316,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     variant_id='1-878314-G-C',
                     xpos=1000878314,
                     screen=hl.Struct(region_type_ids=[]),
-                    CAID='CA4',
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -417,7 +328,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     variant_id='1-878809-C-T',
                     xpos=1000878809,
                     screen=hl.Struct(region_type_ids=[]),
-                    CAID=None,
                 ),
             ],
         )
@@ -639,7 +549,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     PrimateAI_score=None,
                 ),
                 hgmd=None,
-                CAID=None,
                 key_=0,
             ),
         )

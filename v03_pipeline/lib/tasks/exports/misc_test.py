@@ -116,7 +116,6 @@ class MiscTest(unittest.TestCase):
                 variant_id='1-876499-A-G',
                 xpos=1000876499,
                 gt_stats=hl.Struct(AC=47, AN=81784, AF=0.0005746845272369683, hom=1),
-                CAID='CA502654',
                 check_ref=False,
                 sorted_regulatory_feature_consequences=[
                     hl.Struct(
@@ -231,7 +230,6 @@ class MiscTest(unittest.TestCase):
                 variant_id='1-69134-A-G',
                 xpos=1000069134,
                 gt_stats=hl.Struct(AC=25, AN=1246, AF=0.020064204931259155, hom=10),
-                CAID='CA502008',
                 rg38_locus=hl.Locus(
                     contig='chr1',
                     position=69134,
@@ -332,7 +330,6 @@ class MiscTest(unittest.TestCase):
                 variant_id='1-876499-A-G',
                 xpos=1000876499,
                 gt_stats=hl.Struct(AC=47, AN=81784, AF=0.0005746845272369683, hom=1),
-                CAID='CA502654',
                 check_ref=False,
                 gnomad_non_coding_constraint=hl.Struct(z_score=None),
                 hgmd=hl.Struct(accession='abcdefg', classification='DFP'),
@@ -431,7 +428,6 @@ class MiscTest(unittest.TestCase):
                 variant_id='1-876499-A-G',
                 xpos=1000876499,
                 gt_stats=hl.Struct(AC=47, AN=81784, AF=0.0005746845272369683, hom=1),
-                CAID='CA502654',
                 check_ref=False,
                 gnomad_non_coding_constraint=hl.Struct(z_score=None),
                 hgmd=hl.Struct(accession='abcdefg', classification='DFP'),

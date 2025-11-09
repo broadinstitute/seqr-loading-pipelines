@@ -17,9 +17,6 @@ from v03_pipeline.lib.tasks.base.base_update import (
     BaseUpdateTask,
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
-from v03_pipeline.lib.tasks.update_new_variants_with_caids import (
-    UpdateNewVariantsWithCAIDsTask,
-)
 from v03_pipeline.lib.tasks.write_new_variants_table import WriteNewVariantsTableTask
 
 
@@ -38,9 +35,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
     def requires(self) -> list[luigi.Task]:
         return [
             *super().requires(),
-            self.clone(UpdateNewVariantsWithCAIDsTask)
-            if self.dataset_type.should_send_to_allele_registry
-            else self.clone(WriteNewVariantsTableTask),
+            self.clone(WriteNewVariantsTableTask),
         ]
 
     def complete(self) -> bool:

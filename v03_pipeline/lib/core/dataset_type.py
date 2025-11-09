@@ -341,10 +341,6 @@ class DatasetType(StrEnum):
         }.get(self, [])
 
     @property
-    def should_send_to_allele_registry(self):
-        return self == DatasetType.SNV_INDEL
-
-    @property
     def filter_invalid_sites(self):
         return self == DatasetType.SNV_INDEL
 
