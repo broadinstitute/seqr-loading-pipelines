@@ -102,10 +102,16 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
             ),
         )
         export_json = convert_ndarray_to_list(df.head(1).to_dict('records'))
-        self.assertListEqual(list(export_json[0].keys()), ['key', 'transcripts'])
+        self.assertListEqual(
+            list(export_json[0].keys()), ['key', 'CAID', 'transcripts']
+        )
         self.assertEqual(
             export_json[0]['key'],
             0,
+        )
+        self.assertEqual(
+            export_json[0]['CAID'],
+            None,
         )
         self.assertEqual(
             export_json[0]['transcripts'][0],
@@ -204,10 +210,16 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
             ),
         )
         export_json = convert_ndarray_to_list(df.head(1).to_dict('records'))
-        self.assertListEqual(list(export_json[0].keys()), ['key', 'transcripts'])
+        self.assertListEqual(
+            list(export_json[0].keys()), ['key', 'CAID', 'transcripts']
+        )
         self.assertEqual(
             export_json[0]['key'],
             1424,
+        )
+        self.assertEqual(
+            export_json[0]['CAID'],
+            None,
         )
         self.assertEqual(
             export_json[0]['transcripts'][0],

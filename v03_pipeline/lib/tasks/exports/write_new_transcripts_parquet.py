@@ -64,6 +64,7 @@ class WriteNewTranscriptsParquetTask(BaseWriteParquetTask):
         ht = ht.key_by()
         return ht.select(
             key_=ht.key_,
+            CAID=hl.missing(hl.tstr),
             transcripts=hl.enumerate(
                 ht.sortedTranscriptConsequences,
             ).starmap(reformat_transcripts_for_export),
