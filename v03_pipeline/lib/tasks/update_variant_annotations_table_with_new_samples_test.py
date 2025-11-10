@@ -414,17 +414,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ],
         )
 
-    @patch(
-        'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
-    )
     @patch('v03_pipeline.lib.vep.hl.vep')
     def test_update_vat_grch37(
         self,
         mock_vep: Mock,
-        mock_register_alleles: Mock,
     ) -> None:
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_37_VEP_DATA)
-        mock_register_alleles.side_effect = None
         copy_project_pedigree_to_mocked_dir(
             TEST_PEDIGREE_3_REMAP,
             ReferenceGenome.GRCh37,
@@ -553,9 +548,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ),
         )
 
-    @patch(
-        'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
-    )
     @patch('v03_pipeline.lib.reference_datasets.reference_dataset.FeatureFlag')
     @patch('v03_pipeline.lib.vep.hl.vep')
     @patch(
@@ -566,7 +558,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         mock_load_gencode_ensembl_to_refseq_id: Mock,
         mock_vep: Mock,
         mock_rd_ff: Mock,
-        mock_register_alleles: Mock,
     ) -> None:
         mock_load_gencode_ensembl_to_refseq_id.return_value = hl.dict(
             {'ENST00000327044': 'NM_015658.4'},
@@ -579,7 +570,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         )
         mock_rd_ff.ACCESS_PRIVATE_REFERENCE_DATASETS = False
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_38_VEP_DATA)
-        mock_register_alleles.side_effect = None
         copy_project_pedigree_to_mocked_dir(
             TEST_PEDIGREE_3_REMAP,
             ReferenceGenome.GRCh38,
@@ -619,14 +609,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ],
         )
 
-    @patch(
-        'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
-    )
     def test_mito_update_vat(
         self,
-        mock_register_alleles: Mock,
     ) -> None:
-        mock_register_alleles.side_effect = None
         copy_project_pedigree_to_mocked_dir(
             TEST_PEDIGREE_5,
             ReferenceGenome.GRCh38,
