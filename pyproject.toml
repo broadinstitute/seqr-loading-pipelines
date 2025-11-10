@@ -39,6 +39,9 @@ dev = [
     "pyarrow",
 ]
 
+[tool.uv]
+exclude-dependencies = ["psycopg2-binary"]
+
 [tool.setuptools]
 include-package-data = true
 
