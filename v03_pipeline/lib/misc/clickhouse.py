@@ -26,6 +26,7 @@ logger = get_logger(__name__)
 GCS_NAMED_COLLECTION = 'pipeline_data_access'
 GOOGLE_XML_API_PATH = 'https://storage.googleapis.com/'
 OPTIMIZE_TABLE_TIMEOUT_S = 99999
+WAIT_VIEW_TIMEOUT_S = 900
 REDACTED = 'REDACTED'
 STAGING_CLICKHOUSE_DATABASE = 'staging'
 
@@ -529,7 +530,7 @@ def refresh_materialized_views(
             f"""
             SYSTEM WAIT VIEW {table_name_builder.staging_dst_table(materialized_view) if staging else table_name_builder.dst_table(materialized_view)}
             """,
-            timeout=600,
+            timeout=WAIT_VIEW_TIMEOUT_S,
         )
 
 
@@ -807,7 +808,7 @@ def load_complete_run(
                 f"""
                 SYSTEM WAIT VIEW {clickhouse_reference_data.seqr_variants_to_search_mv_path(table_name_builder)}
                 """,
-                timeout=300,
+                timeout=WAIT_VIEW_TIMEOUT_S,
             )
         else:
             logged_query(
