@@ -25,7 +25,6 @@ TEST_PEDIGREE_3_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_3_remap.t
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
 
 
-
 class IOTest(unittest.TestCase):
     def test_file_size_mb(self) -> None:
         # find v03_pipeline/var/test/callsets/mito_1.mt -type f | grep -v 'crc' | xargs ls -alt {} | awk '{sum += $5; print sum}'
@@ -84,7 +83,7 @@ class IOTest(unittest.TestCase):
         )
         self.assertRaisesRegex(
             SeqrValidationError,
-            "Gzip-compressed data is corrupt",
+            'Gzip-compressed data is corrupt',
             import_vcf,
             CORRUPTED_VCF,
             ReferenceGenome.GRCh38,
