@@ -15,7 +15,7 @@ WORKDIR /v03_pipeline
 
 ## Copy & Install Application Deps 
 COPY pyproject.toml uv.lock .
-RUN uv sync prod --locked --no-dev
+RUN uv sync --no-group dev --locked
 
 # Application Code
 COPY v03_pipeline/api api
