@@ -1,6 +1,8 @@
 FROM docker:dind as BUILD
-FROM hailgenetics/hail:0.2.133-py3.11
+FROM ghcr.io/astral-sh/uv:python3.11-alpine AS UV_BUILD
+FROM hailgenetics/hail:0.2.136-py3.11
 COPY --from=BUILD /usr/local/bin/docker /usr/local/bin/docker
+COPY --from=UV_BUILD /usr/local/bin/uv /usr/local/bin/uv
 LABEL maintainer="Broad TGG"
 
 ARG PIPELINE_RUNNER_APP_VERSION
@@ -12,15 +14,14 @@ ENV PATH $PATH:/root/google-cloud-sdk/bin
 WORKDIR /v03_pipeline
 
 ## Copy & Install Application Deps 
-COPY requirements.txt .
-COPY requirements-dataproc.txt .
-COPY requirements-prod.txt .
-RUN python3 -m pip install --no-dependencies --no-cache-dir -r ./requirements.txt -r ./requirements-dataproc.txt -r requirements-prod.txt
+COPY pyproject.toml uv.lock .
+RUN uv sync prod --locked --no-dev
 
 # Application Code
 COPY v03_pipeline/api api
 COPY v03_pipeline/bin bin
 COPY v03_pipeline/lib lib
+COPY v03_pipeline/ops ops
 COPY v03_pipeline/var/liftover var/liftover
 
 # Special paths
