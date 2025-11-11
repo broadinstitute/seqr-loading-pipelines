@@ -14,7 +14,7 @@ ENV PATH $PATH:/root/google-cloud-sdk/bin
 ## Copy & Install Application Deps 
 WORKDIR /
 COPY pyproject.toml uv.lock .
-RUN uv sync --no-group dev --locked
+RUN uv sync --group prod --no-group dev --locked
 
 # Application Code
 WORKDIR /v03_pipeline
