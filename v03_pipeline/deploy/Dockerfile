@@ -11,13 +11,13 @@ ENV PIPELINE_RUNNER_APP_VERSION=${PIPELINE_RUNNER_APP_VERSION}
 RUN curl -sSL https://sdk.cloud.google.com | bash
 ENV PATH $PATH:/root/google-cloud-sdk/bin
 
-WORKDIR /v03_pipeline
-
 ## Copy & Install Application Deps 
+WORKDIR /
 COPY pyproject.toml uv.lock .
 RUN uv sync --no-group dev --locked
 
 # Application Code
+WORKDIR /v03_pipeline
 COPY v03_pipeline/api api
 COPY v03_pipeline/bin bin
 COPY v03_pipeline/lib lib
