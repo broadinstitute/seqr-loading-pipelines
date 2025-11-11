@@ -1744,7 +1744,7 @@ wheels = [
 
 [[package]]
 name = "ipykernel"
-version = "6.22.0"
+version = "6.29.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "appnope", marker = "sys_platform == 'darwin'" },
@@ -1761,9 +1761,9 @@ dependencies = [
     { name = "tornado" },
     { name = "traitlets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bc/18/a773c8f970269988c56678c7b8739b106c5557e419864481c90949db3754/ipykernel-6.22.0.tar.gz", hash = "sha256:302558b81f1bc22dc259fb2a0c5c7cf2f4c0bdb21b50484348f7bafe7fb71421", size = 151303, upload-time = "2023-03-20T14:41:50.653Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/87/e4/6f1b4ab7d7fb9268d67a6c7c4520a7d76a5bbafd7abb716ed43b006153e0/ipykernel-6.29.2.tar.gz", hash = "sha256:3bade28004e3ff624ed57974948116670604ac5f676d12339693f3142176d3f0", size = 161175, upload-time = "2024-02-07T13:43:12.195Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/48/1b/260b3e4d2f633c1c9019e25a977a9e82341d0713ad8fb60e01b97b7559a4/ipykernel-6.22.0-py3-none-any.whl", hash = "sha256:1ae6047c1277508933078163721bbb479c3e7292778a04b4bacf0874550977d6", size = 149991, upload-time = "2023-03-20T14:41:48.164Z" },
+    { url = "https://files.pythonhosted.org/packages/16/9a/0c7b514c73b42cf4ce516ee26c8940a0b23a9754dafaa459a939220240fd/ipykernel-6.29.2-py3-none-any.whl", hash = "sha256:50384f5c577a260a1d53f1f59a828c7266d321c9b7d00d345693783f66616055", size = 116062, upload-time = "2024-02-07T13:43:09.058Z" },
 ]
 
 [[package]]
@@ -1811,18 +1811,18 @@ wheels = [
 
 [[package]]
 name = "ipywidgets"
-version = "8.0.6"
+version = "8.1.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ipykernel" },
+    { name = "comm" },
     { name = "ipython" },
     { name = "jupyterlab-widgets" },
     { name = "traitlets" },
     { name = "widgetsnbextension" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/64/3c/00fe451a0571677a37e78515613f6578ba61462626354a98c17e1b4f9c68/ipywidgets-8.0.6.tar.gz", hash = "sha256:de7d779f2045d60de9f6c25f653fdae2dba57898e6a1284494b3ba20b6893bb8", size = 115372, upload-time = "2023-03-28T15:16:50.533Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3e/48/d3dbac45c2814cb73812f98dd6b38bbcc957a4e7bb31d6ea9c03bf94ed87/ipywidgets-8.1.7.tar.gz", hash = "sha256:15f1ac050b9ccbefd45dccfbb2ef6bed0029d8278682d569d71b8dd96bee0376", size = 116721, upload-time = "2025-05-05T12:42:03.489Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/50/7d/2c8b7bba2b1c2b5d1299f22fa7853f09b573c84e63b62870c13a6ec11990/ipywidgets-8.0.6-py3-none-any.whl", hash = "sha256:a60bf8d2528997e05ac83fd19ea2fbe65f2e79fbe1b2b35779bdfc46c2941dcc", size = 138302, upload-time = "2023-03-28T15:16:47.675Z" },
+    { url = "https://files.pythonhosted.org/packages/58/6a/9166369a2f092bd286d24e6307de555d63616e8ddb373ebad2b5635ca4cd/ipywidgets-8.1.7-py3-none-any.whl", hash = "sha256:764f2602d25471c213919b8a1997df04bef869251db4ca8efba1b76b1bd9f7bb", size = 139806, upload-time = "2025-05-05T12:41:56.833Z" },
 ]
 
 [[package]]
@@ -2506,7 +2506,7 @@ wheels = [
 
 [[package]]
 name = "nbconvert"
-version = "7.3.1"
+version = "7.13.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beautifulsoup4" },
@@ -2525,9 +2525,9 @@ dependencies = [
     { name = "tinycss2" },
     { name = "traitlets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9a/60/e682399bba78a8f3cf39f23006ab1bbb3f8b7706c6f00f34e2f5e36bfc44/nbconvert-7.3.1.tar.gz", hash = "sha256:78685362b11d2e8058e70196fe83b09abed8df22d3e599cf271f4d39fdc48b9e", size = 880064, upload-time = "2023-04-10T13:58:22.119Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8b/aa/7563eca73ade359f69605f38012d35024b257afa1db1c1c76b20259753d1/nbconvert-7.13.1.tar.gz", hash = "sha256:2dc8267dbdfeedce2dcd34c9e3f1b51af18f43cb105549d1c5a18189ec23ba85", size = 851593, upload-time = "2023-12-21T18:31:59.355Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/35/3a/60a1821e977104c98fa3a6142adb768a10e1c110438b323076fbda2c0087/nbconvert-7.3.1-py3-none-any.whl", hash = "sha256:d2e95904666f1ff77d36105b9de4e0801726f93b862d5b28f69e93d99ad3b19c", size = 284123, upload-time = "2023-04-10T13:58:19.854Z" },
+    { url = "https://files.pythonhosted.org/packages/be/80/aa90a9fea4893b6ffb584ce5c61f3497fb76febe5648f9bc257b15a29ded/nbconvert-7.13.1-py3-none-any.whl", hash = "sha256:3c50eb2d326478cc90b8759cf2ab9dde3d892c6537cd6a5bc0991db8ef734bcc", size = 256594, upload-time = "2023-12-21T18:31:56.222Z" },
 ]
 
 [[package]]
@@ -2574,7 +2574,7 @@ wheels = [
 
 [[package]]
 name = "notebook"
-version = "6.5.6"
+version = "6.5.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "argon2-cffi" },
@@ -2594,9 +2594,9 @@ dependencies = [
     { name = "tornado" },
     { name = "traitlets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/86/e9/11789056c6c4cbf88ea599df47a8b8535d09006cd124794c911180923e0e/notebook-6.5.6.tar.gz", hash = "sha256:b4625a4b7a597839dd3156b140d5ba2c7123761f98245a3290f67a8b8ee048d9", size = 5786735, upload-time = "2023-09-19T02:43:04.391Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/05/bc/b025bac523640c13b0c1150466475eac3d79acbf187ef6c1967596c41c43/notebook-6.5.7.tar.gz", hash = "sha256:04eb9011dfac634fbd4442adaf0a8c27cd26beef831fe1d19faf930c327768e4", size = 5786526, upload-time = "2024-05-01T17:42:26.956Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f2/b0/24277b431a62f50e85ae5f7cad478419ed9645f4ba1dd035f2ce11326777/notebook-6.5.6-py3-none-any.whl", hash = "sha256:c1e2eb2e3b6079a0552a04974883a48d04c3c05792170d64a4b23d707d453181", size = 529831, upload-time = "2023-09-19T02:43:01.103Z" },
+    { url = "https://files.pythonhosted.org/packages/af/9c/0620631da9d7013e95a8f985043cad229a0d8fb537a7e3f8ff8467565a8c/notebook-6.5.7-py3-none-any.whl", hash = "sha256:a6afa9a4ff4d149a0771ff8b8c881a7a73b3835f9add0606696d6e9d98ac1cd0", size = 529829, upload-time = "2024-05-01T17:42:22.403Z" },
 ]
 
 [[package]]
@@ -4220,11 +4220,11 @@ requires-dist = [
     { name = "google-cloud-bigquery", specifier = "==3.29.0" },
     { name = "google-cloud-dataproc", specifier = "==5.16.0" },
     { name = "hail", specifier = "==0.2.136" },
-    { name = "ipykernel", specifier = "==6.22.0" },
-    { name = "ipywidgets", specifier = "==8.0.6" },
+    { name = "ipykernel", specifier = "==6.29.2" },
+    { name = "ipywidgets", specifier = "==8.1.7" },
     { name = "luigi", specifier = "==3.5.2" },
-    { name = "nbconvert", specifier = "==7.3.1" },
-    { name = "notebook", specifier = "==6.5.6" },
+    { name = "nbconvert", specifier = "==7.13.1" },
+    { name = "notebook", specifier = "==6.5.7" },
     { name = "onnxconverter-common", git = "https://github.com/microsoft/onnxconverter-common.git?rev=f7a8eb699caa6f6a78d3bdfbcaf5dfbd43569ebd" },
     { name = "pip", specifier = "==23.2.1" },
     { name = "pydantic", specifier = "==2.8.2" },

@@ -3,17 +3,17 @@ name = "seqr-loading-pipeline"
 dynamic = ['version']
 requires-python = ">=3.11"
 dependencies = [
-    "hail==0.2.136",
+    "hail==0.2.136", # NB: when upgrading hail, manually verify the below jupyter pins
     "luigi==3.5.2",
     "gnomad==0.8.0",
     "aiofiles==24.1.0",
     "pydantic==2.8.2",
     "clickhouse-driver==0.2.9",
     "slacker==0.14.0",
-    "ipywidgets==8.0.6",  # matches pinned version in hail init_notebook.py
-    "ipykernel==6.22.0",  # matches pinned version in hail init_notebook.py
-    "notebook==6.5.6",    # matches pinned version in hail init_notebook.py
-    "nbconvert==7.3.1",   # matches pinned version in hail init_notebook.py
+    "ipywidgets==8.1.7",  # matches pinned version in hail init_notebook.py
+    "ipykernel==6.29.2",  # matches pinned version in hail init_notebook.py
+    "notebook==6.5.7",    # matches pinned version in hail init_notebook.py
+    "nbconvert==7.13.1",   # matches pinned version in hail init_notebook.py
     # Git/URL installs (PEP 508 direct references)
     "gnomad-qc @ git+https://github.com/broadinstitute/gnomad_qc.git@v4.1",
     "onnxconverter-common @ git+https://github.com/microsoft/onnxconverter-common.git@f7a8eb699caa6f6a78d3bdfbcaf5dfbd43569ebd",
