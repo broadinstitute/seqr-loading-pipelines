@@ -2,12 +2,12 @@ import hail as hl
 import luigi.worker
 import pandas as pd
 
-from v03_pipeline.lib.misc.io import remap_pedigree_hash
-from v03_pipeline.lib.model import (
+from v03_pipeline.lib.core import (
     DatasetType,
     ReferenceGenome,
     SampleType,
 )
+from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.paths import (
     project_pedigree_path,
     variant_annotations_parquet_path,
