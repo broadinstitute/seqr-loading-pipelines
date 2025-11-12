@@ -5,7 +5,7 @@ from enum import Enum
 import hail as hl
 import numpy as np
 
-from v03_pipeline.lib.model import Sex
+from v03_pipeline.lib.core import Sex
 
 DEFAULT_RELATEDNESS_TOLERANCE = 0.2
 PARENT_CHILD_RELATEDNESS_TOLERANCE = 0.4

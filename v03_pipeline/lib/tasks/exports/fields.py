@@ -3,7 +3,7 @@ import gzip
 import hail as hl
 import hailtop.fs as hfs
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.paths import db_id_to_gene_id_path
 from v03_pipeline.lib.tasks.exports.misc import reformat_transcripts_for_export
 

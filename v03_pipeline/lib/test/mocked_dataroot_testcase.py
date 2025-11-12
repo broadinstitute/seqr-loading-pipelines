@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from v03_pipeline.lib.model import Env
+from v03_pipeline.lib.core import Env
 
 
 class MockedDatarootTestCase(unittest.TestCase):

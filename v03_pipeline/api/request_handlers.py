@@ -12,13 +12,13 @@ from v03_pipeline.api.model import (
     PipelineRunnerRequest,
     RebuildGtStatsRequest,
 )
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.clickhouse import (
     delete_family_guids,
-    load_complete_run,
+    rebuild_gt_stats,
 )
 from v03_pipeline.lib.misc.retry import retry
-from v03_pipeline.lib.model import DatasetType, FeatureFlag, ReferenceGenome
 from v03_pipeline.lib.paths import (
     clickhouse_load_success_file_path,
     metadata_for_run_path,
@@ -74,39 +74,22 @@ def run_loading_pipeline(
     local_scheduler: bool,
     *_: Any,
 ):
-    for attempt_id in range(3):
-        luigi_task_result = luigi.build(
-            [
-                WriteSuccessFileTask(
-                    run_id=run_id,
-                    attempt_id=attempt_id,
-                    **lpr.model_dump(exclude='request_type'),
-                ),
-            ],
-            detailed_summary=True,
-            local_scheduler=local_scheduler,
-        )
-        if luigi_task_result.status in {
-            luigi.execution_summary.LuigiStatusCode.SUCCESS,
-            luigi.execution_summary.LuigiStatusCode.SUCCESS_WITH_RETRY,
-        }:
-            break
-    else:
-        raise RuntimeError(luigi_task_result.status.value[1])
-    if FeatureFlag.CLICKHOUSE_LOADER_DISABLED:
-        project_guids, family_guids = fetch_run_metadata(
-            lpr.reference_genome,
-            lpr.dataset_type,
-            run_id,
-        )
-        load_complete_run(
-            lpr.reference_genome,
-            lpr.dataset_type,
-            run_id,
-            project_guids,
-            family_guids,
-        )
-        write_success_file(lpr.reference_genome, lpr.dataset_type, run_id)
+    luigi_task_result = luigi.build(
+        [
+            WriteSuccessFileTask(
+                run_id=run_id,
+                **lpr.model_dump(exclude='request_type'),
+            ),
+        ],
+        detailed_summary=True,
+        local_scheduler=local_scheduler,
+    )
+    if luigi_task_result.status in {
+        luigi.execution_summary.LuigiStatusCode.SUCCESS,
+        luigi.execution_summary.LuigiStatusCode.SUCCESS_WITH_RETRY,
+    }:
+        return
+    raise RuntimeError(luigi_task_result.status.value[1])
 
 
 def run_delete_families(dpr: DeleteFamiliesRequest, run_id: str, *_: Any):
@@ -120,7 +103,7 @@ def run_delete_families(dpr: DeleteFamiliesRequest, run_id: str, *_: Any):
             )
 
 
-def rebuild_gt_stats(rgsr: RebuildGtStatsRequest, run_id: str, *_: Any):
+def run_rebuild_gt_stats(rgsr: RebuildGtStatsRequest, run_id: str, *_: Any):
     for dataset_type in DatasetType:
         for reference_genome in dataset_type.reference_genomes:
             rebuild_gt_stats(
@@ -137,5 +120,5 @@ REQUEST_HANDLER_MAP: dict[
 ] = {
     LoadingPipelineRequest: run_loading_pipeline,
     DeleteFamiliesRequest: run_delete_families,
-    RebuildGtStatsRequest: rebuild_gt_stats,
+    RebuildGtStatsRequest: run_rebuild_gt_stats,
 }

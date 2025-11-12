@@ -1,5 +1,7 @@
+import ast
 import functools
 import hashlib
+import math
 import os
 import time
 from collections.abc import Callable
@@ -9,10 +11,10 @@ from string import Template
 
 from clickhouse_driver import Client
 
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome
+from v03_pipeline.lib.core.environment import Env
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.retry import retry
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome
-from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import (
     new_entries_parquet_path,
     new_transcripts_parquet_path,
@@ -24,6 +26,7 @@ logger = get_logger(__name__)
 GCS_NAMED_COLLECTION = 'pipeline_data_access'
 GOOGLE_XML_API_PATH = 'https://storage.googleapis.com/'
 OPTIMIZE_TABLE_TIMEOUT_S = 99999
+WAIT_VIEW_TIMEOUT_S = 900
 REDACTED = 'REDACTED'
 STAGING_CLICKHOUSE_DATABASE = 'staging'
 
@@ -153,15 +156,8 @@ class ClickHouseDictionary(StrEnum):
 
 
 class ClickHouseMaterializedView(StrEnum):
-    CLINVAR_ALL_VARIANTS_TO_CLINVAR_MV = 'clinvar_all_variants_to_clinvar_mv'
     ENTRIES_TO_PROJECT_GT_STATS_MV = 'entries_to_project_gt_stats_mv'
     PROJECT_GT_STATS_TO_GT_STATS_MV = 'project_gt_stats_to_gt_stats_mv'
-
-    @classmethod
-    def for_dataset_type_refreshable(cls, dataset_type: DatasetType):
-        if dataset_type in {DatasetType.SV, DatasetType.GCNV}:
-            return []
-        return [ClickHouseMaterializedView.CLINVAR_ALL_VARIANTS_TO_CLINVAR_MV]
 
     @classmethod
     def for_dataset_type_atomic_entries_update(
@@ -232,6 +228,36 @@ class TableNameBuilder:
         return f"file('{path}', 'Parquet')"
 
 
+class ClickhouseReferenceData(StrEnum):
+    CLINVAR = 'clinvar'
+
+    @classmethod
+    def for_dataset_type(cls, dataset_type: DatasetType):
+        if dataset_type in {DatasetType.SV, DatasetType.GCNV}:
+            return []
+        return [ClickhouseReferenceData.CLINVAR]
+
+    def search_is_join_table(self):
+        return self == ClickhouseReferenceData.CLINVAR
+
+    def all_variants_path(self, table_name_builder: TableNameBuilder) -> str:
+        return (
+            f'{table_name_builder.dst_prefix}/reference_data/{self.value}/all_variants`'
+        )
+
+    def seqr_variants_path(self, table_name_builder: TableNameBuilder) -> str:
+        return f'{table_name_builder.dst_prefix}/reference_data/{self.value}/seqr_variants`'
+
+    def search_path(self, table_name_builder: TableNameBuilder) -> str:
+        return f'{table_name_builder.dst_prefix}/reference_data/{self.value}`'
+
+    def seqr_variants_to_search_mv_path(
+        self,
+        table_name_builder: TableNameBuilder,
+    ) -> str:
+        return f'{table_name_builder.dst_prefix}/reference_data/{self.value}/seqr_variants_to_search_mv`'
+
+
 def logged_query(query, params=None, timeout: int | None = None):
     client = get_clickhouse_client(timeout)
     sanitized_query = query
@@ -244,7 +270,6 @@ def logged_query(query, params=None, timeout: int | None = None):
     return client.execute(query, params)
 
 
-@retry(delay=1)
 def drop_staging_db():
     logged_query(f'DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};')
 
@@ -289,6 +314,53 @@ def get_create_mv_statements(
     )[0]
 
 
+def normalize_partition(partition: str) -> tuple:
+    """
+    Ensure a ClickHouse partition expression is always returned as a tuple.
+    'project_d'       -> ('project_d',)
+    "('project_d', 0)" -> ('project_d', 0)
+    """
+    if not isinstance(partition, str):
+        msg = f'Unsupported partition type: {type(partition)}'
+        raise TypeError(msg)
+    partition = partition.strip()
+    if partition.startswith('(') and partition.endswith(')'):
+        return ast.literal_eval(partition)
+    return (partition,)
+
+
+def get_partitions_for_projects(
+    table_name_builder: TableNameBuilder,
+    clickhouse_table: ClickHouseTable,
+    project_guids: list[str],
+    staging=False,
+):
+    rows = logged_query(
+        """
+        SELECT DISTINCT partition
+        FROM system.parts
+        WHERE
+            database = %(database)s
+            AND table = %(table)s
+            AND multiSearchAny(partition, %(project_guids)s)
+        """,
+        {
+            'database': STAGING_CLICKHOUSE_DATABASE
+            if staging
+            else Env.CLICKHOUSE_DATABASE,
+            'table': (
+                table_name_builder.staging_dst_table(clickhouse_table)
+                if staging
+                else table_name_builder.dst_table(clickhouse_table)
+            )
+            .split('.')[1]
+            .replace('`', ''),
+            'project_guids': project_guids,
+        },
+    )
+    return [normalize_partition(row[0]) for row in rows]
+
+
 def create_staging_materialized_views(
     table_name_builder: TableNameBuilder,
     clickhouse_mvs: list[ClickHouseMaterializedView],
@@ -324,15 +396,19 @@ def stage_existing_project_partitions(
                 """,
             )
             continue
-        for project_guid in project_guids:
+        for partition in get_partitions_for_projects(
+            table_name_builder,
+            clickhouse_table,
+            project_guids,
+        ):
             # Note that ClickHouse successfully handles the case where the project
             # does not already exist in the dst table.  We simply attach an empty partition!
             logged_query(
                 f"""
                 ALTER TABLE {table_name_builder.staging_dst_table(clickhouse_table)}
-                ATTACH PARTITION %(project_guid)s FROM {table_name_builder.dst_table(clickhouse_table)}
+                ATTACH PARTITION %(partition)s FROM {table_name_builder.dst_table(clickhouse_table)}
                 """,
-                {'project_guid': project_guid},
+                {'partition': partition},
             )
 
 
@@ -343,7 +419,7 @@ def delete_existing_families_from_staging_entries(
     logged_query(
         f"""
         INSERT INTO {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)}
-        SELECT COLUMNS('.*') EXCEPT(sign), -1 as sign
+        SELECT COLUMNS('.*') EXCEPT(sign, n_partitions, partition_id), -1 as sign
         FROM {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)}
         WHERE family_guid in %(family_guids)s
         """,
@@ -354,18 +430,34 @@ def delete_existing_families_from_staging_entries(
 def insert_new_entries(
     table_name_builder: TableNameBuilder,
 ) -> None:
+    dst_cols = [
+        r[0]
+        for r in logged_query(
+            f'DESCRIBE TABLE {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)}',
+        )
+    ]
+    src_cols = [
+        r[0]
+        for r in logged_query(
+            f'DESCRIBE TABLE {table_name_builder.src_table(ClickHouseTable.ENTRIES)}',
+        )
+    ]
+    common = [c for c in dst_cols if c in src_cols]
+    dst_list = ', '.join(common)
+    src_list = ', '.join(common)
     logged_query(
         f"""
-        INSERT INTO {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)}
-        SELECT *
+        INSERT INTO {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)} ({dst_list})
+        SELECT {src_list}
         FROM {table_name_builder.src_table(ClickHouseTable.ENTRIES)}
         """,
     )
 
 
-@retry(tries=5)
+@retry(tries=2)
 def optimize_entries(
     table_name_builder: TableNameBuilder,
+    project_guids: list[str],
 ) -> None:
     safely_optimized = False
     while not safely_optimized:
@@ -399,10 +491,22 @@ def optimize_entries(
                 logger.info('Decrs exist and merges are running, so waiting')
             else:
                 logger.info('Decrs exist and no merges are running, so optimizing')
+                partitions = get_partitions_for_projects(
+                    table_name_builder,
+                    ClickHouseTable.ENTRIES,
+                    project_guids,
+                    staging=True,
+                )
+                table_name = table_name_builder.staging_dst_table(
+                    ClickHouseTable.ENTRIES,
+                )
+                optimize_statements = [
+                    f'OPTIMIZE TABLE {table_name} PARTITION {partition} FINAL'
+                    for partition in partitions
+                ]
+                parallel_optimize_sql = '\nPARALLEL WITH\n'.join(optimize_statements)
                 logged_query(
-                    f"""
-                    OPTIMIZE TABLE {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)} FINAL
-                    """,
+                    parallel_optimize_sql,
                     timeout=OPTIMIZE_TABLE_TIMEOUT_S,
                 )
             time.sleep(Env.CLICKHOUSE_OPTIMIZE_TABLE_WAIT_S)
@@ -410,7 +514,7 @@ def optimize_entries(
             safely_optimized = True
 
 
-@retry(delay=5)
+@retry(tries=2)
 def refresh_materialized_views(
     table_name_builder,
     materialized_views: list[ClickHouseMaterializedView],
@@ -426,11 +530,10 @@ def refresh_materialized_views(
             f"""
             SYSTEM WAIT VIEW {table_name_builder.staging_dst_table(materialized_view) if staging else table_name_builder.dst_table(materialized_view)}
             """,
-            timeout=600,
+            timeout=WAIT_VIEW_TIMEOUT_S,
         )
 
 
-@retry(delay=5)
 def validate_family_guid_counts(
     table_name_builder: TableNameBuilder,
     project_guids: list[str],
@@ -470,7 +573,7 @@ def validate_family_guid_counts(
         raise ValueError(msg)
 
 
-@retry(delay=5)
+@retry(tries=2)
 def reload_dictionaries(
     table_name_builder: TableNameBuilder,
     dictionaries: list[ClickHouseDictionary],
@@ -483,20 +586,24 @@ def reload_dictionaries(
         )
 
 
-@retry(delay=5)  # REPLACE partition is a copy, so this is idempotent.
 def replace_project_partitions(
     table_name_builder: TableNameBuilder,
     clickhouse_tables: list[ClickHouseTable],
     project_guids: list[str],
 ) -> None:
     for clickhouse_table in clickhouse_tables:
-        for project_guid in project_guids:
+        for partition in get_partitions_for_projects(
+            table_name_builder,
+            clickhouse_table,
+            project_guids,
+            staging=True,
+        ):
             logged_query(
                 f"""
                 ALTER TABLE {table_name_builder.dst_table(clickhouse_table)}
-                REPLACE PARTITION %(project_guid)s FROM {table_name_builder.staging_dst_table(clickhouse_table)}
+                REPLACE PARTITION %(partition)s FROM {table_name_builder.staging_dst_table(clickhouse_table)}
                 """,
-                {'project_guid': project_guid},
+                {'partition': partition},
             )
 
 
@@ -514,7 +621,6 @@ def exchange_tables(
         )
 
 
-@retry()
 def direct_insert_annotations(
     table_name_builder: TableNameBuilder,
     **_,
@@ -563,7 +669,6 @@ def direct_insert_annotations(
     drop_staging_db()
 
 
-@retry()
 def direct_insert_all_keys(
     clickhouse_table: ClickHouseTable,
     table_name_builder: TableNameBuilder,
@@ -613,7 +718,6 @@ def finalize_refresh_flow(
     )
 
 
-@retry()
 def atomic_insert_entries(
     table_name_builder: TableNameBuilder,
     project_guids: list[str],
@@ -648,6 +752,7 @@ def atomic_insert_entries(
     )
     optimize_entries(
         table_name_builder,
+        project_guids,
     )
     validate_family_guid_counts(
         table_name_builder,
@@ -657,6 +762,7 @@ def atomic_insert_entries(
     finalize_refresh_flow(table_name_builder, project_guids)
 
 
+@retry()
 def load_complete_run(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
@@ -677,14 +783,42 @@ def load_complete_run(
             project_guids=project_guids,
             family_guids=family_guids,
         )
-    refresh_materialized_views(
-        table_name_builder,
-        ClickHouseMaterializedView.for_dataset_type_refreshable(
-            dataset_type,
-        ),
-    )
+    for clickhouse_reference_data in ClickhouseReferenceData.for_dataset_type(
+        dataset_type,
+    ):
+        logged_query(
+            f"""
+            INSERT INTO {clickhouse_reference_data.seqr_variants_path(table_name_builder)}
+            SELECT
+                DISTINCT ON (key)
+                dst.key as key,
+                COLUMNS('.*') EXCEPT(version, variantId, key)
+            FROM {clickhouse_reference_data.all_variants_path(table_name_builder)} src
+            INNER JOIN {table_name_builder.dst_table(ClickHouseTable.KEY_LOOKUP)} dst
+            ON {ClickHouseTable.KEY_LOOKUP.join_condition}
+            """,
+        )
+        if clickhouse_reference_data.search_is_join_table:
+            logged_query(
+                f"""
+                SYSTEM REFRESH VIEW {clickhouse_reference_data.seqr_variants_to_search_mv_path(table_name_builder)}
+                """,
+            )
+            logged_query(
+                f"""
+                SYSTEM WAIT VIEW {clickhouse_reference_data.seqr_variants_to_search_mv_path(table_name_builder)}
+                """,
+                timeout=WAIT_VIEW_TIMEOUT_S,
+            )
+        else:
+            logged_query(
+                f"""
+                SYSTEM RELOAD DICTIONARY {clickhouse_reference_data.search_path(table_name_builder)}
+                """,
+            )
 
 
+@retry()
 def delete_family_guids(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
@@ -715,6 +849,7 @@ def delete_family_guids(
         logger.info(msg)
         return
     project_guids = [project_guid]
+    drop_staging_db()
     create_staging_tables(
         table_name_builder,
         ClickHouseTable.for_dataset_type_atomic_entries_update(dataset_type),
@@ -738,10 +873,12 @@ def delete_family_guids(
     )
     optimize_entries(
         table_name_builder,
+        project_guids,
     )
     finalize_refresh_flow(table_name_builder, project_guids)
 
 
+@retry()
 def rebuild_gt_stats(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
@@ -761,6 +898,7 @@ def rebuild_gt_stats(
         dataset_type,
         run_id,
     )
+    drop_staging_db()
     create_staging_tables(
         table_name_builder,
         ClickHouseTable.for_dataset_type_atomic_entries_update(dataset_type),
@@ -778,24 +916,50 @@ def rebuild_gt_stats(
             dataset_type,
         ),
     )
-    for project_guid in project_guids:
+    for partition in get_partitions_for_projects(
+        table_name_builder,
+        ClickHouseTable.PROJECT_GT_STATS,
+        project_guids,
+        staging=True,
+    ):
         logged_query(
             f"""
             ALTER TABLE {table_name_builder.staging_dst_table(ClickHouseTable.PROJECT_GT_STATS)}
-            DROP PARTITION %(project_guid)s
+            DROP PARTITION %(partition)s
             """,
-            {'project_guid': project_guid},
+            {'partition': partition},
         )
     select_statement = get_create_mv_statements(
         table_name_builder,
         ClickHouseMaterializedView.ENTRIES_TO_PROJECT_GT_STATS_MV,
     )[1]
-    logged_query(
-        f"""
-        INSERT INTO {table_name_builder.staging_dst_table(ClickHouseTable.PROJECT_GT_STATS)}
-        {select_statement}
-        """,
+    select_statement = select_statement.replace(
+        table_name_builder.dst_prefix,
+        table_name_builder.staging_dst_prefix,
     )
+    # NB: encountered OOMs with large projects, necessitating sharding the insertion query.
+    max_key = logged_query(
+        f"""
+        SELECT max(key) FROM {table_name_builder.dst_table(ClickHouseTable.GT_STATS)}
+        """,
+    )[0][0]
+    step = math.ceil(max_key / 5)
+    for range_start in range(0, max_key, step):
+        range_end = min(range_start + step, max_key + 1)
+        logged_query(
+            f"""
+            INSERT INTO {
+                table_name_builder.staging_dst_table(ClickHouseTable.PROJECT_GT_STATS)
+            }
+            {
+                select_statement.replace(
+                    'GROUP BY project_guid',
+                    'WHERE key >= %(range_start)s AND key < %(range_end)s GROUP BY project_guid',
+                )
+            }
+            """,
+            {'range_start': range_start, 'range_end': range_end},
+        )
     finalize_refresh_flow(table_name_builder, project_guids)
 
 

@@ -1,6 +1,6 @@
 import hail as hl
 
-from v03_pipeline.lib.model import DatasetType
+from v03_pipeline.lib.core import DatasetType
 
 
 def compute_callset_family_entries_ht(

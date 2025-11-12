@@ -2,7 +2,7 @@ import unittest
 from pathlib import Path
 
 from v03_pipeline.api.model import DeleteFamiliesRequest, LoadingPipelineRequest
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 
 CALLSET_PATH = str(Path('v03_pipeline/var/test/callsets/1kg_30variants.vcf').resolve())
 
@@ -20,6 +20,7 @@ class ModelTest(unittest.TestCase):
         self.assertEqual(lpr.reference_genome, ReferenceGenome.GRCh38)
         self.assertEqual(lpr.project_guids, ['project_a'])
         self.assertEqual(lpr.request_type, 'LoadingPipelineRequest')
+        self.assertEqual(lpr.attempt_id, 0)
 
         # Test wildcard VCF
         raw_request['callset_path'] = CALLSET_PATH.replace(
@@ -35,12 +36,13 @@ class ModelTest(unittest.TestCase):
             'sample_type': 'BLENDED',
             'reference_genome': ReferenceGenome.GRCh38.value,
             'dataset_type': DatasetType.SNV_INDEL.value,
+            'attempt_id': 5,
         }
         with self.assertRaises(ValueError) as cm:
             LoadingPipelineRequest.model_validate(raw_request)
         self.assertTrue(
             str(cm.exception).startswith(
-                '3 validation errors for LoadingPipelineRequest',
+                '4 validation errors for LoadingPipelineRequest',
             ),
         )
 

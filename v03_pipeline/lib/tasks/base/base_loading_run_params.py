@@ -1,6 +1,6 @@
 import luigi
 
-from v03_pipeline.lib.model import SampleType
+from v03_pipeline.lib.core import SampleType
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )

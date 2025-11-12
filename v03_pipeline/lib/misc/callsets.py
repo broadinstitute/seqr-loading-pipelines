@@ -3,7 +3,7 @@ import functools
 import hail as hl
 import hailtop.fs as hfs
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome
 from v03_pipeline.lib.paths import (
     remapped_and_subsetted_callset_path,
     variant_annotations_table_path,

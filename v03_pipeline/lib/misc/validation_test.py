@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import hail as hl
 
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.misc.validation import (
     SeqrValidationError,
     validate_allele_depth_length,
@@ -12,7 +13,6 @@ from v03_pipeline.lib.misc.validation import (
     validate_no_duplicate_variants,
     validate_sample_type,
 )
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
 

@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import hail as hl
 
-from v03_pipeline.lib.model import ReferenceGenome
+from v03_pipeline.lib.core import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 
 TEST_GNOMAD_SVS_RAW_HT = (

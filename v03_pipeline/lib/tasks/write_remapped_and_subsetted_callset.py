@@ -2,6 +2,7 @@ import hail as hl
 import luigi
 import luigi.util
 
+from v03_pipeline.lib.core.feature_flag import FeatureFlag
 from v03_pipeline.lib.misc.family_loading_failures import (
     get_families_failed_imputed_sex_ploidy,
     get_families_failed_missing_samples,
@@ -19,7 +20,6 @@ from v03_pipeline.lib.misc.pedigree import (
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
 from v03_pipeline.lib.misc.sv import overwrite_male_non_par_calls
 from v03_pipeline.lib.misc.validation import SeqrValidationError
-from v03_pipeline.lib.model.feature_flag import FeatureFlag
 from v03_pipeline.lib.paths import (
     project_pedigree_path,
     relatedness_check_table_path,

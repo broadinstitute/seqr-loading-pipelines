@@ -3,7 +3,7 @@ import os
 
 import hailtop.fs as hfs
 
-from v03_pipeline.lib.model import (
+from v03_pipeline.lib.core import (
     AccessControl,
     DatasetType,
     Env,
@@ -420,8 +420,16 @@ def loading_pipeline_queue_dir() -> str:
     Returns the directory where loading pipeline requests are queued.
     """
     return os.path.join(
-        Env.LOCAL_DISK_MOUNT_PATH,
+        Env.LOCAL_DISK_MOUNT_DIR,
         'loading_pipeline_queue',
+    )
+
+
+# https://en.wikipedia.org/wiki/Dead_letter_queue
+def loading_pipeline_deadletter_queue_dir() -> str:
+    return os.path.join(
+        Env.LOCAL_DISK_MOUNT_DIR,
+        'loading_pipeline_deadletter_queue',
     )
 
 
@@ -431,6 +439,16 @@ def loading_pipeline_queue_path(run_id: str) -> str:
     """
     return os.path.join(
         loading_pipeline_queue_dir(),
+        f'request_{run_id}.json',
+    )
+
+
+def loading_pipeline_deadletter_queue_path(run_id: str) -> str:
+    """
+    Returns a new path for a loading pipeline queue request file.
+    """
+    return os.path.join(
+        loading_pipeline_deadletter_queue_dir(),
         f'request_{run_id}.json',
     )
 

@@ -3,7 +3,7 @@ import shutil
 
 import numpy as np
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.paths import project_pedigree_path
 
 

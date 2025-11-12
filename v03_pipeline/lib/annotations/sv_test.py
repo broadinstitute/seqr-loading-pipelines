@@ -3,7 +3,7 @@ import unittest
 import hail as hl
 
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.model import DatasetType
+from v03_pipeline.lib.core import DatasetType
 
 
 class SVTest(unittest.TestCase):

@@ -1,11 +1,11 @@
 import hail as hl
 
+from v03_pipeline.lib.core import ReferenceGenome
 from v03_pipeline.lib.misc.io import (
     checkpoint,
     compute_hail_n_partitions,
     file_size_bytes,
 )
-from v03_pipeline.lib.model import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.misc import vcf_to_ht
 
 

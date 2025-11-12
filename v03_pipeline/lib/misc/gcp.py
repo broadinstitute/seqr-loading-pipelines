@@ -5,7 +5,7 @@ import google.auth.transport.requests
 import google.oauth2.credentials
 import pytz
 
-from v03_pipeline.lib.model import FeatureFlag
+from v03_pipeline.lib.core import FeatureFlag
 
 SERVICE_ACCOUNT_CREDENTIALS = None
 CLOUD_PLATFORM_SCOPE = [

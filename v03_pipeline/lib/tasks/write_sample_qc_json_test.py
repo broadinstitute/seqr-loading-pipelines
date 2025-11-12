@@ -7,7 +7,7 @@ import hail as hl
 import hailtop.fs as hfs
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.paths import ancestry_model_rf_path
 from v03_pipeline.lib.tasks.write_sample_qc_json import WriteSampleQCJsonTask
 from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask

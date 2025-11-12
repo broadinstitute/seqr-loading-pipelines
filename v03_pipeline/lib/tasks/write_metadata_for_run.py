@@ -5,7 +5,7 @@ import hailtop.fs as hfs
 import luigi
 import luigi.util
 
-from v03_pipeline.lib.model import FeatureFlag
+from v03_pipeline.lib.core import FeatureFlag
 from v03_pipeline.lib.paths import (
     metadata_for_run_path,
     relatedness_check_tsv_path,

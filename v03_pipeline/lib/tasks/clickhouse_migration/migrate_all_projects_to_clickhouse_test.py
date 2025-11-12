@@ -7,12 +7,12 @@ import hailtop.fs as hfs
 import luigi.worker
 import pandas as pd
 
-from v03_pipeline.lib.model import (
+from v03_pipeline.lib.core import (
     DatasetType,
     ReferenceGenome,
     SampleType,
 )
-from v03_pipeline.lib.model.constants import MIGRATION_RUN_ID
+from v03_pipeline.lib.core.constants import MIGRATION_RUN_ID
 from v03_pipeline.lib.paths import (
     db_id_to_gene_id_path,
     metadata_for_run_path,

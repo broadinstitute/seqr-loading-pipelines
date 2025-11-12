@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import hailtop.fs as hfs
 
-from v03_pipeline.lib.model import (
+from v03_pipeline.lib.core import (
     DatasetType,
     ReferenceGenome,
     SampleType,

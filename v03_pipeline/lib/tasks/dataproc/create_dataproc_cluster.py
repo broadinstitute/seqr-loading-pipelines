@@ -7,16 +7,16 @@ import luigi
 from google.cloud import dataproc_v1 as dataproc
 from pip._internal.operations import freeze as pip_freeze
 
+from v03_pipeline.lib.core import DatasetType, Env, FeatureFlag, ReferenceGenome
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.gcp import get_service_account_credentials
-from v03_pipeline.lib.model import DatasetType, Env, FeatureFlag, ReferenceGenome
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )
 from v03_pipeline.lib.tasks.dataproc.misc import get_cluster_name
 
 DEBIAN_IMAGE = '2.2.5-debian12'
-DISK_SIZE_GB = 400
+DISK_SIZE_GB = 600
 HAIL_VERSION = hl.version().split('-')[0]
 INSTANCE_TYPE = 'n1-highmem-8'
 PKGS = '|'.join(
@@ -27,6 +27,11 @@ PKGS = '|'.join(
     ],
 )
 TIMEOUT_S = 1200
+FAILURE_STATUSES = {
+    google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.UNKNOWN,
+    google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.ERROR,
+    google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.ERROR_DUE_TO_UPDATE,
+}
 
 logger = get_logger(__name__)
 
@@ -156,7 +161,9 @@ class CreateDataprocClusterTask(luigi.Task):
             },
         )
 
-    def complete(self) -> bool:
+    def safely_get_cluster(
+        self,
+    ):
         try:
             cluster = self.client.get_cluster(
                 request={
@@ -169,12 +176,15 @@ class CreateDataprocClusterTask(luigi.Task):
                 },
             )
         except google.api_core.exceptions.NotFound:
+            return None
+        else:
+            return cluster
+
+    def complete(self) -> bool:
+        cluster = self.safely_get_cluster()
+        if not cluster:
             return False
-        if cluster.status.state in {
-            google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.UNKNOWN,
-            google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.ERROR,
-            google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.ERROR_DUE_TO_UPDATE,
-        }:
+        if cluster.status.state in FAILURE_STATUSES:
             msg = f'Cluster {cluster.cluster_name} entered {cluster.status.state.name} state'
             logger.error(msg)
         # This will return False when the cluster is "CREATING"
@@ -187,24 +197,33 @@ class CreateDataprocClusterTask(luigi.Task):
         if not Env.GCLOUD_PROJECT or not Env.GCLOUD_REGION or not Env.GCLOUD_ZONE:
             msg = 'Environment Variables GCLOUD_PROJECT, GCLOUD_REGION, GCLOUD_ZONE are required for running the pipeline on dataproc.'
             raise RuntimeError(msg)
-        operation = self.client.create_cluster(
-            request={
-                'project_id': Env.GCLOUD_PROJECT,
-                'region': Env.GCLOUD_REGION,
-                'cluster': get_cluster_config(
-                    self.reference_genome,
-                    self.dataset_type,
-                    self.run_id,
-                ),
-            },
-        )
+        cluster = self.safely_get_cluster()
+        if not cluster:
+            self.client.create_cluster(
+                request={
+                    'project_id': Env.GCLOUD_PROJECT,
+                    'region': Env.GCLOUD_REGION,
+                    'cluster': get_cluster_config(
+                        self.reference_genome,
+                        self.dataset_type,
+                        self.run_id,
+                    ),
+                },
+            )
         wait_s = 0
         while wait_s < TIMEOUT_S:
-            if operation.done():
-                result = operation.result()  # Will throw on failure!
-                msg = f'Created cluster {result.cluster_name} with cluster uuid: {result.cluster_uuid}'
+            cluster = self.safely_get_cluster()
+            if (
+                cluster.status.state
+                == google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.RUNNING
+            ):
+                msg = f'Created cluster {cluster.cluster_name} with cluster uuid: {cluster.cluster_uuid}'
                 logger.info(msg)
                 break
+            if cluster.status.state in FAILURE_STATUSES:
+                msg = f'Cluster {cluster.cluster_name} entered {cluster.status.state.name} state'
+                logger.error(msg)
+                raise RuntimeError(msg)
             logger.info('Waiting for cluster spinup')
             time.sleep(3)
             wait_s += 3
