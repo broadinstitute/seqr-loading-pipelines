@@ -278,7 +278,7 @@ def valid_reference_dataset_path(
             reference_dataset.access_control,
             reference_genome,
         ),
-        f'{reference_dataset.value}',
+        reference_dataset.value,
         f'{reference_dataset.version(reference_genome)}.ht',
     )
 
@@ -491,7 +491,7 @@ def reference_dataset_parquet(
     return os.path.join(
         Env.REFERENCE_DATASETS_DIR,
         reference_genome.value,
-        f'{reference_dataset.value}',
+        reference_dataset.value,
         f'{reference_dataset.version(reference_genome)}.parquet',
     )
 
