@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import patch
 
 import hail as hl
+from pyspark.sql import Row
 
 from v03_pipeline.lib.core.definitions import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
@@ -69,4 +70,31 @@ class GnomadTest(unittest.TestCase):
                         Hemi=0,
                     ),
                 ],
+            )
+
+    def test_get_spark_dataframe(self):
+        with patch.object(
+            ReferenceDataset,
+            'path',
+            return_value=GNOMAD_EXOMES_38_PATH,
+        ):
+            df = ReferenceDataset.gnomad_exomes.get_spark_dataframe(
+                ReferenceGenome.GRCh38,
+            )
+            self.assertEqual(
+                df.collect(),
+                [
+                    Row(
+                    locus=Row(contig='chr1', position=12138),
+                    alleles=['C', 'A'],
+                    AF=0.00909090880304575,
+                    AN=110,
+                    AC=1,
+                    Hom=0,
+                    AF_POPMAX_OR_GLOBAL=0.009803921915590763,
+                    FAF_AF=0.0,
+                    Hemi=0,
+                    variant_id='1-12138-C-A',
+                    ),
+                ]
             )
