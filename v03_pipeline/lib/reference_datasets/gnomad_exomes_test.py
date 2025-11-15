@@ -85,16 +85,16 @@ class GnomadTest(unittest.TestCase):
                 df.collect(),
                 [
                     Row(
-                    locus=Row(contig='chr1', position=12138),
-                    alleles=['C', 'A'],
-                    AF=0.00909090880304575,
-                    AN=110,
-                    AC=1,
-                    Hom=0,
-                    AF_POPMAX_OR_GLOBAL=0.009803921915590763,
-                    FAF_AF=0.0,
-                    Hemi=0,
-                    variant_id='1-12138-C-A',
+                        locus=Row(contig='chr1', position=12138),
+                        alleles=['C', 'A'],
+                        AF=0.00909090880304575,
+                        AN=110,
+                        AC=1,
+                        Hom=0,
+                        AF_POPMAX_OR_GLOBAL=0.009803921915590763,
+                        FAF_AF=0.0,
+                        Hemi=0,
+                        variant_id='1-12138-C-A',
                     ),
-                ]
+                ],
             )
