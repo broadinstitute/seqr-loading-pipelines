@@ -278,7 +278,7 @@ def valid_reference_dataset_path(
             reference_dataset.access_control,
             reference_genome,
         ),
-        f'{reference_dataset.value}',
+        reference_dataset.value,
         f'{reference_dataset.version(reference_genome)}.ht',
     )
 
@@ -481,6 +481,18 @@ def clickhouse_load_fail_file_path(
         ),
         run_id,
         '_CLICKHOUSE_LOAD_FAIL',
+    )
+
+
+def reference_dataset_parquet(
+    reference_genome: ReferenceGenome,
+    reference_dataset: ReferenceDataset,
+) -> str:
+    return os.path.join(
+        Env.REFERENCE_DATASETS_DIR,
+        reference_genome.value,
+        reference_dataset.value,
+        f'{reference_dataset.version(reference_genome)}.parquet',
     )
 
 

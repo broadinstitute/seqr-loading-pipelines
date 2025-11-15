@@ -5,8 +5,10 @@ from enum import StrEnum
 from typing import Union
 
 import hail as hl
+import pyspark.sql.dataframe
 
 from v03_pipeline.lib.annotations import snv_indel, sv
+from v03_pipeline.lib.annotations.expression_helpers import get_expr_for_variant_id
 from v03_pipeline.lib.core import (
     AccessControl,
     DatasetType,
@@ -183,6 +185,25 @@ class ReferenceDataset(StrEnum):
             version=self.version(reference_genome),
             enums=self.enum_globals,
         )
+
+    def get_spark_dataframe(
+        self,
+        reference_genome: ReferenceGenome,
+    ) -> pyspark.sql.dataframe.DataFrame:
+        module = importlib.import_module(
+            f'v03_pipeline.lib.reference_datasets.{self.name}',
+        )
+        path = self.path(reference_genome)
+        ht = module.get_ht(path, reference_genome)
+        for dataset_type in self.dataset_types(reference_genome):
+            validate_allele_type(ht, dataset_type)
+            validate_no_duplicate_variants(ht, reference_genome, dataset_type)
+        # Neither SVs nor interval reference datasets will flow
+        # through this pathway, so this is safe to run without conditional logic.
+        ht = ht.annotate(
+            variant_id=get_expr_for_variant_id(ht),
+        )
+        return ht.to_spark(flatten=False)
 
 
 CONFIG = {
