@@ -484,5 +484,17 @@ def clickhouse_load_fail_file_path(
     )
 
 
+def reference_dataset_parquet(
+    reference_genome: ReferenceGenome,
+    reference_dataset: ReferenceDataset,
+) -> str:
+    return os.path.join(
+        Env.REFERENCE_DATASETS_DIR,
+        reference_genome.value,
+        f'{reference_dataset.value}',
+        f'{reference_dataset.version(reference_genome)}.parquet',
+    )
+
+
 def db_id_to_gene_id_path() -> str:
     return os.path.join(Env.LOADING_DATASETS_DIR, 'db_id_to_gene_id.csv.gz')
