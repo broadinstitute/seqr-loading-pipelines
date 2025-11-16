@@ -216,12 +216,12 @@ CONFIG = {
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
-            PATH: 'https://dbnsfp.s3.amazonaws.com/dbNSFP4.7a.zip',
+            PATH: 'gs://seqr-reference-data/clickhouse/GRCh37/dbNSFP5.3a_grch37.gz',
         },
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
             VERSION: '1.0',
-            PATH: 'https://dbnsfp.s3.amazonaws.com/dbNSFP4.7a.zip',
+            PATH: 'gs://seqr-reference-data/clickhouse/GRCh38/dbNSFP5.3a_grch38.gz',
         },
     },
     ReferenceDataset.eigen: {
