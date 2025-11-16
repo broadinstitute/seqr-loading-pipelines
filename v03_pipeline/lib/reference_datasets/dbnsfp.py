@@ -3,8 +3,8 @@ import hail as hl
 from v03_pipeline.lib.core import DatasetType, ReferenceGenome
 from v03_pipeline.lib.reference_datasets.misc import (
     key_by_locus_alleles,
+    vcf_to_ht,
 )
-from v03_pipeline.lib.reference_datasets.misc import vcf_to_ht
 
 SHARED_TYPES = {
     'fathmm-MKL_coding_score': hl.tfloat32,
