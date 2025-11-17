@@ -23,7 +23,7 @@ if __name__ == '__main__':
     )
     run_id_prefix = (
         MIGRATION_RUN_ID + '-' + str(uuid.uuid1().int)[:4]
-    )  # Note: the random-ness is a cache bust for the luigi local scheduler
+    )  # Note: the randomness is a cache bust for the luigi local scheduler
     luigi.build(
         [
             task_cls(
