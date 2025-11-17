@@ -32,7 +32,7 @@ Core logic and shared libraries.
 - `reference_datasets` manages parsing of raw reference sources into hail tables.
 - `tasks` specifies the Luigi defined pipeline.  Note that Luigi pipelines are defined by their requirements, so
 the pipeline is defined, effectively, in reverse.
-	- `WriteSuccessFile` is the last task, defining a `requires()` method that runs the pipeline either locally or on scalable compute.
+	- `WriteClickhouseLoadSuccessFileTask` is the last task, defining a `requires()` method that runs the pipeline either locally or on scalable compute.
 	- `WriteImportedCallset` is the first task, importing a VCF into a Hail Matrix table, an "imported callset".
 - `test` holds a few utilities used by the tests, which are dispersed throughout the rest of the repository.
 - `paths.py` defines paths for all intermediate and output files of the pipeline.
@@ -82,8 +82,8 @@ of the SNV_INDEL/MITO/SV/GCNV callset schemas may be found in the tests.
 - Examples of exported parquets may be found in `lib/tasks/exports/*_parquet_test.py`
 
 
-## 🚶‍♂️ ClickHouse Loader Walkthrough
-- The Clickhouse Loader follows the pattern established in the [Making a Large Data Load Resilient](https://clickhouse.com/blog/supercharge-your-clickhouse-data-loads-part3) blog 
+## 🚶‍♂️ ClickHouse Load Walkthrough
+- The Clickhouse Load follows the pattern established in the [Making a Large Data Load Resilient](https://clickhouse.com/blog/supercharge-your-clickhouse-data-loads-part3) blog 
 	- Rows are first loaded into a `staging` database that copies the production `TABLE`s and `MATERIALIZED VIEWS`.
 	- After all `entries` are inserted, we validate the inserted row count and finalize the per-project allele frequency aggregation.
 	- Partitions are atomically moved from the `staging` environment to production. 
