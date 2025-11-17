@@ -9,20 +9,20 @@
 
 ## 📁 Repository Structure
 
-### `api/`
+### `v03_pipeline/api/`
 Contains the interface layer to the _seqr_ application. 
 - `api/model.py` defines pydantic models for the REST interface.
 - `api/app.py` specifies an `aiohttp` webserver that handles load data requests. 
 
-### `bin/`
+### `v03_pipeline/bin/`
 Scripts or command-line utilities used for setup or task execution.
 - `bin/pipeline_worker.py` — manages asynchronous jobs requested by _seqr_.
 
-### `deploy/`
+### `v03_pipeline/deploy/`
 Dockerfiles for the loading pipeline itself & any annotation utilities.
 Kubernetes manifests are managed separately in [seqr-helm](https://github.com/broadinstitute/seqr-helm/tree/main/charts/pipeline-runner)
 
-### `lib/`
+### `v03_pipeline/lib/`
 Core logic and shared libraries.  
 - `annotations` defines hail logic to re-format and standardize fields.
 - `methods` wraps hail-defined genomics methods for QC.
@@ -37,7 +37,10 @@ the pipeline is defined, effectively, in reverse.
 - `test` holds a few utilities used by the tests, which are dispersed throughout the rest of the repository.
 - `paths.py` defines paths for all intermediate and output files of the pipeline.
 
-### `var/`
+### `v03_pipeline/ops/`
+Manual operations scripts.
+
+### `v03_pipeline/var/`
 Static configuration and test files.
 
 ---

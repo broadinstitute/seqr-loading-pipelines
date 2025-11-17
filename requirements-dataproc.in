@@ -1,8 +1,0 @@
-# These requirements are in a separate file to 
-# accomadate a pinned protobuf in the hail library
-# itself.  Several of these packages have a dependency
-# on a newer version of protobuf and we run into
-# terrible conflicts.
-google-cloud-dataproc==5.16.0
-google-cloud-bigquery==3.29.0
-google-api-python-client==2.159.0

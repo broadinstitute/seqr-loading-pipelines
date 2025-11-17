@@ -148,6 +148,7 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
         '.*(?:InvalidHeader|VCFParseError): (.*)$': Template(
             'VCF failed file format validation: $match',
         ),
+        '.*IOException: Gzip-compressed data is corrupt.*': 'Gzip-compressed data is corrupt.',
     },
 )
 def import_vcf(
