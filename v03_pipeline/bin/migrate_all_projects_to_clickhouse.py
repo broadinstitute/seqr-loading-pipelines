@@ -21,7 +21,9 @@ if __name__ == '__main__':
         if FeatureFlag.RUN_PIPELINE_ON_DATAPROC
         else MigrateAllProjectsToClickHouseTask
     )
-    run_id_prefix = MIGRATION_RUN_ID + '-' + str(uuid.uuid1().int)[:4] # Note: the random-ness is a cache bust for the luigi local scheduler
+    run_id_prefix = (
+        MIGRATION_RUN_ID + '-' + str(uuid.uuid1().int)[:4]
+    )  # Note: the random-ness is a cache bust for the luigi local scheduler
     luigi.build(
         [
             task_cls(
