@@ -30,6 +30,7 @@ if __name__ == '__main__':
                 reference_genome,
                 DatasetType.SNV_INDEL,
                 run_id=run_id_prefix,
+                attempt_id=0,
             )
             for reference_genome in ReferenceGenome
         ],

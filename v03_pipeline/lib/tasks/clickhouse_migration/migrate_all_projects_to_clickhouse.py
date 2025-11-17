@@ -17,6 +17,7 @@ from v03_pipeline.lib.tasks.clickhouse_migration.migrate_project_to_clickhouse i
 @luigi.util.inherits(BaseLoadingPipelineParams)
 class MigrateAllProjectsToClickHouseTask(luigi.WrapperTask):
     run_id = luigi.Parameter()
+    attempt_id = luigi.IntParameter()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
