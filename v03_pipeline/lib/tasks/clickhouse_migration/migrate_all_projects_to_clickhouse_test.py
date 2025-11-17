@@ -88,6 +88,7 @@ class MigrateAllProjectsToClickHouseTaskTest(MockedReferenceDatasetsTestCase):
             reference_genome=ReferenceGenome.GRCh37,
             dataset_type=DatasetType.SNV_INDEL,
             run_id=MIGRATION_RUN_ID,
+            attempt_id=0,
         )
         worker.add(task)
         worker.run()
