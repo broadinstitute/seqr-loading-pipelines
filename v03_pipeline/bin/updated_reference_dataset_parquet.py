@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+
 import luigi
 
 from v03_pipeline.lib.core import ReferenceGenome
@@ -22,7 +23,7 @@ def main():
         UpdatedReferenceDatasetParquetTask(
             reference_genome=args.reference_genome,
             reference_dataset=args.reference_dataset,
-        )
+        ),
     )
 
 
