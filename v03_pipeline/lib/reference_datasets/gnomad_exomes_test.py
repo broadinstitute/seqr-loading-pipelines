@@ -75,7 +75,7 @@ class GnomadTest(unittest.TestCase):
     def test_get_spark_dataframe(self):
         with patch.object(
             ReferenceDataset,
-            'path',
+            'path_for_spark_dataframe',
             return_value=GNOMAD_EXOMES_38_PATH,
         ):
             df = ReferenceDataset.gnomad_exomes.get_spark_dataframe(

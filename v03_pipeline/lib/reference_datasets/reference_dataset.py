@@ -162,7 +162,7 @@ class ReferenceDataset(StrEnum):
     def path(self, reference_genome: ReferenceGenome) -> str | list[str]:
         return CONFIG[self][reference_genome][PATH]
 
-    def spark_dataframe_path(
+    def path_for_spark_dataframe(
         self,
         reference_genome: ReferenceGenome,
     ) -> str | list[str]:
@@ -204,7 +204,7 @@ class ReferenceDataset(StrEnum):
         module = importlib.import_module(
             f'v03_pipeline.lib.reference_datasets.{self.name}',
         )
-        path = self.spark_dataframe_path(reference_genome)
+        path = self.path_for_spark_dataframe(reference_genome)
         ht = module.get_ht(path, reference_genome)
         for dataset_type in self.dataset_types(reference_genome):
             validate_allele_type(ht, dataset_type)
