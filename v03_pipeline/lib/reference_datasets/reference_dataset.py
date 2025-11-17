@@ -163,7 +163,8 @@ class ReferenceDataset(StrEnum):
         return CONFIG[self][reference_genome][PATH]
 
     def spark_dataframe_path(
-        self, reference_genome: ReferenceGenome,
+        self,
+        reference_genome: ReferenceGenome,
     ) -> str | list[str]:
         return (
             CONFIG[self][reference_genome][SPARK_DATAFRAME_PATH]
