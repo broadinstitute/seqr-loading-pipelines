@@ -10,7 +10,7 @@ from v03_pipeline.api.model import (
     PipelineRunnerRequest,
     RebuildGtStatsRequest,
 )
-from v03_pipeline.lib.core import DatasetType, FeatureFlag
+from v03_pipeline.lib.core import DatasetType
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.clickhouse import (
     delete_family_guids,
@@ -19,7 +19,6 @@ from v03_pipeline.lib.misc.clickhouse import (
 from v03_pipeline.lib.tasks.write_clickhouse_load_success_file import (
     WriteClickhouseLoadSuccessFileTask,
 )
-from v03_pipeline.lib.tasks.write_success_file import WriteSuccessFileTask
 
 logger = get_logger(__name__)
 
@@ -32,16 +31,9 @@ def run_loading_pipeline(
 ):
     luigi_task_result = luigi.build(
         [
-            WriteSuccessFileTask(
+            WriteClickhouseLoadSuccessFileTask(
                 run_id=run_id,
                 **lpr.model_dump(exclude='request_type'),
-            )
-            if FeatureFlag.CLICKHOUSE_LOADER_DISABLED
-            else (
-                WriteClickhouseLoadSuccessFileTask(
-                    run_id=run_id,
-                    **lpr.model_dump(exclude='request_type'),
-                )
             ),
         ],
         detailed_summary=True,
