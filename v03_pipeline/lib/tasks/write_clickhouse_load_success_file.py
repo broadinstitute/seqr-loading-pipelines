@@ -13,6 +13,8 @@ from v03_pipeline.lib.tasks.load_complete_run_to_clickhouse import (
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class WriteClickhouseLoadSuccessFileTask(luigi.Task):
+    attempt_id = luigi.IntParameter()
+
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             clickhouse_load_success_file_path(
