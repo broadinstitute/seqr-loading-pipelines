@@ -52,8 +52,6 @@ if __name__ == '__main__':
                         reference_genome=reference_genome,
                         dataset_type=DatasetType.SNV_INDEL,
                         run_id=f'{run_id_prefix}_{sample_type.value}_{project_guid}',
-                        sample_type=sample_type,
-                        project_guid=project_guid,
                         attempt_id=0,
                     ),
                 )
