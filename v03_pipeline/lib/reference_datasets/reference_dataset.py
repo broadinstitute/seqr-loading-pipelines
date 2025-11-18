@@ -5,8 +5,10 @@ from enum import StrEnum
 from typing import Union
 
 import hail as hl
+import pyspark.sql.dataframe
 
 from v03_pipeline.lib.annotations import snv_indel, sv
+from v03_pipeline.lib.annotations.expression_helpers import get_expr_for_variant_id
 from v03_pipeline.lib.core import (
     AccessControl,
     DatasetType,
@@ -34,6 +36,7 @@ FILTER = 'filter'
 SELECT = 'select'
 VERSION = 'version'
 PATH = 'path'
+SPARK_DATAFRAME_PATH = 'spark_dataframe_path'
 
 
 class ReferenceDataset(StrEnum):
@@ -159,6 +162,16 @@ class ReferenceDataset(StrEnum):
     def path(self, reference_genome: ReferenceGenome) -> str | list[str]:
         return CONFIG[self][reference_genome][PATH]
 
+    def path_for_spark_dataframe(
+        self,
+        reference_genome: ReferenceGenome,
+    ) -> str | list[str]:
+        return (
+            CONFIG[self][reference_genome][SPARK_DATAFRAME_PATH]
+            if SPARK_DATAFRAME_PATH in CONFIG[self][reference_genome]
+            else CONFIG[self][reference_genome][PATH]
+        )
+
     def get_ht(
         self,
         reference_genome: ReferenceGenome,
@@ -184,6 +197,25 @@ class ReferenceDataset(StrEnum):
             enums=self.enum_globals,
         )
 
+    def get_spark_dataframe(
+        self,
+        reference_genome: ReferenceGenome,
+    ) -> pyspark.sql.dataframe.DataFrame:
+        module = importlib.import_module(
+            f'v03_pipeline.lib.reference_datasets.{self.name}',
+        )
+        path = self.path_for_spark_dataframe(reference_genome)
+        ht = module.get_ht(path, reference_genome)
+        for dataset_type in self.dataset_types(reference_genome):
+            validate_allele_type(ht, dataset_type)
+            validate_no_duplicate_variants(ht, reference_genome, dataset_type)
+        # Neither SVs nor interval reference datasets will flow
+        # through this code path, so this is safe to run without conditional logic.
+        ht = ht.annotate(
+            variant_id=get_expr_for_variant_id(ht),
+        )
+        return ht.to_spark(flatten=False)
+
 
 CONFIG = {
     ReferenceDataset.dbnsfp: {
@@ -196,11 +228,13 @@ CONFIG = {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
             PATH: 'https://dbnsfp.s3.amazonaws.com/dbNSFP4.7a.zip',
+            SPARK_DATAFRAME_PATH: 'gs://seqr-reference-data/clickhouse/GRCh37/dbnsfp/dbNSFP5.3a_grch37.gz',
         },
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
             VERSION: '1.0',
             PATH: 'https://dbnsfp.s3.amazonaws.com/dbNSFP4.7a.zip',
+            SPARK_DATAFRAME_PATH: 'gs://seqr-reference-data/clickhouse/GRCh38/dbnsfp/dbNSFP5.3a_grch38.gz',
         },
     },
     ReferenceDataset.eigen: {

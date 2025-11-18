@@ -1,10 +1,9 @@
 import hail as hl
 
 from v03_pipeline.lib.core import DatasetType, ReferenceGenome
-from v03_pipeline.lib.misc.io import checkpoint
 from v03_pipeline.lib.reference_datasets.misc import (
-    download_zip_file,
     key_by_locus_alleles,
+    vcf_to_ht,
 )
 
 SHARED_TYPES = {
@@ -59,30 +58,19 @@ def predictor_parse(field: hl.StringExpression) -> hl.StringExpression:
 def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
     types = TYPES[reference_genome]
     rename = RENAME[reference_genome]
-
-    with download_zip_file(path, 'dbnsfp') as unzipped_dir:
-        ht = hl.import_table(
-            f'{unzipped_dir}/dbNSFP*_variant.chr*.gz',
-            types=types,
-            missing='.',
-            force=True,
-        )
-        # NB: We ran into weird issues...running out
-        # of file descriptors on dataproc :/
-        ht, _ = checkpoint(ht)
-        hl._set_flags(use_new_shuffle=None, no_whole_stage_codegen='1')  # noqa: SLF001
-        select_fields = {'ref', 'alt', *types.keys(), *rename.keys()}
-        ht = ht.select(
-            *select_fields,
-            **{k: hl.parse_float32(predictor_parse(ht[k])) for k in PREDICTOR_SCORES},
-            **{k: predictor_parse(ht[k]) for k in PREDICTOR_FIELDS},
-        )
-        ht = ht.rename(rename)
-        ht = key_by_locus_alleles(ht, reference_genome)
-        return ht.group_by(*ht.key).aggregate(
-            **{f: hl.agg.take(ht[f], 1)[0] for f in PREDICTOR_FIELDS},
-            **{f: hl.agg.max(ht[f]) for f in ht.row_value if f not in PREDICTOR_FIELDS},
-        )
+    ht = vcf_to_ht(path, reference_genome)
+    select_fields = {'ref', 'alt', *types.keys(), *rename.keys()}
+    ht = ht.select(
+        *select_fields,
+        **{k: hl.parse_float32(predictor_parse(ht[k])) for k in PREDICTOR_SCORES},
+        **{k: predictor_parse(ht[k]) for k in PREDICTOR_FIELDS},
+    )
+    ht = ht.rename(rename)
+    ht = key_by_locus_alleles(ht, reference_genome)
+    return ht.group_by(*ht.key).aggregate(
+        **{f: hl.agg.take(ht[f], 1)[0] for f in PREDICTOR_FIELDS},
+        **{f: hl.agg.max(ht[f]) for f in ht.row_value if f not in PREDICTOR_FIELDS},
+    )
 
 
 def select(_: ReferenceGenome, dataset_type: DatasetType, ht: hl.Table) -> hl.Table:
