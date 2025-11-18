@@ -44,7 +44,7 @@ class BaseRunJobOnDataprocTask(luigi.Task):
 
     @property
     def job_id(self):
-        return f'{self.task.task_family}-{self.reference_genome[:-2]}-{self.run_id}-{self.attempt_id}'
+        return f'{self.task.task_family}-{self.reference_genome[-2:]}-{self.run_id}-{self.attempt_id}'
 
     def requires(self) -> [luigi.Task]:
         return [self.clone(CreateDataprocClusterTask)]
