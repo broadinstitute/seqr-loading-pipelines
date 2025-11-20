@@ -443,14 +443,19 @@ def insert_new_entries(
         )
     ]
     common = [c for c in dst_cols if c in src_cols]
+    overrides = {}
+    if 'geneId_ids' in dst_cols and 'geneIds' in src_cols:
+        overrides['geneId_ids'] = (
+            "arrayMap(g -> dictGetOrDefault('seqrdb_gene_ids', 'seqrdb_id', g, 1), geneIds)"
+        )
     dst_list = ', '.join(common)
-    src_list = ', '.join(common)
+    src_list = ', '.join([overrides.get(c, c) for c in common])
     logged_query(
         f"""
         INSERT INTO {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)} ({dst_list})
         SELECT {src_list}
         FROM {table_name_builder.src_table(ClickHouseTable.ENTRIES)}
-        """,
+        """
     )
 
 
