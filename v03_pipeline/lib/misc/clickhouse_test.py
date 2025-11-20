@@ -63,13 +63,41 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         client.execute(
             f"""
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.seqrdb_gene_ids_src (
+                gene_id String,
+                seqrdb_id UInt32
+            ) ENGINE = Memory;
+            """,
+        )
+        client.execute(
+            f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`seqrdb_gene_ids_src` VALUES',
+            [('GENE1', 123), ('GENE2', 12), ('GENE3', 1)],
+        )
+        client.execute(
+            f"""
+            CREATE DICTIONARY {Env.CLICKHOUSE_DATABASE}.seqrdb_gene_ids
+            (
+                gene_id String,
+                seqrdb_id UInt32
+            )
+            PRIMARY KEY gene_id
+            SOURCE(CLICKHOUSE(
+                USER {Env.CLICKHOUSE_WRITER_USER} PASSWORD {Env.CLICKHOUSE_WRITER_PASSWORD}
+                DB {Env.CLICKHOUSE_DATABASE} TABLE `seqrdb_gene_ids_src`
+            ))
+            LAYOUT(HASHED())
+            LIFETIME(0);
+            """,
+        )
+        client.execute(
+            f"""
             CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries` (
                 `key` UInt32,
                 `project_guid` LowCardinality(String),
                 `family_guid` String,
                 `xpos` UInt64 CODEC(Delta(8), ZSTD(1)),
                 `sample_type` Enum8('WES' = 0, 'WGS' = 1),
-                `is_annotated_in_any_gene` Boolean,
+                `is_annotated_in_any_gene` Boolean DEFAULT length(geneId_ids) > 1,
                 `geneId_ids` Array(UInt32),
                 `calls` Array(
                     Tuple(
@@ -376,15 +404,10 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'WES',
                     'WES',
                 ],
-                'is_annotated_in_any_gene': [
-                    True,
-                    False,
-                    True,
-                ],
-                'geneId_ids': [
+                'geneIds': [
                     [],
-                    [123, 12],
-                    [1],
+                    ['GENE1', 'GENE2'],
+                    ['GENE3'],
                 ],
                 'calls': [
                     [('sample_d1', 0), ('sample_d11', 2)],
@@ -405,8 +428,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ('family_guid', pa.string()),
                 ('xpos', pa.int64()),
                 ('sample_type', pa.string()),
-                ('is_annotated_in_any_gene', pa.bool_()),
-                ('geneId_ids', pa.list_(pa.int64())),
+                ('geneIds', pa.list_(pa.string())),
                 (
                     'calls',
                     pa.list_(
@@ -426,7 +448,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             schema,
         )
         write_test_parquet(
-            df.drop('is_annotated_in_any_gene', axis=1).drop('geneId_ids', axis=1),
+            df.drop('geneIds', axis=1),
             new_entries_parquet_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.GCNV,
@@ -440,13 +462,18 @@ class ClickhouseTest(MockedDatarootTestCase):
         client = get_clickhouse_client()
         client.execute(
             f"""
-          DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};
-          """,
+            DROP DICTIONARY IF EXISTS {Env.CLICKHOUSE_DATABASE}.seqrdb_gene_ids;
+            """,
         )
         client.execute(
             f"""
-          DROP DATABASE IF EXISTS {Env.CLICKHOUSE_DATABASE};
-          """,
+            DROP DATABASE IF EXISTS {Env.CLICKHOUSE_DATABASE};
+            """,
+        )
+        client.execute(
+            f"""
+            DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};
+            """,
         )
 
     def test_get_clickhouse_client(self):
@@ -1198,7 +1225,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 `family_guid` String,
                 `xpos` UInt64 CODEC(Delta(8), ZSTD(1)),
                 `sample_type` Enum8('WES' = 0, 'WGS' = 1),
-                `is_annotated_in_any_gene` Boolean,
+                `is_annotated_in_any_gene` Boolean DEFAULT length(geneId_ids) > 1,
                 `geneId_ids` Array(UInt32),
                 `calls` Array(
                     Tuple(

@@ -1,10 +1,6 @@
-import gzip
-
 import hail as hl
-import hailtop.fs as hfs
 
 from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
-from v03_pipeline.lib.paths import db_id_to_gene_id_path
 from v03_pipeline.lib.tasks.exports.misc import reformat_transcripts_for_export
 
 FIVE_PERCENT = 0.05
@@ -131,30 +127,6 @@ def get_calls_export_fields(
     }[dataset_type](fe)
 
 
-def get_gene_id_ids_expr(ht: hl.Table, dataset_type: DatasetType):
-    db_id_to_gene_id_lookup = hl.dict(
-        [
-            (gene_id, int(db_id))
-            for line in gzip.decompress(
-                hfs.open(db_id_to_gene_id_path(), 'rb').read(),
-            ).splitlines()[1:]  # skip header line
-            for db_id, gene_id in [line.decode().split(',', 1)]
-        ],
-    )
-    key = (
-        'sorted_gene_consequences'
-        if dataset_type == DatasetType.SV
-        else 'sorted_transcript_consequences'
-    )
-    return hl.set(
-        ht[key]
-        .gene_id.map(
-            lambda x: db_id_to_gene_id_lookup.get(x),
-        )
-        .filter(hl.is_defined),
-    )
-
-
 def get_entries_export_fields(
     ht: hl.Table,
     dataset_type: DatasetType,
@@ -184,15 +156,14 @@ def get_entries_export_fields(
             else {}
         ),
         **(
-            {'is_annotated_in_any_gene': hl.len(ht.sorted_transcript_consequences) > 0}
-            if dataset_type == DatasetType.SNV_INDEL
-            else {}
-        ),
-        **(
             {
-                'geneId_ids': get_gene_id_ids_expr(ht, dataset_type),
+                'geneIds': hl.set(ht.sorted_gene_consequences.gene_id)
+                if dataset_type == DatasetType.SV
+                else hl.set(ht.sorted_transcript_consequences.gene_id)
+                if dataset_type == DatasetType.SNV_INDEL
+                else None,
             }
-            if dataset_type in {DatasetType.SNV_INDEL, DatasetType.SV}
+            if dataset_type in {DatasetType.SV, DatasetType.SNV_INDEL}
             else {}
         ),
         'filters': ht.filters,
