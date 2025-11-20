@@ -48,7 +48,6 @@ TEST_PROJECT_TABLES = [
         'R0114_project4',
     ),
 ]
-TEST_DB_ID_TO_GENE_ID = 'v03_pipeline/var/test/db_id_to_gene_id.csv.gz'
 
 
 class MigrateAllProjectsToClickHouseTaskTest(MockedReferenceDatasetsTestCase):
@@ -71,14 +70,6 @@ class MigrateAllProjectsToClickHouseTaskTest(MockedReferenceDatasetsTestCase):
                     project_guid,
                 ),
             )
-        os.makedirs(
-            self.mock_env.LOADING_DATASETS_DIR,
-            exist_ok=True,
-        )
-        shutil.copy2(
-            TEST_DB_ID_TO_GENE_ID,
-            db_id_to_gene_id_path(),
-        )
 
     def test_all_project_entries_to_clickhouse_test(
         self,
