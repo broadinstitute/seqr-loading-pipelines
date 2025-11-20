@@ -448,7 +448,19 @@ def insert_new_entries(
         common.append('geneId_ids')
         overrides = {
             'geneId_ids': (
-                f"arrayMap(g -> dictGetOrDefault({Env.CLICKHOUSE_DATABASE}.`seqrdb_gene_ids`, 'seqrdb_id', g, 1), geneIds)"
+                f"""
+                arrayFilter(
+                    x -> x IS NOT NULL,
+                    arrayMap(
+                        g -> dictGetOrNull(
+                            {Env.CLICKHOUSE_DATABASE}.`seqrdb_gene_ids`,
+                            'seqrdb_id',
+                            g
+                        ),
+                        geneIds
+                    )
+                )
+                """
             ),
         }
     dst_list = ', '.join(common)
