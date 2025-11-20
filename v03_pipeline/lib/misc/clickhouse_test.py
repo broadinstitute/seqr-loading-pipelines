@@ -1225,13 +1225,8 @@ class ClickhouseTest(MockedDatarootTestCase):
                 `family_guid` String,
                 `xpos` UInt64 CODEC(Delta(8), ZSTD(1)),
                 `sample_type` Enum8('WES' = 0, 'WGS' = 1),
-                `is_annotated_in_any_gene` Boolean MATERIALIZED length(geneIds) > 1,
-                `geneId_ids` Array(UInt32)
-                    MATERIALIZED arrayMap(
-                        g -> dictGetOrDefault('seqrdb_gene_ids', 'seqrdb_id', tuple(g), 1),
-                        geneIds
-                    )
-                ,
+                `is_annotated_in_any_gene` Boolean DEFAULT length(geneId_ids) > 1,
+                `geneId_ids` Array(UInt32),
                 `calls` Array(
                     Tuple(
                         sampleId String,
