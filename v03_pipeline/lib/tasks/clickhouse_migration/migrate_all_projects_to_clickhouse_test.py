@@ -1,6 +1,4 @@
 import json
-import os
-import shutil
 
 import hail as hl
 import hailtop.fs as hfs
@@ -14,7 +12,6 @@ from v03_pipeline.lib.core import (
 )
 from v03_pipeline.lib.core.constants import MIGRATION_RUN_ID
 from v03_pipeline.lib.paths import (
-    db_id_to_gene_id_path,
     metadata_for_run_path,
     new_entries_parquet_path,
     pipeline_run_success_file_path,
