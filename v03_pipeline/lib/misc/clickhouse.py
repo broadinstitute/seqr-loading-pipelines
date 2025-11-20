@@ -449,7 +449,7 @@ def insert_new_entries(
         overrides = {
             'geneId_ids': (
                 f"arrayMap(g -> dictGetOrDefault({Env.CLICKHOUSE_DATABASE}.`seqrdb_gene_ids`, 'seqrdb_id', g, 1), geneIds)"
-            )
+            ),
         }
     dst_list = ', '.join(common)
     src_list = ', '.join([overrides.get(c, c) for c in common])
@@ -458,7 +458,7 @@ def insert_new_entries(
         INSERT INTO {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)} ({dst_list})
         SELECT {src_list}
         FROM {table_name_builder.src_table(ClickHouseTable.ENTRIES)}
-        """
+        """,
     )
 
 
