@@ -1,6 +1,6 @@
 import luigi
 
-from v03_pipeline.lib.core.definitions import ReferenceGenome
+from v03_pipeline.lib.core.definitions import DatasetType, ReferenceGenome
 from v03_pipeline.lib.paths import reference_dataset_parquet
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 from v03_pipeline.lib.tasks.dataproc.base_run_job_on_dataproc import (
@@ -11,10 +11,10 @@ from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarge
 
 class UpdatedReferenceDatasetParquetTask(BaseRunJobOnDataprocTask):
     reference_genome = luigi.EnumParameter(enum=ReferenceGenome)
+    dataset_type = luigi.EnumParameter(enum=DatasetType)
     reference_dataset: ReferenceDataset = luigi.EnumParameter(
         enum=ReferenceDataset,
     )
-    attempt_id = luigi.IntParameter()
 
     def complete(self) -> luigi.Target:
         return GCSorLocalFolderTarget(self.output().path).exists()
