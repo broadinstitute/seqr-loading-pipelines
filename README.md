@@ -52,8 +52,7 @@ The production pipeline runs with python `3.11`.
 ```bash
 git clone https://github.com/broadinstitute/seqr-loading-pipelines.git
 cd seqr-loading-pipelines
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
+RUN uv sync --group dev --locked
 ```
 
 ### [Install](https://clickhouse.com/docs/getting-started/quick-start/oss) & start ClickHouse with provided test configuration:
@@ -66,7 +65,7 @@ curl https://clickhouse.com/ | sh
 
 ### Run an Individual Test
 ```bash
-nosetests v03_pipeline/lib/misc/math_test.py
+uv run nosetests v03_pipeline/lib/misc/math_test.py
 ```
 
 ### Formatting and Linting
