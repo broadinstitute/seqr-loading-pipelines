@@ -58,7 +58,10 @@ def main(max_insert_threads: int, project_guids: list[str]):
     logged_query(
         f"""
         CREATE TABLE IF NOT EXISTS {REPARTITION_DATABASE_NAME}.`GRCh38/SNV_INDEL/repartitioned_entries`
-        AS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries` PARTITION BY (project_guid, partition_id)
+        AS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries`
+        ENGINE = CollapsingMergeTree(sign)
+        PARTITION BY (project_guid, partition_id)
+        SETTINGS deduplicate_merge_projection_mode = 'rebuild'
         """,
     )
     if not project_guids:
