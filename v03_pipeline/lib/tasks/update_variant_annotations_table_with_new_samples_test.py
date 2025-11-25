@@ -710,14 +710,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ],
         )
 
-    @patch(
-        'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
-    )
     def test_mito_update_vat(
         self,
-        mock_register_alleles: Mock,
     ) -> None:
-        mock_register_alleles.side_effect = None
         copy_project_pedigree_to_mocked_dir(
             TEST_PEDIGREE_5,
             ReferenceGenome.GRCh38,
