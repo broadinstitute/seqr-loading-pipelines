@@ -40,7 +40,7 @@ class LoadCompleteRunToClickhouse(luigi.Task):
             SELECT EXISTS (
                 SELECT 1
                 FROM {table_name_builder.dst_table(ClickHouseTable.ANNOTATIONS_MEMORY)}
-                WHERE key = %(max_key_src)
+                WHERE key = %(max_key_src)s
             );
             """,
             {'max_key_src': max_key_src},
