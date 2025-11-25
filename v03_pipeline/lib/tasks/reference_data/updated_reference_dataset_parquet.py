@@ -10,7 +10,7 @@ from v03_pipeline.lib.tasks.dataproc.base_run_job_on_dataproc import (
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
 
 
-class UpdatedReferenceDatasetParquetTask(BaseRunJobOnDataprocTask):
+class UpdatedReferenceDatasetParquetTask(luigi.Task):
     reference_genome = luigi.EnumParameter(enum=ReferenceGenome)
     dataset_type = luigi.EnumParameter(enum=DatasetType)
     reference_dataset: ReferenceDataset = luigi.EnumParameter(
@@ -34,3 +34,15 @@ class UpdatedReferenceDatasetParquetTask(BaseRunJobOnDataprocTask):
             self.output().path,
             mode='overwrite',
         )
+
+
+class UpdatedReferenceDatasetParquetOnDataprocTask(RunPipelineOnDataprocTask):
+    reference_genome = luigi.EnumParameter(enum=ReferenceGenome)
+    dataset_type = luigi.EnumParameter(enum=DatasetType)
+    reference_dataset: ReferenceDataset = luigi.EnumParameter(
+        enum=ReferenceDataset,
+    )
+
+    @property
+    def task(self) -> luigi.Task:
+        return UpdatedReferenceDatasetParquetTask

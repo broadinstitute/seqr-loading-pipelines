@@ -6,7 +6,7 @@ import luigi
 from v03_pipeline.lib.core import DatasetType, ReferenceGenome
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_parquet import (
-    UpdatedReferenceDatasetParquetTask,
+    UpdatedReferenceDatasetParquetOnDataprocTask,
 )
 
 
@@ -22,7 +22,7 @@ def main():
     args = parser.parse_args()
     luigi.build(
         [
-            UpdatedReferenceDatasetParquetTask(
+            UpdatedReferenceDatasetParquetOnDataprocTask(
                 reference_genome=args.reference_genome,
                 dataset_type=args.dataset_type,
                 reference_dataset=args.reference_dataset,
