@@ -29,8 +29,6 @@ class MiscTest(unittest.TestCase):
                 'GRCh38',
                 '--dataset-type',
                 'SNV_INDEL',
-                '--run-id',
-                'a_misc_run',
                 '--sample-type',
                 'WGS',
                 '--callset-path',
