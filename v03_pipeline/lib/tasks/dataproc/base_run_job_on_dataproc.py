@@ -28,6 +28,7 @@ logger = get_logger(__name__)
 
 @luigi.util.inherits(BaseLoadingPipelineParams)
 class BaseRunJobOnDataprocTask(luigi.Task):
+    run_id = luigi.Parameter()
     attempt_id = luigi.IntParameter()
 
     def __init__(self, *args, **kwargs):

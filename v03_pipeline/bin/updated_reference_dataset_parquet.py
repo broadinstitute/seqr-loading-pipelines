@@ -26,9 +26,10 @@ def main():
                 reference_genome=args.reference_genome,
                 dataset_type=args.dataset_type,
                 reference_dataset=args.reference_dataset,
+                run_id='manual_run',
                 attempt_id=0,
             ),
-        ]
+        ],
     )
 
 
