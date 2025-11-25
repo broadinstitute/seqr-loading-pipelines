@@ -21,12 +21,14 @@ def main():
     )
     args = parser.parse_args()
     luigi.build(
-        UpdatedReferenceDatasetParquetTask(
-            reference_genome=args.reference_genome,
-            dataset_type=args.dataset_type,
-            reference_dataset=args.reference_dataset,
-            attempt_id=0,
-        ),
+        [
+            UpdatedReferenceDatasetParquetTask(
+                reference_genome=args.reference_genome,
+                dataset_type=args.dataset_type,
+                reference_dataset=args.reference_dataset,
+                attempt_id=0,
+            ),
+        ]
     )
 
 
