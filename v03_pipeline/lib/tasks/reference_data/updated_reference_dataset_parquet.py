@@ -36,7 +36,7 @@ class UpdatedReferenceDatasetParquetTask(luigi.Task):
         )
 
 
-class UpdatedReferenceDatasetParquetOnDataprocTask(RunPipelineOnDataprocTask):
+class UpdatedReferenceDatasetParquetOnDataprocTask(BaseRunJobOnDataprocTask):
     reference_genome = luigi.EnumParameter(enum=ReferenceGenome)
     dataset_type = luigi.EnumParameter(enum=DatasetType)
     reference_dataset: ReferenceDataset = luigi.EnumParameter(
