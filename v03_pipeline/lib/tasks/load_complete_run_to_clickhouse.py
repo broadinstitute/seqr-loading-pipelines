@@ -59,6 +59,7 @@ class LoadCompleteRunToClickhouse(luigi.Task):
             self.reference_genome,
             self.dataset_type,
             self.run_id,
-            self.project_guids,
+            # Note: nasty bug here where Luigi parses ListParameters to tuples.
+            list(self.project_guids),
             family_guids,
         )
