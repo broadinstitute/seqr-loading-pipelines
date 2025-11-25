@@ -46,7 +46,8 @@ class MiscTest(unittest.TestCase):
                 '--is-new-gcnv-joint-call',
                 'False',
                 '--run-id',
-                'a_misc_run--attempt-id',
+                'a_misc_run',
+                '--attempt-id',
                 '0',
             ],
         )
