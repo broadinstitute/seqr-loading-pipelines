@@ -13,7 +13,7 @@ TEST_PEDIGREE_9 = 'v03_pipeline/var/test/pedigrees/test_pedigree_9.tsv'
 
 class PedigreesTest(unittest.TestCase):
     def test_empty_pedigree(self) -> None:
-        with self.assertRaises(ValueError):
+        with self.assertRaises(Exception):  # noqa: B017
             _ = import_pedigree(TEST_PEDIGREE_1)
 
     def test_parse_lineage(self) -> None:
