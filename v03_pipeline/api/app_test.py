@@ -73,7 +73,7 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
             'sample_type': SampleType.WGS.value,
             'reference_genome': ReferenceGenome.GRCh38.value,
             'dataset_type': DatasetType.SNV_INDEL.value,
-            'validations_to_skip': ['bad_validation']
+            'validations_to_skip': ['bad_validation'],
         }
         with self.assertLogs(level='ERROR') as log:
             async with self.client.request(
@@ -120,7 +120,7 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
                     'skip_check_sex_and_relatedness': False,
                     'skip_expect_tdr_metrics': False,
                     'attempt_id': 0,
-                    'validations_to_skip': []
+                    'validations_to_skip': [],
                 },
             },
         )
