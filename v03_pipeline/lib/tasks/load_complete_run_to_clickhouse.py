@@ -10,7 +10,7 @@ from v03_pipeline.lib.misc.clickhouse import (
     load_complete_run,
     logged_query,
 )
-from v03_pipeline.lib.paths import metadata_for_run_path
+from v03_pipeline.lib.paths import metadata_for_run_path, pipeline_run_success_file_path
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )
@@ -25,6 +25,14 @@ class LoadCompleteRunToClickhouse(luigi.Task):
         return [self.clone(WriteSuccessFileTask)]
 
     def complete(self):
+        if not hfs.exists(
+            pipeline_run_success_file_path(
+                self.reference_genome,
+                self.dataset_type,
+                self.run_id,
+            ),
+        ):
+            return False
         table_name_builder = TableNameBuilder(
             self.reference_genome,
             self.dataset_type,
@@ -35,7 +43,7 @@ class LoadCompleteRunToClickhouse(luigi.Task):
             SELECT max(key) FROM {table_name_builder.src_table(ClickHouseTable.ANNOTATIONS_MEMORY)}
             """,
         )[0][0]
-        return logged_query(
+        exists_in_annotations = logged_query(
             f"""
             SELECT EXISTS (
                 SELECT 1
@@ -45,6 +53,17 @@ class LoadCompleteRunToClickhouse(luigi.Task):
             """,
             {'max_key_src': max_key_src},
         )[0][0]
+        exists_in_gt_stats = logged_query(
+            f"""
+            SELECT EXISTS (
+                SELECT 1
+                FROM {table_name_builder.dst_table(ClickHouseTable.GT_STATS)}
+                WHERE key = %(max_key_src)s
+            );
+            """,
+            {'max_key_src': max_key_src},
+        )[0][0]
+        return exists_in_annotations and exists_in_gt_stats
 
     def run(self):
         with hfs.open(
