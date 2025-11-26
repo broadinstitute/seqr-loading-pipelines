@@ -3,12 +3,9 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.misc.validation import (
+    ALL_VALIDATIONS,
+    SKIPPABLE_VALIDATIONS,
     SeqrValidationError,
-    validate_allele_depth_length,
-    validate_allele_type,
-    validate_expected_contig_frequency,
-    validate_no_duplicate_variants,
-    validate_sample_type,
 )
 from v03_pipeline.lib.paths import (
     imported_callset_path,
@@ -31,6 +28,22 @@ MAX_SNV_INDEL_ALLELE_LENGTH = 500
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class ValidateCallsetTask(BaseUpdateTask):
+    @property
+    def validation_dependencies(self) -> dict[str, hl.Table]:
+        deps = {}
+        if (
+            ALL_VALIDATIONS not in self.validations_to_skip
+            and 'validate_sample_type' not in self.validations_to_skip
+            and self.dataset_type.can_run_validation
+        ):
+            deps['coding_and_noncoding_variants_ht'] = hl.read_table(
+                valid_reference_dataset_path(
+                    self.reference_genome,
+                    ReferenceDataset.gnomad_coding_and_noncoding,
+                ),
+            )
+        return deps
+
     def complete(self) -> luigi.Target:
         if super().complete():
             mt = hl.read_matrix_table(self.output().path)
@@ -50,7 +63,11 @@ class ValidateCallsetTask(BaseUpdateTask):
 
     def requires(self) -> list[luigi.Task]:
         requirements = [self.clone(WriteImportedCallsetTask)]
-        if not self.skip_validation and self.dataset_type.can_run_validation:
+        if (
+            ALL_VALIDATIONS not in self.validations_to_skip
+            and 'validate_sample_type' not in self.validations_to_skip
+            and self.dataset_type.can_run_validation
+        ):
             requirements = [
                 *requirements,
                 (
@@ -87,29 +104,22 @@ class ValidateCallsetTask(BaseUpdateTask):
                 ),
             )
 
-        validation_exceptions = []
-        if self.skip_validation or not self.dataset_type.can_run_validation:
+        if (
+            ALL_VALIDATIONS in self.validations_to_skip
+            or not self.dataset_type.can_run_validation
+        ):
             return mt.select_globals(
                 callset_path=self.callset_path,
                 validated_sample_type=self.sample_type.value,
             )
-        coding_and_noncoding_variants_ht = hl.read_table(
-            valid_reference_dataset_path(
-                self.reference_genome,
-                ReferenceDataset.gnomad_coding_and_noncoding,
-            ),
-        )
-        for validation_f in [
-            validate_allele_depth_length,
-            validate_allele_type,
-            validate_no_duplicate_variants,
-            validate_expected_contig_frequency,
-            validate_sample_type,
-        ]:
+        validation_exceptions = []
+        for validation_f in SKIPPABLE_VALIDATIONS:
             try:
+                if validation_f in self.validations_to_skip:
+                    continue
                 validation_f(
                     mt,
-                    coding_and_noncoding_variants_ht=coding_and_noncoding_variants_ht,
+                    **self.validation_dependencies,
                     **self.param_kwargs,
                 )
             except SeqrValidationError as e:
