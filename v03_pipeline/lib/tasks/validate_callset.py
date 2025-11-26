@@ -3,7 +3,6 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.misc.validation import (
-    ALL_VALIDATIONS,
     SKIPPABLE_VALIDATIONS,
     SeqrValidationError,
 )
@@ -32,8 +31,7 @@ class ValidateCallsetTask(BaseUpdateTask):
     def validation_dependencies(self) -> dict[str, hl.Table]:
         deps = {}
         if (
-            ALL_VALIDATIONS not in self.validations_to_skip
-            and 'validate_sample_type' not in self.validations_to_skip
+            'validate_sample_type' not in self.validations_to_skip
             and self.dataset_type.can_run_validation
         ):
             deps['coding_and_noncoding_variants_ht'] = hl.read_table(
@@ -64,8 +62,7 @@ class ValidateCallsetTask(BaseUpdateTask):
     def requires(self) -> list[luigi.Task]:
         requirements = [self.clone(WriteImportedCallsetTask)]
         if (
-            ALL_VALIDATIONS not in self.validations_to_skip
-            and 'validate_sample_type' not in self.validations_to_skip
+            'validate_sample_type' not in self.validations_to_skip
             and self.dataset_type.can_run_validation
         ):
             requirements = [
@@ -104,10 +101,7 @@ class ValidateCallsetTask(BaseUpdateTask):
                 ),
             )
 
-        if (
-            ALL_VALIDATIONS in self.validations_to_skip
-            or not self.dataset_type.can_run_validation
-        ):
+        if not self.dataset_type.can_run_validation:
             return mt.select_globals(
                 callset_path=self.callset_path,
                 validated_sample_type=self.sample_type.value,
@@ -115,7 +109,7 @@ class ValidateCallsetTask(BaseUpdateTask):
         validation_exceptions = []
         for validation_f in SKIPPABLE_VALIDATIONS:
             try:
-                if validation_f in self.validations_to_skip:
+                if str(validation_f.__name__) in self.validations_to_skip:
                     continue
                 validation_f(
                     mt,
