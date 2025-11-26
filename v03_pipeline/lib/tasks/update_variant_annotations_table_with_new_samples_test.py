@@ -207,7 +207,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 [],
             ),  # for the second call, there are no new variants, return empty iterator
         ]
-
         mock_standard_contigs.return_value = {'chr1'}
         # This creates a mock validation table with 1 coding and 1 non-coding variant
         # explicitly chosen from the VCF.
@@ -248,7 +247,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 ),
             ),
         )
-
         coding_and_noncoding_variants_ht.write(
             valid_reference_dataset_path(
                 ReferenceGenome.GRCh38,

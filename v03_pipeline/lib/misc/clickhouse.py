@@ -965,12 +965,14 @@ def rebuild_gt_stats(
 
 def get_clickhouse_client(
     timeout: int | None = None,
+    database: str | None = None,
 ) -> Client:
     return Client(
         host=Env.CLICKHOUSE_SERVICE_HOSTNAME,
         port=Env.CLICKHOUSE_SERVICE_PORT,
         user=Env.CLICKHOUSE_WRITER_USER,
         password=Env.CLICKHOUSE_WRITER_PASSWORD,
+        **{'database': database} if database else {},
         **{'send_receive_timeout': timeout} if timeout else {},
         **{
             'settings': {

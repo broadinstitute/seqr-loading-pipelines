@@ -102,6 +102,9 @@ inline-quotes = "single"
 '*clickhouse*' = [
     'S608' # unsafe sql
 ]
+'*pipeline_worker*' = [
+    'S608' # unsafe sql
+]
 
 [tool.ruff.pylint]
 max-args = 6
