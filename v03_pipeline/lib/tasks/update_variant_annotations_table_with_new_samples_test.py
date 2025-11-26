@@ -271,7 +271,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
-            skip_validation=False,
+            validations_to_skip=[],
             run_id=TEST_RUN_ID,
         )
         worker.add(uvatwns_task_3)
@@ -332,7 +332,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0114_project4'],
-            skip_validation=False,
+            validations_to_skip=[],
             run_id=TEST_RUN_ID + '-another-run',
         )
         worker.add(uvatwns_task_4)
