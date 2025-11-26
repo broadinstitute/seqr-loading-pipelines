@@ -56,17 +56,10 @@ class ModelTest(unittest.TestCase):
         }
         raw_request = {
             **shared_params,
-            'skip_validation': True,
-        }
-        lpr = LoadingPipelineRequest.model_validate(raw_request)
-        self.assertGreater(len(lpr.validations_to_skip), 1)
-
-        raw_request = {
-            **shared_params,
             'validations_to_skip': ['all'],
         }
         lpr = LoadingPipelineRequest.model_validate(raw_request)
-        self.assertGreater(len(lpr.validations_to_skip), 1)
+        self.assertGreater(len(lpr.validations_to_skip), 2)
 
         raw_request = {
             **shared_params,
