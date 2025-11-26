@@ -4,6 +4,7 @@ import shutil
 from unittest.mock import Mock, patch
 
 import hail as hl
+import hailtop.fs as hfs
 import luigi
 import luigi.worker
 
@@ -15,10 +16,10 @@ from v03_pipeline.lib.misc.clickhouse import (
     get_clickhouse_client,
 )
 from v03_pipeline.lib.paths import (
+    clickhouse_load_success_file_path,
     db_id_to_gene_id_path,
     loading_pipeline_deadletter_queue_dir,
     loading_pipeline_queue_dir,
-    clickhouse_load_success_file_path,
 )
 from v03_pipeline.lib.test.misc import copy_project_pedigree_to_mocked_dir
 from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
@@ -193,12 +194,12 @@ class PipelineWorkerTest(MockedReferenceDatasetsTestCase):
         mock_safe_post_to_slack.assert_called_once_with(
             ':white_check_mark: Pipeline Runner Request Success! :white_check_mark:\nRun ID: 20250916-200704-123456\n```{\n    "attempt_id": 0,\n    "callset_path": "v03_pipeline/var/test/callsets/1kg_30variants.vcf",\n    "dataset_type": "SNV_INDEL",\n    "project_guids": [\n        "R0113_test_project"\n    ],\n    "reference_genome": "GRCh38",\n    "request_type": "LoadingPipelineRequest",\n    "sample_type": "WGS",\n    "skip_check_sex_and_relatedness": false,\n    "skip_expect_tdr_metrics": false,\n    "skip_validation": true\n}```',
         )
-        with open(
-            clickhouse_load_success_file(
+        with hfs.open(
+            clickhouse_load_success_file_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
-                'request_20250916-200704-123456',
-            )
+                '20250916-200704-123456',
+            ),
         ) as f:
             self.assertEqual(f.read(), '')
 
