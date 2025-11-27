@@ -193,6 +193,7 @@ class PipelineWorkerTest(MockedReferenceDatasetsTestCase):
         process_queue(local_scheduler=True)
         mock_safe_post_to_slack.assert_called_once_with(
             ':white_check_mark: Pipeline Runner Request Success! :white_check_mark:\nRun ID: 20250916-200704-123456\n```{\n    "attempt_id": 0,\n    "callset_path": "v03_pipeline/var/test/callsets/1kg_30variants.vcf",\n    "dataset_type": "SNV_INDEL",\n    "project_guids": [\n        "R0113_test_project"\n    ],\n    "reference_genome": "GRCh38",\n    "request_type": "LoadingPipelineRequest",\n    "sample_type": "WGS",\n    "skip_check_sex_and_relatedness": false,\n    "skip_expect_tdr_metrics": false,\n    "validations_to_skip": [\n        "validate_allele_depth_length",\n        "validate_allele_type",\n        "validate_expected_contig_frequency",\n        "validate_no_duplicate_variants",\n        "validate_sample_type"\n    ]\n}```',
+
         )
         with hfs.open(
             clickhouse_load_success_file_path(
