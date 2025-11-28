@@ -24,7 +24,11 @@ from v03_pipeline.lib.core import (
     SampleType,
 )
 from v03_pipeline.lib.misc.io import remap_pedigree_hash
-from v03_pipeline.lib.misc.validation import validate_expected_contig_frequency
+from v03_pipeline.lib.misc.validation import (
+    ALL_VALIDATIONS,
+    SKIPPABLE_VALIDATIONS,
+    validate_expected_contig_frequency,
+)
 from v03_pipeline.lib.paths import (
     valid_reference_dataset_path,
 )
@@ -86,7 +90,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
-            skip_validation=True,
+            validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
         worker = luigi.worker.Worker()
@@ -116,7 +120,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
-            skip_validation=True,
+            validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
         worker = luigi.worker.Worker()
@@ -129,8 +133,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
     )
     @patch('v03_pipeline.lib.tasks.update_new_variants_with_caids.Env')
     @patch(
-        'v03_pipeline.lib.tasks.validate_callset.validate_expected_contig_frequency',
-        partial(validate_expected_contig_frequency, min_rows_per_contig=25),
+        'v03_pipeline.lib.tasks.validate_callset.SKIPPABLE_VALIDATIONS',
+        [
+            x
+            for x in SKIPPABLE_VALIDATIONS
+            if x.__str__ != 'validate_expected_contig_frequency'
+        ]
+        + [partial(validate_expected_contig_frequency, min_rows_per_contig=25)],
     )
     @patch.object(ReferenceGenome, 'standard_contigs', new_callable=PropertyMock)
     @patch('v03_pipeline.lib.vep.hl.vep')
@@ -268,7 +277,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
-            skip_validation=False,
+            validations_to_skip=[],
             run_id=TEST_RUN_ID,
         )
         worker.add(uvatwns_task_3)
@@ -329,7 +338,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0114_project4'],
-            skip_validation=False,
+            validations_to_skip=[],
             run_id=TEST_RUN_ID + '-another-run',
         )
         worker.add(uvatwns_task_4)
@@ -527,7 +536,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
-            skip_validation=True,
+            validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
         worker.add(uvatwns_task)
@@ -683,7 +692,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
-            skip_validation=True,
+            validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
         worker.add(uvatwns_task)
@@ -726,7 +735,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WGS,
                 callset_path=TEST_MITO_MT,
                 project_guids=['R0115_test_project2'],
-                skip_validation=True,
+                validations_to_skip=[ALL_VALIDATIONS],
                 run_id=TEST_RUN_ID,
             )
         )
@@ -834,7 +843,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SV_VCF,
                 project_guids=['R0115_test_project2'],
-                skip_validation=True,
+                validations_to_skip=[ALL_VALIDATIONS],
                 run_id=TEST_RUN_ID,
             )
         )
@@ -1294,7 +1303,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SV_VCF_2,
                 project_guids=['R0115_test_project2'],
-                skip_validation=True,
+                validations_to_skip=[ALL_VALIDATIONS],
                 run_id='second_run_id',
             )
         )
@@ -1414,7 +1423,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SV_VCF_2,
                 project_guids=['R0116_test_project3', 'R0117_test_project4'],
-                skip_validation=True,
+                validations_to_skip=[ALL_VALIDATIONS],
                 run_id='run_id',
             )
         )
@@ -1446,7 +1455,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WES,
                 callset_path=TEST_GCNV_BED_FILE,
                 project_guids=['R0115_test_project2'],
-                skip_validation=True,
+                validations_to_skip=[ALL_VALIDATIONS],
                 run_id=TEST_RUN_ID,
             )
         )
@@ -1585,7 +1594,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WES,
                 callset_path=TEST_GCNV_BED_FILE_2,
                 project_guids=['R0115_test_project2'],
-                skip_validation=True,
+                validations_to_skip=[ALL_VALIDATIONS],
                 run_id='second_run_id',
             )
         )

@@ -9,6 +9,7 @@ from v03_pipeline.lib.core import (
     SampleType,
 )
 
+ALL_VALIDATIONS = 'all'
 AMBIGUOUS_THRESHOLD_PERC: float = 0.01  # Fraction of samples identified as "ambiguous_sex" above which an error will be thrown.
 MIN_ROWS_PER_CONTIG = 100
 SAMPLE_TYPE_MATCH_THRESHOLD = 0.3
@@ -191,3 +192,12 @@ def validate_sample_type(
     if has_noncoding and has_coding and sample_type != SampleType.WGS:
         msg = 'Sample type validation error: dataset sample-type is specified as WES but appears to be WGS because it contains many common non-coding variants'
         raise SeqrValidationError(msg)
+
+
+SKIPPABLE_VALIDATIONS = [
+    validate_allele_depth_length,
+    validate_allele_type,
+    validate_expected_contig_frequency,
+    validate_no_duplicate_variants,
+    validate_sample_type,
+]

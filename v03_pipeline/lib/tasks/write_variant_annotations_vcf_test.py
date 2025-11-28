@@ -5,6 +5,7 @@ import hailtop.fs as hfs
 import luigi.worker
 
 from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.misc.validation import ALL_VALIDATIONS
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
@@ -64,7 +65,7 @@ class WriteVariantAnnotationsVCFTest(MockedReferenceDatasetsTestCase):
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SV_VCF,
                 project_guids=['R0115_test_project2'],
-                skip_validation=True,
+                validations_to_skip=[ALL_VALIDATIONS],
                 skip_expect_tdr_metrics=True,
             )
         )
