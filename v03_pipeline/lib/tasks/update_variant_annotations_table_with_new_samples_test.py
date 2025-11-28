@@ -18,7 +18,6 @@ from v03_pipeline.lib.annotations.enums import (
     SV_TYPES,
     TRANSCRIPT_CONSEQUENCE_TERMS,
 )
-from v03_pipeline.lib.misc.validation import SKIPPABLE_VALIDATIONS
 from v03_pipeline.lib.core import (
     DatasetType,
     ReferenceGenome,
@@ -27,6 +26,7 @@ from v03_pipeline.lib.core import (
 from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.misc.validation import (
     ALL_VALIDATIONS,
+    SKIPPABLE_VALIDATIONS,
     validate_expected_contig_frequency,
 )
 from v03_pipeline.lib.paths import (
