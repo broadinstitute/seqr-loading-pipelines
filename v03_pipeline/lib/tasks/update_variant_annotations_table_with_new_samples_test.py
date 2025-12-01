@@ -1,5 +1,5 @@
+import functools
 import shutil
-from functools import partial
 from unittest.mock import Mock, PropertyMock, patch
 
 import hail as hl
@@ -139,7 +139,15 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             for x in SKIPPABLE_VALIDATIONS
             if x.__str__ != 'validate_expected_contig_frequency'
         ]
-        + [partial(validate_expected_contig_frequency, min_rows_per_contig=25)],
+        + [
+            functools.update_wrapper(
+                functools.partial(
+                    validate_expected_contig_frequency,
+                    min_rows_per_contig=25,
+                ),
+                validate_expected_contig_frequency,
+            ),
+        ],
     )
     @patch.object(ReferenceGenome, 'standard_contigs', new_callable=PropertyMock)
     @patch('v03_pipeline.lib.vep.hl.vep')
