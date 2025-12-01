@@ -137,7 +137,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         [
             x
             for x in SKIPPABLE_VALIDATIONS
-            if x.__str__ != 'validate_expected_contig_frequency'
+            if x.__name__ != 'validate_expected_contig_frequency'
         ]
         + [
             functools.update_wrapper(

@@ -115,7 +115,7 @@ class ValidateCallsetTask(BaseUpdateTask):
         validation_exceptions = []
         for validation_f in SKIPPABLE_VALIDATIONS:
             try:
-                if str(validation_f.__name__) in self.validations_to_skip:
+                if validation_f.__name__ in self.validations_to_skip:
                     continue
                 validation_f(
                     mt,
