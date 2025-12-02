@@ -67,6 +67,28 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
                     'callset_path must point to a file that exists' in log.output[0],
                 )
 
+        body = {
+            'callset_path': CALLSET_PATH,
+            'project_guids': ['project_a'],
+            'sample_type': SampleType.WGS.value,
+            'reference_genome': ReferenceGenome.GRCh38.value,
+            'dataset_type': DatasetType.SNV_INDEL.value,
+            'validations_to_skip': ['bad_validation'],
+        }
+        with self.assertLogs(level='ERROR') as log:
+            async with self.client.request(
+                'POST',
+                '/loading_pipeline_enqueue',
+                json=body,
+            ) as resp:
+                self.assertEqual(
+                    resp.status,
+                    web_exceptions.HTTPBadRequest.status_code,
+                )
+                self.assertTrue(
+                    "input_value='bad_validation" in log.output[0],
+                )
+
     async def test_loading_pipeline_enqueue(self):
         body = {
             'callset_path': CALLSET_PATH,
@@ -96,9 +118,9 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
                     'reference_genome': 'GRCh38',
                     'sample_type': 'WGS',
                     'skip_check_sex_and_relatedness': False,
-                    'skip_validation': False,
                     'skip_expect_tdr_metrics': False,
                     'attempt_id': 0,
+                    'validations_to_skip': [],
                 },
             },
         )

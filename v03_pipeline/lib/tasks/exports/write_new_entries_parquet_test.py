@@ -10,6 +10,7 @@ from v03_pipeline.lib.core import (
     ReferenceGenome,
     SampleType,
 )
+from v03_pipeline.lib.misc.validation import ALL_VALIDATIONS
 from v03_pipeline.lib.paths import (
     db_id_to_gene_id_path,
     new_entries_parquet_path,
@@ -114,7 +115,7 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project', 'R0114_project4'],
-            skip_validation=True,
+            validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
         worker.add(task)
@@ -214,7 +215,7 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_MITO_CALLSET,
             project_guids=['R0116_test_project3'],
-            skip_validation=True,
+            validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
         worker.add(task)
@@ -269,7 +270,7 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_SV_VCF_2,
             project_guids=['R0115_test_project2'],
-            skip_validation=True,
+            validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
         worker.add(task)
@@ -352,7 +353,7 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
             sample_type=SampleType.WES,
             callset_path=TEST_GCNV_BED_FILE,
             project_guids=['R0115_test_project2'],
-            skip_validation=True,
+            validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
         worker.add(task)

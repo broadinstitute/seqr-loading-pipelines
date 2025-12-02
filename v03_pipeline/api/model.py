@@ -1,9 +1,20 @@
+from typing import Literal
+
 import hailtop.fs as hfs
-from pydantic import AliasChoices, BaseModel, Field, conint, field_validator
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    Field,
+    conint,
+    field_validator,
+    root_validator,
+)
 
 from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.misc.validation import ALL_VALIDATIONS, SKIPPABLE_VALIDATIONS
 
 MAX_LOADING_PIPELINE_ATTEMPTS = 3
+STRINGIFIED_SKIPPABLE_VALIDATIONS = [f.__name__ for f in SKIPPABLE_VALIDATIONS]
 VALID_FILE_TYPES = ['vcf', 'vcf.gz', 'vcf.bgz', 'mt']
 
 
@@ -26,15 +37,35 @@ class LoadingPipelineRequest(PipelineRunnerRequest):
     sample_type: SampleType
     reference_genome: ReferenceGenome
     dataset_type: DatasetType
-    skip_validation: bool = False
     skip_check_sex_and_relatedness: bool = False
     skip_expect_tdr_metrics: bool = False
+    validations_to_skip: list[Literal[*STRINGIFIED_SKIPPABLE_VALIDATIONS]] = []
 
     def incr_attempt(self):
         if self.attempt_id == (MAX_LOADING_PIPELINE_ATTEMPTS - 1):
             return False
         self.attempt_id += 1
         return True
+
+    @field_validator('validations_to_skip')
+    @classmethod
+    def must_be_known_validation(cls, validations_to_skip):
+        for v in validations_to_skip:
+            if v not in set(STRINGIFIED_SKIPPABLE_VALIDATIONS):
+                msg = f'{v} is not a valid validator'
+                raise ValueError(msg)
+        return validations_to_skip
+
+    @root_validator(
+        pre=True,
+    )  # the root validator runs before Pydantic parses or coerces field values.
+    @classmethod
+    def override_all_validations(cls, values):
+        if values.get('validations_to_skip') == [
+            ALL_VALIDATIONS,
+        ]:
+            values['validations_to_skip'] = STRINGIFIED_SKIPPABLE_VALIDATIONS
+        return values
 
     @field_validator('callset_path')
     @classmethod
