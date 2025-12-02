@@ -16,6 +16,8 @@ class UpdatedReferenceDatasetParquetTask(luigi.Task):
     reference_dataset: ReferenceDataset = luigi.EnumParameter(
         enum=ReferenceDataset,
     )
+    run_id = luigi.Parameter()
+    attempt_id = luigi.IntParameter()
 
     def complete(self) -> luigi.Target:
         return GCSorLocalFolderTarget(self.output().path).exists()
