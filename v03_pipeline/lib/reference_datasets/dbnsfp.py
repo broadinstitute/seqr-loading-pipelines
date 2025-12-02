@@ -3,36 +3,63 @@ import hail as hl
 from v03_pipeline.lib.core import DatasetType, ReferenceGenome
 from v03_pipeline.lib.reference_datasets.misc import (
     key_by_locus_alleles,
+    vcf_to_ht,
 )
 
+SHARED_TYPES = {
+    'fathmm-MKL_coding_score': hl.tfloat32,
+    'PrimateAI_score': hl.tfloat32,
+}
+TYPES = {
+    ReferenceGenome.GRCh37: {
+        **SHARED_TYPES,
+        'hg19_pos(1-based)': hl.tint,
+        'CADD_phred_hg19': hl.tfloat32,
+    },
+    ReferenceGenome.GRCh38: {
+        **SHARED_TYPES,
+        'pos(1-based)': hl.tint,
+        'CADD_phred': hl.tfloat32,
+    },
+}
 
-GRCh38_FIELDS = {
-    'chrom': '#chr',
-    'pos': 'pos(1-based)',
-    'ref': 'ref',
-    'alt': 'alt',
-    'cadd': 'CADD_phred',
-    'eigen': 'Eigen-phred_coding',
-    'fathmm': 'fathmm-XF_coding_score',
-    'mpc': 'MPC_score',
-    'mut_pred': 'MutPred_score',
-    'mut_tester': 'MutationTaster_pred',
-    'polyphen': 'Polyphen2_HVAR_score',
-    'primate_ai': 'PrimateAI_score',
-    'revel': 'REVEL_score',
-    'sift': 'SIFT_score',
-    'vest': 'VEST4_score',
+SHARED_RENAME = {
+    'fathmm-MKL_coding_score': 'fathmm_MKL_coding_score',
 }
-GRCh37_FIELDS = {
-    'hg19_pos(1-based)': 'pos(1-based)',
-    **GRCh38_FIELDS,
+RENAME = {
+    ReferenceGenome.GRCh37: {
+        **SHARED_RENAME,
+        'hg19_chr': 'chrom',
+        'hg19_pos(1-based)': 'pos',
+        'CADD_phred_hg19': 'CADD_phred',
+    },
+    ReferenceGenome.GRCh38: {
+        **SHARED_RENAME,
+        '#chr': 'chrom',
+        'pos(1-based)': 'pos',
+    },
 }
+
+PREDICTOR_SCORES = {
+    'SIFT_score',
+    'Polyphen2_HVAR_score',
+    'VEST4_score',
+    'MPC_score',
+    'MutPred_score',
+    'REVEL_score',
+}
+PREDICTOR_FIELDS = ['MutationTaster_pred']
+
+
+def predictor_parse(field: hl.StringExpression) -> hl.StringExpression:
+    return field.split(';').find(lambda p: p != '.')
 
 
 def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
     types = TYPES[reference_genome]
     rename = RENAME[reference_genome]
-    ht = hl.import_table(path, force_bgz=True)
+    ht = vcf_to_ht(path, reference_genome)
+    select_fields = {'ref', 'alt', *types.keys(), *rename.keys()}
     ht = ht.select(
         *select_fields,
         **{k: hl.parse_float32(predictor_parse(ht[k])) for k in PREDICTOR_SCORES},
