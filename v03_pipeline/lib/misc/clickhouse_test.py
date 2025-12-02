@@ -234,6 +234,16 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         client.execute(
             f"""
+            CREATE MATERIALIZED VIEW {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/reference_data/clinvar/all_variants_to_seqr_variants_mv`
+            REFRESH EVERY 10 YEAR ENGINE = Null
+            AS SELECT DISTINCT ON (key) dst.key as key, COLUMNS('.*') EXCEPT(version, variantId, key)
+            FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/reference_data/clinvar/all_variants` src
+            INNER JOIN {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` dst
+            ON assumeNotNull(src.variantId) = dst.variantId
+            """,
+        )
+        client.execute(
+            f"""
             CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/entries` (
                 `key` UInt32,
                 `project_guid` LowCardinality(String),

@@ -251,6 +251,12 @@ class ClickhouseReferenceData(StrEnum):
     def search_path(self, table_name_builder: TableNameBuilder) -> str:
         return f'{table_name_builder.dst_prefix}/reference_data/{self.value}`'
 
+    def all_variants_to_seqr_variants_mv_path(
+        self,
+        table_name_builder: TableNameBuilder,
+    ) -> str:
+        return f'{table_name_builder.dst_prefix}/reference_data/{self.value}/all_variants_to_seqr_variants_mv`'
+
     def seqr_variants_to_search_mv_path(
         self,
         table_name_builder: TableNameBuilder,
@@ -788,15 +794,14 @@ def load_complete_run(
     ):
         logged_query(
             f"""
-            INSERT INTO {clickhouse_reference_data.seqr_variants_path(table_name_builder)}
-            SELECT
-                DISTINCT ON (key)
-                dst.key as key,
-                COLUMNS('.*') EXCEPT(version, variantId, key)
-            FROM {clickhouse_reference_data.all_variants_path(table_name_builder)} src
-            INNER JOIN {table_name_builder.dst_table(ClickHouseTable.KEY_LOOKUP)} dst
-            ON {ClickHouseTable.KEY_LOOKUP.join_condition}
+            SYSTEM REFRESH VIEW {clickhouse_reference_data.all_variants_to_seqr_variants_mv_path(table_name_builder)}
             """,
+        )
+        logged_query(
+            f"""
+            SYSTEM WAIT VIEW {clickhouse_reference_data.all_variants_to_seqr_variants_mv_path(table_name_builder)}
+            """,
+            timeout=WAIT_VIEW_TIMEOUT_S,
         )
         if clickhouse_reference_data.search_is_join_table:
             logged_query(
