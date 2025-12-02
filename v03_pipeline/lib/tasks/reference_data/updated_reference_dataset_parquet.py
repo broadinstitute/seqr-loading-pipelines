@@ -30,7 +30,7 @@ class UpdatedReferenceDatasetParquetTask(luigi.Task):
             ),
         )
 
-    def create_table(self):
+    def run(self):
         df = self.reference_dataset.get_spark_dataframe(self.reference_genome)
         df.write.parquet(
             self.output().path,
