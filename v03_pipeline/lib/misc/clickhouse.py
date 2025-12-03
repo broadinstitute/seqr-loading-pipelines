@@ -788,14 +788,21 @@ def load_complete_run(
     ):
         logged_query(
             f"""
+            CREATE TABLE {table_name_builder.staging_dst_prefix}/_tmp_loadable_variantIds` ENGINE = Set AS (
+                SELECT {ClickHouseTable.KEY_LOOKUP.key_field}
+                FROM {table_name_builder.src_table(ClickHouseTable.KEY_LOOKUP)}
+            )
+            """,
+        )
+        logged_query(
+            f"""
             INSERT INTO {clickhouse_reference_data.seqr_variants_path(table_name_builder)}
             SELECT
                 DISTINCT ON (key)
                 dst.key as key,
                 COLUMNS('.*') EXCEPT(version, variantId, key)
-            FROM {clickhouse_reference_data.all_variants_path(table_name_builder)} src
-            INNER JOIN {table_name_builder.dst_table(ClickHouseTable.KEY_LOOKUP)} dst
-            ON {ClickHouseTable.KEY_LOOKUP.join_condition}
+            FROM {clickhouse_reference_data.all_variants_path(table_name_builder)}
+            WHERE {ClickHouseTable.KEY_LOOKUP.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_variantIds`
             """,
         )
         if clickhouse_reference_data.search_is_join_table:
