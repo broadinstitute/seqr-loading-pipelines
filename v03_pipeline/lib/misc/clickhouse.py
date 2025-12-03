@@ -280,7 +280,7 @@ class ClickhouseReferenceData(StrEnum):
             INSERT INTO {self.seqr_variants_path(table_name_builder)}
             SELECT
                 DISTINCT ON (key)
-                kl.key,
+                dst.key,
                 COLUMNS('.*') EXCEPT(version, variantId, key)
             FROM {self.all_variants_path(table_name_builder)} src
             INNER JOIN {table_name_builder.dst_table(ClickHouseTable.KEY_LOOKUP)} dst
