@@ -1,14 +1,21 @@
+import json
+
+import hailtop.fs as hfs
 import luigi
 import luigi.util
 
-from v03_pipeline.lib.paths import clickhouse_load_success_file_path
+from v03_pipeline.lib.misc.clickhouse import (
+    load_complete_run,
+)
+from v03_pipeline.lib.paths import (
+    clickhouse_load_success_file_path,
+    metadata_for_run_path,
+)
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
-from v03_pipeline.lib.tasks.load_complete_run_to_clickhouse import (
-    LoadCompleteRunToClickhouse,
-)
+from v03_pipeline.lib.tasks.write_success_file import WriteSuccessFileTask
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
@@ -25,8 +32,25 @@ class WriteClickhouseLoadSuccessFileTask(luigi.Task):
         )
 
     def requires(self) -> luigi.Task:
-        return self.clone(LoadCompleteRunToClickhouse)
+        return self.clone(WriteSuccessFileTask)
 
     def run(self):
+        with hfs.open(
+            metadata_for_run_path(
+                self.reference_genome,
+                self.dataset_type,
+                self.run_id,
+            ),
+        ) as f:
+            family_guids = list(json.load(f)['family_samples'].keys())
+        load_complete_run(
+            self.reference_genome,
+            self.dataset_type,
+            self.run_id,
+            # Note: nasty bug here where Luigi parses ListParameters to tuples.
+            list(self.project_guids),
+            family_guids,
+        )
+
         with self.output().open('w') as f:
             f.write('')
