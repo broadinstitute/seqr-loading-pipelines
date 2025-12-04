@@ -5,7 +5,6 @@ import luigi
 
 from v03_pipeline.lib.core import DatasetType, ReferenceGenome
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
-from v03_pipeline.lib.tasks.dataproc.misc import snake_to_kebab_arg
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_parquet import (
     UpdatedReferenceDatasetParquetOnDataprocTask,
 )
@@ -27,7 +26,7 @@ def main():
                 reference_genome=args.reference_genome,
                 dataset_type=args.dataset_type,
                 reference_dataset=args.reference_dataset,
-                run_id=f'{snake_to_kebab_arg(args.reference_dataset.value)}',
+                run_id=f'{re.sub(r"\_", "-", args.reference_dataset.value).lower()}-run',
                 attempt_id=0,
             ),
         ],
