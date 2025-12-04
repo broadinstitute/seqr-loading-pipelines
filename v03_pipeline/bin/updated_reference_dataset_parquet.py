@@ -26,7 +26,7 @@ def main():
                 reference_genome=args.reference_genome,
                 dataset_type=args.dataset_type,
                 reference_dataset=args.reference_dataset,
-                run_id=f'{re.sub(r"\_", "-", args.reference_dataset.value).lower()}-run',
+                run_id=f'{args.reference_dataset.value.replace("_", "-").lower()}-run',
                 attempt_id=0,
             ),
         ],
