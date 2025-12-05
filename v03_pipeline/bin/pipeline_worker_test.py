@@ -61,6 +61,20 @@ class PipelineWorkerTest(MockedReferenceDatasetsTestCase):
         client = get_clickhouse_client(database=Env.CLICKHOUSE_DATABASE)
         client.execute(
             """
+            CREATE DICTIONARY seqrdb_gene_ids
+            (
+                `gene_id` String,
+                `seqrdb_id` String,
+                `affected` String
+            )
+            PRIMARY KEY gene_id
+            SOURCE(NULL())
+            LIFETIME(0)
+            LAYOUT(HASHED())
+            """,
+        )
+        client.execute(
+            """
             CREATE DICTIONARY seqrdb_affected_status_dict
             (
                 `family_guid` String,
