@@ -257,6 +257,56 @@ class ClickhouseReferenceData(StrEnum):
     ) -> str:
         return f'{table_name_builder.dst_prefix}/reference_data/{self.value}/seqr_variants_to_search_mv`'
 
+    def refresh(
+        self,
+        table_name_builder: TableNameBuilder,
+    ):
+        drop_staging_db()
+        logged_query(
+            f"""
+            CREATE DATABASE {STAGING_CLICKHOUSE_DATABASE}
+            """,
+        )
+        logged_query(
+            f"""
+            CREATE TABLE {table_name_builder.staging_dst_prefix}/_tmp_loadable_variantIds` ENGINE = Set AS (
+                SELECT {ClickHouseTable.KEY_LOOKUP.key_field}
+                FROM {table_name_builder.src_table(ClickHouseTable.KEY_LOOKUP)}
+            )
+            """,
+        )
+        logged_query(
+            f"""
+            INSERT INTO {self.seqr_variants_path(table_name_builder)}
+            SELECT
+                DISTINCT ON (key)
+                dst.key,
+                COLUMNS('.*') EXCEPT(version, variantId, key)
+            FROM {self.all_variants_path(table_name_builder)} src
+            INNER JOIN {table_name_builder.dst_table(ClickHouseTable.KEY_LOOKUP)} dst
+            ON {ClickHouseTable.KEY_LOOKUP.join_condition}
+            WHERE src.variantId IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_variantIds`
+            """,
+        )
+        if self.search_is_join_table:
+            logged_query(
+                f"""
+                SYSTEM REFRESH VIEW {self.seqr_variants_to_search_mv_path(table_name_builder)}
+                """,
+            )
+            logged_query(
+                f"""
+                SYSTEM WAIT VIEW {self.seqr_variants_to_search_mv_path(table_name_builder)}
+                """,
+                timeout=WAIT_VIEW_TIMEOUT_S,
+            )
+        else:
+            logged_query(
+                f"""
+                SYSTEM RELOAD DICTIONARY {self.search_path(table_name_builder)}
+                """,
+            )
+
 
 def logged_query(query, params=None, timeout: int | None = None):
     client = get_clickhouse_client(timeout)
@@ -806,36 +856,9 @@ def load_complete_run(
     for clickhouse_reference_data in ClickhouseReferenceData.for_dataset_type(
         dataset_type,
     ):
-        logged_query(
-            f"""
-            INSERT INTO {clickhouse_reference_data.seqr_variants_path(table_name_builder)}
-            SELECT
-                DISTINCT ON (key)
-                dst.key as key,
-                COLUMNS('.*') EXCEPT(version, variantId, key)
-            FROM {clickhouse_reference_data.all_variants_path(table_name_builder)} src
-            INNER JOIN {table_name_builder.dst_table(ClickHouseTable.KEY_LOOKUP)} dst
-            ON {ClickHouseTable.KEY_LOOKUP.join_condition}
-            """,
+        clickhouse_reference_data.refresh(
+            table_name_builder=table_name_builder,
         )
-        if clickhouse_reference_data.search_is_join_table:
-            logged_query(
-                f"""
-                SYSTEM REFRESH VIEW {clickhouse_reference_data.seqr_variants_to_search_mv_path(table_name_builder)}
-                """,
-            )
-            logged_query(
-                f"""
-                SYSTEM WAIT VIEW {clickhouse_reference_data.seqr_variants_to_search_mv_path(table_name_builder)}
-                """,
-                timeout=WAIT_VIEW_TIMEOUT_S,
-            )
-        else:
-            logged_query(
-                f"""
-                SYSTEM RELOAD DICTIONARY {clickhouse_reference_data.search_path(table_name_builder)}
-                """,
-            )
 
 
 @retry()
