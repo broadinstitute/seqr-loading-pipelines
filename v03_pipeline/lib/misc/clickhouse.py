@@ -442,9 +442,29 @@ def insert_new_entries(
             f'DESCRIBE TABLE {table_name_builder.src_table(ClickHouseTable.ENTRIES)}',
         )
     ]
-    common = [c for c in dst_cols if c in src_cols]
+    common, overrides = [c for c in dst_cols if c in src_cols], {}
+    if 'geneId_ids' in dst_cols and 'geneIds' in src_cols:
+        common = [c for c in common if c not in ('geneId_ids', 'geneIds')]
+        common.append('geneId_ids')
+        overrides = {
+            'geneId_ids': (
+                f"""
+                arrayFilter(
+                    x -> x IS NOT NULL,
+                    arrayMap(
+                        g -> dictGetOrNull(
+                            {Env.CLICKHOUSE_DATABASE}.`seqrdb_gene_ids`,
+                            'seqrdb_id',
+                            g
+                        ),
+                        geneIds
+                    )
+                )
+                """
+            ),
+        }
     dst_list = ', '.join(common)
-    src_list = ', '.join(common)
+    src_list = ', '.join([overrides.get(c, c) for c in common])
     logged_query(
         f"""
         INSERT INTO {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)} ({dst_list})

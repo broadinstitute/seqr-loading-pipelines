@@ -1,6 +1,3 @@
-import os
-import shutil
-
 import hail as hl
 import luigi.worker
 import pandas as pd
@@ -12,7 +9,6 @@ from v03_pipeline.lib.core import (
 )
 from v03_pipeline.lib.misc.validation import ALL_VALIDATIONS
 from v03_pipeline.lib.paths import (
-    db_id_to_gene_id_path,
     new_entries_parquet_path,
     variant_annotations_table_path,
 )
@@ -25,7 +21,6 @@ from v03_pipeline.lib.test.misc import (
 )
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
-TEST_DB_ID_TO_GENE_ID = 'v03_pipeline/var/test/db_id_to_gene_id.csv.gz'
 TEST_PEDIGREE_3_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_3_remap.tsv'
 TEST_PEDIGREE_4_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_4_remap.tsv'
 TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
@@ -48,6 +43,8 @@ TEST_RUN_ID = 'manual__2024-04-03'
 
 
 class WriteNewEntriesParquetTest(MockedDatarootTestCase):
+    maxDiff = None
+
     def setUp(self) -> None:
         super().setUp()
         ht = hl.read_table(
@@ -83,14 +80,6 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
                 ReferenceGenome.GRCh38,
                 DatasetType.GCNV,
             ),
-        )
-        os.makedirs(
-            self.mock_env.LOADING_DATASETS_DIR,
-            exist_ok=True,
-        )
-        shutil.copy2(
-            TEST_DB_ID_TO_GENE_ID,
-            db_id_to_gene_id_path(),
         )
 
     def test_write_new_entries_parquet(self):
@@ -140,8 +129,7 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
                     'sample_type': 'WGS',
                     'xpos': 1000876499,
                     'is_gnomad_gt_5_percent': True,
-                    'is_annotated_in_any_gene': True,
-                    'geneId_ids': [720548],
+                    'geneIds': ['ENSG00000187634'],
                     'filters': [],
                     'calls': [
                         {
@@ -175,8 +163,7 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
                     'sample_type': 'WGS',
                     'xpos': 1000878314,
                     'is_gnomad_gt_5_percent': False,
-                    'is_annotated_in_any_gene': True,
-                    'geneId_ids': [720548],
+                    'geneIds': ['ENSG00000187634'],
                     'filters': ['VQSRTrancheSNP99.00to99.90'],
                     'calls': [
                         {
@@ -293,7 +280,7 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
                     'project_guid': 'R0115_test_project2',
                     'family_guid': 'family_2_1',
                     'xpos': 1001025886,
-                    'geneId_ids': [720558],
+                    'geneIds': ['ENSG00000188157'],
                     'filters': ['HIGH_SR_BACKGROUND', 'UNRESOLVED'],
                     'calls': [
                         {
