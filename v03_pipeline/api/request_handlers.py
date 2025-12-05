@@ -9,10 +9,12 @@ from v03_pipeline.api.model import (
     LoadingPipelineRequest,
     PipelineRunnerRequest,
     RebuildGtStatsRequest,
+    RefreshClickhouseReferenceDataRequest,
 )
 from v03_pipeline.lib.core import DatasetType
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.clickhouse import (
+    ClickhouseReferenceDataset,
     delete_family_guids,
     rebuild_gt_stats,
 )
@@ -69,6 +71,26 @@ def run_rebuild_gt_stats(rgsr: RebuildGtStatsRequest, run_id: str, *_: Any):
             )
 
 
+def run_refresh_clickhouse_reference_data(
+    rcrdr: RefreshClickhouseReferenceDataRequest,
+    run_id: str,
+    *_: Any,
+):
+    for dataset_type in DatasetType:
+        for reference_genome in dataset_type.reference_genomes:
+            reference_dataset = rcrdr.reference_dataset
+            if reference_dataset not in ClickhouseReferenceDataset.for_dataset_type(
+                dataset_type,
+            ):
+                continue
+            run_refresh_clickhouse_reference_data(
+                reference_genome,
+                dataset_type,
+                run_id,
+                **rcrdr.model_dump(exclude='request_type'),
+            )
+
+
 REQUEST_HANDLER_MAP: dict[
     type[PipelineRunnerRequest],
     Callable[[PipelineRunnerRequest, str, ...], None],
@@ -76,4 +98,5 @@ REQUEST_HANDLER_MAP: dict[
     LoadingPipelineRequest: run_loading_pipeline,
     DeleteFamiliesRequest: run_delete_families,
     RebuildGtStatsRequest: run_rebuild_gt_stats,
+    RefreshClickhouseReferenceDataRequest: run_refresh_clickhouse_reference_data,
 }

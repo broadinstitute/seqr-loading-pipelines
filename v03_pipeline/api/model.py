@@ -11,6 +11,7 @@ from pydantic import (
 )
 
 from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.misc.clickhouse import ClickhouseReferenceDataset
 from v03_pipeline.lib.misc.validation import ALL_VALIDATIONS, SKIPPABLE_VALIDATIONS
 
 MAX_LOADING_PIPELINE_ATTEMPTS = 3
@@ -97,3 +98,7 @@ class RebuildGtStatsRequest(PipelineRunnerRequest):
         min_length=1,
         frozen=True,
     )
+
+
+class RefreshClickhouseReferenceDataRequest(PipelineRunnerRequest):
+    reference_dataset: ClickhouseReferenceDataset
