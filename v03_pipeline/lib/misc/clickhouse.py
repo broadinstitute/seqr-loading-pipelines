@@ -228,17 +228,20 @@ class TableNameBuilder:
         return f"file('{path}', 'Parquet')"
 
 
-class ClickhouseReferenceData(StrEnum):
+class ClickhouseReferenceDataset(StrEnum):
     CLINVAR = 'clinvar'
+
+    def fully_refreshable(self):
+        return self != ClickhouseReferenceDataset.CLINVAR
 
     @classmethod
     def for_dataset_type(cls, dataset_type: DatasetType):
         if dataset_type in {DatasetType.SV, DatasetType.GCNV}:
             return []
-        return [ClickhouseReferenceData.CLINVAR]
+        return [ClickhouseReferenceDataset.CLINVAR]
 
     def search_is_join_table(self):
-        return self == ClickhouseReferenceData.CLINVAR
+        return self == ClickhouseReferenceDataset.CLINVAR
 
     def all_variants_path(self, table_name_builder: TableNameBuilder) -> str:
         return (
@@ -251,13 +254,48 @@ class ClickhouseReferenceData(StrEnum):
     def search_path(self, table_name_builder: TableNameBuilder) -> str:
         return f'{table_name_builder.dst_prefix}/reference_data/{self.value}`'
 
+    def all_variants_mv(
+        self,
+        table_name_builder: TableNameBuilder,
+    ) -> str:
+        return f'{table_name_builder.dst_prefix}/reference_data/{self.value}/all_variants_mv`'
+
+    def all_variants_to_seqr_variants_mv(
+        self,
+        table_name_builder: TableNameBuilder,
+    ) -> str:
+        return f'{table_name_builder.dst_prefix}/reference_data/{self.value}/all_variants_to_seqr_variants_mv`'
+
     def seqr_variants_to_search_mv_path(
         self,
         table_name_builder: TableNameBuilder,
     ) -> str:
         return f'{table_name_builder.dst_prefix}/reference_data/{self.value}/seqr_variants_to_search_mv`'
 
-    def refresh(
+    def refresh_search(
+        self,
+        table_name_builder: TableNameBuilder,
+    ) -> str:
+        if self.search_is_join_table:
+            logged_query(
+                f"""
+                SYSTEM REFRESH VIEW {self.seqr_variants_to_search_mv_path(table_name_builder)}
+                """,
+            )
+            logged_query(
+                f"""
+                SYSTEM WAIT VIEW {self.seqr_variants_to_search_mv_path(table_name_builder)}
+                """,
+                timeout=WAIT_VIEW_TIMEOUT_S,
+            )
+        else:
+            logged_query(
+                f"""
+                SYSTEM RELOAD DICTIONARY {self.search_path(table_name_builder)}
+                """,
+            )
+
+    def insert_and_refresh_search(
         self,
         table_name_builder: TableNameBuilder,
     ):
@@ -288,24 +326,35 @@ class ClickhouseReferenceData(StrEnum):
             WHERE src.variantId IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_variantIds`
             """,
         )
-        if self.search_is_join_table:
-            logged_query(
-                f"""
-                SYSTEM REFRESH VIEW {self.seqr_variants_to_search_mv_path(table_name_builder)}
-                """,
-            )
-            logged_query(
-                f"""
-                SYSTEM WAIT VIEW {self.seqr_variants_to_search_mv_path(table_name_builder)}
-                """,
-                timeout=WAIT_VIEW_TIMEOUT_S,
-            )
-        else:
-            logged_query(
-                f"""
-                SYSTEM RELOAD DICTIONARY {self.search_path(table_name_builder)}
-                """,
-            )
+        self.refresh_search(table_name_builder)
+
+    def download_and_fully_refresh(
+        self,
+        table_name_builder: TableNameBuilder,
+    ):
+        logged_query(
+            f"""
+            SYSTEM REFRESH VIEW {self.all_variants_mv(table_name_builder)}
+            """,
+        )
+        logged_query(
+            f"""
+            SYSTEM WAIT VIEW {self.all_variants_mv(table_name_builder)}
+            """,
+            timeout=WAIT_VIEW_TIMEOUT_S * 2,  # double the timeout for large downloads
+        )
+        logged_query(
+            f"""
+            SYSTEM REFRESH VIEW {self.all_variants_to_seqr_variants_mv(table_name_builder)}
+            """,
+        )
+        logged_query(
+            f"""
+            SYSTEM WAIT VIEW {self.all_variants_to_seqr_variants_mv(table_name_builder)}
+            """,
+            timeout=WAIT_VIEW_TIMEOUT_S,  # note: maybe increase this for splice_ai?
+        )
+        self.refresh_search(table_name_builder)
 
 
 def logged_query(query, params=None, timeout: int | None = None):
@@ -853,10 +902,10 @@ def load_complete_run(
             project_guids=project_guids,
             family_guids=family_guids,
         )
-    for clickhouse_reference_data in ClickhouseReferenceData.for_dataset_type(
+    for clickhouse_reference_data in ClickhouseReferenceDataset.for_dataset_type(
         dataset_type,
     ):
-        clickhouse_reference_data.refresh(
+        clickhouse_reference_data.insert_and_refresh_search(
             table_name_builder=table_name_builder,
         )
 
@@ -1004,6 +1053,27 @@ def rebuild_gt_stats(
             {'range_start': range_start, 'range_end': range_end},
         )
     finalize_refresh_flow(table_name_builder, project_guids)
+
+
+@retry
+def run_refresh_clickhouse_reference_data(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+    reference_dataset: ClickhouseReferenceDataset,
+):
+    if not reference_dataset.fully_refreshable:
+        msg = f'Skipping reference dataset refresh for {reference_dataset.value} for {reference_genome.value}/{dataset_type.value}..'
+        logger.info(msg)
+        return
+    msg = f'Attempting refresh reference dataset {reference_dataset.value} for {reference_genome.value}/{dataset_type.value} ... '
+    logger.info(msg)
+    table_name_builder = TableNameBuilder(
+        reference_genome,
+        dataset_type,
+        run_id,
+    )
+    reference_dataset.download_and_fully_refresh(table_name_builder)
 
 
 def get_clickhouse_client(
