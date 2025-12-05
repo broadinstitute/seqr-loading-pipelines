@@ -17,7 +17,6 @@ from v03_pipeline.lib.misc.clickhouse import (
 )
 from v03_pipeline.lib.paths import (
     clickhouse_load_success_file_path,
-    db_id_to_gene_id_path,
     loading_pipeline_deadletter_queue_dir,
     loading_pipeline_queue_dir,
 )
@@ -27,7 +26,6 @@ from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
 )
 from v03_pipeline.var.test.vep.mock_vep_data import MOCK_38_VEP_DATA
 
-TEST_DB_ID_TO_GENE_ID = 'v03_pipeline/var/test/db_id_to_gene_id.csv.gz'
 TEST_PEDIGREE_3_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_3_remap.tsv'
 TEST_SCHEMA = 'v03_pipeline/var/test/test_clickhouse_schema.sql'
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
@@ -116,14 +114,6 @@ class PipelineWorkerTest(MockedReferenceDatasetsTestCase):
             LIFETIME(0)
             LAYOUT(FLAT(MAX_ARRAY_SIZE 1000000000))
             """,
-        )
-        os.makedirs(
-            self.mock_env.LOADING_DATASETS_DIR,
-            exist_ok=True,
-        )
-        shutil.copy2(
-            TEST_DB_ID_TO_GENE_ID,
-            db_id_to_gene_id_path(),
         )
 
     def tearDown(self):
