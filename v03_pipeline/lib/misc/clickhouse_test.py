@@ -11,6 +11,7 @@ from v03_pipeline.lib.misc.clickhouse import (
     STAGING_CLICKHOUSE_DATABASE,
     ClickHouseDictionary,
     ClickHouseMaterializedView,
+    ClickhouseReferenceDataset,
     ClickHouseTable,
     TableNameBuilder,
     create_staging_materialized_views,
@@ -554,7 +555,12 @@ class ClickhouseTest(MockedDatarootTestCase):
             [(1, 'a'), (2, 'b'), (3, 'c'), (4, 'd'), (7, 'c'), (10, 'b')],
         )
 
-    def test_entries_insert_flow(self):
+    @patch.object(
+        ClickhouseReferenceDataset,
+        'for_reference_genome_dataset_type',
+        return_value=[ClickhouseReferenceDataset.CLINVAR],
+    )
+    def test_entries_insert_flow(self, mock_for_reference_genome_dataset_type):
         # Tests individual components of the atomic_insert_entries
         # to validate the state after each step.
         client = get_clickhouse_client()
@@ -922,7 +928,12 @@ class ClickhouseTest(MockedDatarootTestCase):
             ],
         )
 
-    def test_load_complete_run_snv_indel(self):
+    @patch.object(
+        ClickhouseReferenceDataset,
+        'for_reference_genome_dataset_type',
+        return_value=[ClickhouseReferenceDataset.CLINVAR],
+    )
+    def test_load_complete_run_snv_indel(self, mock_for_reference_genome_dataset_type):
         load_complete_run(
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
