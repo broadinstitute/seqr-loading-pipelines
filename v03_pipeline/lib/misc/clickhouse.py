@@ -950,7 +950,9 @@ def load_complete_run(
             project_guids=project_guids,
             family_guids=family_guids,
         )
-    for clickhouse_reference_data in ClickhouseReferenceDataset.for_reference_genome_dataset_type(
+    for (
+        clickhouse_reference_data
+    ) in ClickhouseReferenceDataset.for_reference_genome_dataset_type(
         dataset_type,
     ):
         clickhouse_reference_data.insert_into_seqr_variants_and_refresh_search(
