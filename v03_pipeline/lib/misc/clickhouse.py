@@ -230,18 +230,63 @@ class TableNameBuilder:
 
 class ClickhouseReferenceDataset(StrEnum):
     CLINVAR = 'clinvar'
+    GNOMAD_EXOMES = 'gnomad_exomes'
+    GNOMAD_GENOMES = 'gnomad_genomes'
+    GNOMAD_NON_CODING_CONSTRAINT = 'gnomad_non_coding_constraint'
+    HGMD = 'hgmd'
+    PEXT = 'pext'
+    SCREEN = 'screen'
+    SPLICE_AI = 'splice_ai'
+    TOPMED = 'topmed'
 
     def fully_refreshable(self):
         return self != ClickhouseReferenceDataset.CLINVAR
 
+    def has_seqr_variants(self):
+        return self not in {
+            ClickhouseReferenceDataset.GNOMAD_NON_CODING_CONSTRAINT,
+            ClickhouseReferenceDataset.PEXT,
+            ClickhouseReferenceDataset.SCREEN,
+        }
+
     @classmethod
-    def for_dataset_type(cls, dataset_type: DatasetType):
+    def for_reference_genome_dataset_type(
+        cls,
+        reference_genome: ReferenceGenome,
+        dataset_type: DatasetType,
+    ):
         if dataset_type in {DatasetType.SV, DatasetType.GCNV}:
             return []
-        return [ClickhouseReferenceDataset.CLINVAR]
+        return {
+            (ReferenceGenome.GRCh38, DatasetType.MITO): [
+                ClickhouseReferenceDataset.CLINVAR,
+            ],
+            (ReferenceGenome.GRCh37, DatasetType.SNV_INDEL): [
+                ClickhouseReferenceDataset.CLINVAR,
+                ClickhouseReferenceDataset.GNOMAD_EXOMES,
+                ClickhouseReferenceDataset.GNOMAD_GENOMES,
+                ClickhouseReferenceDataset.HGMD,
+                ClickhouseReferenceDataset.SPLICE_AI,
+                ClickhouseReferenceDataset.TOPMED,
+            ],
+            (ReferenceGenome.GRCh38, DatasetType.SNV_INDEL): [
+                ClickhouseReferenceDataset.CLINVAR,
+                ClickhouseReferenceDataset.GNOMAD_EXOMES,
+                ClickhouseReferenceDataset.GNOMAD_GENOMES,
+                ClickhouseReferenceDataset.GNOMAD_NON_CODING_CONSTRAINT,
+                ClickhouseReferenceDataset.HGMD,
+                ClickhouseReferenceDataset.PEXT,
+                ClickhouseReferenceDataset.SCREEN,
+                ClickhouseReferenceDataset.SPLICE_AI,
+                ClickhouseReferenceDataset.TOPMED,
+            ],
+        }[(reference_genome, dataset_type)]
 
     def search_is_join_table(self):
-        return self == ClickhouseReferenceDataset.CLINVAR
+        return self in {
+            ClickhouseReferenceDataset.CLINVAR,
+            ClickhouseReferenceDataset.HGMD,
+        }
 
     def all_variants_path(self, table_name_builder: TableNameBuilder) -> str:
         return (
@@ -288,17 +333,19 @@ class ClickhouseReferenceDataset(StrEnum):
                 """,
                 timeout=WAIT_VIEW_TIMEOUT_S,
             )
-        else:
-            logged_query(
-                f"""
-                SYSTEM RELOAD DICTIONARY {self.search_path(table_name_builder)}
-                """,
-            )
+            return
+        logged_query(
+            f"""
+            SYSTEM RELOAD DICTIONARY {self.search_path(table_name_builder)}
+            """,
+        )
 
-    def insert_and_refresh_search(
+    def insert_into_seqr_variants_and_refresh_search(
         self,
         table_name_builder: TableNameBuilder,
     ):
+        if not self.has_seqr_variants:
+            return
         drop_staging_db()
         logged_query(
             f"""
@@ -343,17 +390,18 @@ class ClickhouseReferenceDataset(StrEnum):
             """,
             timeout=WAIT_VIEW_TIMEOUT_S * 2,  # double the timeout for large downloads
         )
-        logged_query(
-            f"""
-            SYSTEM REFRESH VIEW {self.all_variants_to_seqr_variants_mv(table_name_builder)}
-            """,
-        )
-        logged_query(
-            f"""
-            SYSTEM WAIT VIEW {self.all_variants_to_seqr_variants_mv(table_name_builder)}
-            """,
-            timeout=WAIT_VIEW_TIMEOUT_S,  # note: maybe increase this for splice_ai?
-        )
+        if self.has_seqr_variants:
+            logged_query(
+                f"""
+                SYSTEM REFRESH VIEW {self.all_variants_to_seqr_variants_mv(table_name_builder)}
+                """,
+            )
+            logged_query(
+                f"""
+                SYSTEM WAIT VIEW {self.all_variants_to_seqr_variants_mv(table_name_builder)}
+                """,
+                timeout=WAIT_VIEW_TIMEOUT_S,  # note: maybe increase this for splice_ai?
+            )
         self.refresh_search(table_name_builder)
 
 
@@ -905,7 +953,7 @@ def load_complete_run(
     for clickhouse_reference_data in ClickhouseReferenceDataset.for_dataset_type(
         dataset_type,
     ):
-        clickhouse_reference_data.insert_and_refresh_search(
+        clickhouse_reference_data.insert_into_seqr_variants_and_refresh_search(
             table_name_builder=table_name_builder,
         )
 

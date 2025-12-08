@@ -79,8 +79,12 @@ def run_refresh_clickhouse_reference_data(
     for dataset_type in DatasetType:
         for reference_genome in dataset_type.reference_genomes:
             reference_dataset = rcrdr.reference_dataset
-            if reference_dataset not in ClickhouseReferenceDataset.for_dataset_type(
-                dataset_type,
+            if (
+                reference_dataset
+                not in ClickhouseReferenceDataset.for_reference_genome_dataset_type(
+                    reference_genome,
+                    dataset_type,
+                )
             ):
                 continue
             run_refresh_clickhouse_reference_data(
