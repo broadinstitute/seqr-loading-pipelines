@@ -953,6 +953,7 @@ def load_complete_run(
     for (
         clickhouse_reference_data
     ) in ClickhouseReferenceDataset.for_reference_genome_dataset_type(
+        reference_genome,
         dataset_type,
     ):
         clickhouse_reference_data.insert_into_seqr_variants_and_refresh_search(
