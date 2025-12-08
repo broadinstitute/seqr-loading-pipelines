@@ -1226,7 +1226,12 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         self.assertCountEqual(gt_stats, [(1, 0)])
 
-    def test_repartitioned_entries_table(self):
+    @patch.object(
+        ClickhouseReferenceDataset,
+        'for_reference_genome_dataset_type',
+        return_value=[ClickhouseReferenceDataset.CLINVAR],
+    )
+    def test_repartitioned_entries_table(self, mock_for_reference_genome_dataset_type):
         client = get_clickhouse_client()
         client.execute(
             f"""
