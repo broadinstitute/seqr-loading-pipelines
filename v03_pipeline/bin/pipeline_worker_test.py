@@ -11,8 +11,8 @@ from v03_pipeline.bin.pipeline_worker import process_queue
 from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.core.environment import Env
 from v03_pipeline.lib.misc.clickhouse import (
-    ClickhouseReferenceDataset,
     STAGING_CLICKHOUSE_DATABASE,
+    ClickhouseReferenceDataset,
     get_clickhouse_client,
 )
 from v03_pipeline.lib.paths import (
