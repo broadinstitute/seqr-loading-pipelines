@@ -11,6 +11,7 @@ from v03_pipeline.bin.pipeline_worker import process_queue
 from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.core.environment import Env
 from v03_pipeline.lib.misc.clickhouse import (
+    ClickhouseReferenceDataset,
     STAGING_CLICKHOUSE_DATABASE,
     get_clickhouse_client,
 )
@@ -143,6 +144,11 @@ class PipelineWorkerTest(MockedReferenceDatasetsTestCase):
            """,
         )
 
+    @patch.object(
+        ClickhouseReferenceDataset,
+        'for_reference_genome_dataset_type',
+        return_value=[ClickhouseReferenceDataset.CLINVAR],
+    )
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_ensembl_to_refseq_id',
     )
@@ -159,6 +165,7 @@ class PipelineWorkerTest(MockedReferenceDatasetsTestCase):
         mock_vep: Mock,
         mock_register_alleles: Mock,
         mock_load_gencode_ensembl_to_refseq_id: Mock,
+        mock_for_reference_genome_dataset_type: Mock,
     ):
         mock_load_gencode_ensembl_to_refseq_id.return_value = hl.dict(
             {'ENST00000327044': 'NM_015658.4'},
