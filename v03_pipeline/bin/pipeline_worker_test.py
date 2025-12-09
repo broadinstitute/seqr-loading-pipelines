@@ -12,6 +12,7 @@ from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.core.environment import Env
 from v03_pipeline.lib.misc.clickhouse import (
     STAGING_CLICKHOUSE_DATABASE,
+    ClickhouseReferenceDataset,
     get_clickhouse_client,
 )
 from v03_pipeline.lib.paths import (
@@ -59,6 +60,20 @@ class PipelineWorkerTest(MockedReferenceDatasetsTestCase):
         """,
         )
         client = get_clickhouse_client(database=Env.CLICKHOUSE_DATABASE)
+        client.execute(
+            """
+            CREATE DICTIONARY seqrdb_gene_ids
+            (
+                `gene_id` String,
+                `seqrdb_id` String,
+                `affected` String
+            )
+            PRIMARY KEY gene_id
+            SOURCE(NULL())
+            LIFETIME(0)
+            LAYOUT(HASHED())
+            """,
+        )
         client.execute(
             """
             CREATE DICTIONARY seqrdb_affected_status_dict
@@ -129,6 +144,11 @@ class PipelineWorkerTest(MockedReferenceDatasetsTestCase):
            """,
         )
 
+    @patch.object(
+        ClickhouseReferenceDataset,
+        'for_reference_genome_dataset_type',
+        return_value=[ClickhouseReferenceDataset.CLINVAR],
+    )
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_ensembl_to_refseq_id',
     )
@@ -145,6 +165,7 @@ class PipelineWorkerTest(MockedReferenceDatasetsTestCase):
         mock_vep: Mock,
         mock_register_alleles: Mock,
         mock_load_gencode_ensembl_to_refseq_id: Mock,
+        mock_for_reference_genome_dataset_type: Mock,
     ):
         mock_load_gencode_ensembl_to_refseq_id.return_value = hl.dict(
             {'ENST00000327044': 'NM_015658.4'},

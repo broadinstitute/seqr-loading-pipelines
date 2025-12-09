@@ -9,6 +9,7 @@ from v03_pipeline.api.model import (
     LoadingPipelineRequest,
     PipelineRunnerRequest,
     RebuildGtStatsRequest,
+    RefreshClickhouseReferenceDataRequest,
 )
 from v03_pipeline.lib.core.environment import Env
 from v03_pipeline.lib.logger import get_logger
@@ -84,6 +85,15 @@ async def rebuild_gt_stats_enqueue(request: web.Request) -> web.Response:
     )
 
 
+async def refresh_clickhouse_reference_dataset_enqueue(
+    request: web.Request,
+) -> web.Response:
+    return await _enqueue_request(
+        request,
+        RefreshClickhouseReferenceDataRequest,
+    )
+
+
 async def status(_: web.Request) -> web.Response:
     return web.json_response({'success': True})
 
@@ -100,6 +110,10 @@ async def init_web_app():
             web.post('/loading_pipeline_enqueue', loading_pipeline_enqueue),
             web.post('/delete_families_enqueue', delete_families_enqueue),
             web.post('/rebuild_gt_stats_enqueue', rebuild_gt_stats_enqueue),
+            web.post(
+                '/refresh_clickhouse_reference_dataset_enqueue',
+                refresh_clickhouse_reference_dataset_enqueue,
+            ),
         ],
     )
     return app
