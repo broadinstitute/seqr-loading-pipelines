@@ -346,6 +346,11 @@ class ClickhouseReferenceDataset(StrEnum):
     ):
         if not self.has_seqr_variants:
             return
+        exists_seqr_variants = logged_query(
+            f'EXISTS TABLE {self.seqr_variants_path(table_name_builder)}'
+        )[0][0]
+        if not exists_seqr_variants:
+            return
         drop_staging_db()
         logged_query(
             f"""
