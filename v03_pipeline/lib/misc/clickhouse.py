@@ -229,12 +229,24 @@ class TableNameBuilder:
 
 
 class ClickhouseReferenceDataset(StrEnum):
+    ABSPLICE2 = 'absplice2'
     CLINVAR = 'clinvar'
+    DBSNFP = 'dbnsfp'
+    EIGEN = 'eigen'
     GNOMAD_EXOMES = 'gnomad_exomes'
     GNOMAD_GENOMES = 'gnomad_genomes'
+    GNOMAD_MITO = 'gnomad_mito'
+    GNOMAD_MITO_HETEROPLASMY = 'gnomad_mito_heteroplasmy'
     GNOMAD_NON_CODING_CONSTRAINT = 'gnomad_non_coding_constraint'
+    HELIX_MITO = 'helix_mito'
+    HELIX_MITO_HETEROPLASMY = 'helix_mito_heteroplasmy'
     HGMD = 'hgmd'
+    HMTVAR = 'hmtvar'
+    LOCAL_CONSTRAINT_MITO = 'local_constraint_mito'
+    MITIMPACT = 'mitimpact'
+    MITOMAP = 'mitomap'
     PEXT = 'pext'
+    PROMOTER_AI = 'promoterAI'
     SCREEN = 'screen'
     SPLICE_AI = 'splice_ai'
     TOPMED = 'topmed'
@@ -260,9 +272,19 @@ class ClickhouseReferenceDataset(StrEnum):
         return {
             (ReferenceGenome.GRCh38, DatasetType.MITO): [
                 ClickhouseReferenceDataset.CLINVAR,
+                ClickhouseReferenceDataset.GNOMAD_MITO,
+                ClickhouseReferenceDataset.GNOMAD_MITO_HETEROPLASMY,
+                ClickhouseReferenceDataset.HELIX_MITO,
+                ClickhouseReferenceDataset.HELIX_MITO_HETEROPLASMY,
+                ClickhouseReferenceDataset.HMTVAR,
+                ClickhouseReferenceDataset.LOCAL_CONSTRAINT_MITO,
+                ClickhouseReferenceDataset.MITIMPACT,
+                ClickhouseReferenceDataset.MITOMAP,
             ],
             (ReferenceGenome.GRCh37, DatasetType.SNV_INDEL): [
                 ClickhouseReferenceDataset.CLINVAR,
+                ClickhouseReferenceDataset.DBNSFP,
+                ClickhouseReferenceDataset.EIGEN,
                 ClickhouseReferenceDataset.GNOMAD_EXOMES,
                 ClickhouseReferenceDataset.GNOMAD_GENOMES,
                 ClickhouseReferenceDataset.HGMD,
@@ -270,12 +292,16 @@ class ClickhouseReferenceDataset(StrEnum):
                 ClickhouseReferenceDataset.TOPMED,
             ],
             (ReferenceGenome.GRCh38, DatasetType.SNV_INDEL): [
+                ClickhouseReferenceDataset.ABSPLICE2,
                 ClickhouseReferenceDataset.CLINVAR,
+                ClickhouseReferenceDataset.DBNSFP,
+                ClickhouseReferenceDataset.EIGEN,
                 ClickhouseReferenceDataset.GNOMAD_EXOMES,
                 ClickhouseReferenceDataset.GNOMAD_GENOMES,
                 ClickhouseReferenceDataset.GNOMAD_NON_CODING_CONSTRAINT,
                 ClickhouseReferenceDataset.HGMD,
                 ClickhouseReferenceDataset.PEXT,
+                ClickhouseReferenceDataset.PROMOTER_AI,
                 ClickhouseReferenceDataset.SCREEN,
                 ClickhouseReferenceDataset.SPLICE_AI,
                 ClickhouseReferenceDataset.TOPMED,
