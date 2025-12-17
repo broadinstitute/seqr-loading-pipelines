@@ -55,6 +55,7 @@ def get_cluster_config(
                     'DEPLOYMENT_TYPE': Env.DEPLOYMENT_TYPE,
                     'REFERENCE_GENOME': reference_genome.value,
                     'PIPELINE_RUNNER_APP_VERSION': Env.PIPELINE_RUNNER_APP_VERSION,
+                    'REFERENCE_DATASETS_DIR': Env.REFERENCE_DATASETS_DIR,
                 },
                 'internal_ip_only': False,  # Recent change with 2.2 dataproc images.
                 'service_account': service_account_credentials.service_account_email,
