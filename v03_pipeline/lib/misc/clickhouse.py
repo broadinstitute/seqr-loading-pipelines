@@ -231,7 +231,7 @@ class TableNameBuilder:
 class ClickhouseReferenceDataset(StrEnum):
     ABSPLICE2 = 'absplice2'
     CLINVAR = 'clinvar'
-    DBSNFP = 'dbnsfp'
+    DBNSFP = 'dbnsfp'
     EIGEN = 'eigen'
     GNOMAD_EXOMES = 'gnomad_exomes'
     GNOMAD_GENOMES = 'gnomad_genomes'
