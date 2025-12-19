@@ -26,7 +26,7 @@ case $REFERENCE_GENOME in
         "$REFERENCE_DATASETS_DIR/vep/GRCh38/homo_sapiens_vep_110_GRCh38.tar.gz"
 
         # Copied from the UTRAnnotator repo (https://github.com/ImperialCardioGenetics/UTRannotator/tree/master)
-        "$REFERENCE_DATASETS_DIR//vep/GRCh38/uORF_5UTR_GRCh38_PUBLIC.txt"
+        "$REFERENCE_DATASETS_DIR/vep/GRCh38/uORF_5UTR_GRCh38_PUBLIC.txt"
 
         "$REFERENCE_DATASETS_DIR/vep/GRCh38/vep-GRCh38.json"
     )
