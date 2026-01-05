@@ -1138,7 +1138,7 @@ def rebuild_gt_stats(
 
 
 @retry
-def run_refresh_clickhouse_reference_data(
+def refresh_clickhouse_reference_data(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     run_id: str,
