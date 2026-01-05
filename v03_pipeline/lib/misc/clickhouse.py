@@ -252,6 +252,12 @@ class ClickhouseReferenceDataset(StrEnum):
     TOPMED = 'topmed'
 
     @property
+    def all_variants_mv_timeout(self):
+        return {
+            ClickhouseReferenceDataset.SPLICE_AI: WAIT_VIEW_TIMEOUT_S * 5,
+        }.get(self, WAIT_VIEW_TIMEOUT_S)
+
+    @property
     def fully_refreshable(self):
         return self != ClickhouseReferenceDataset.CLINVAR
 
@@ -435,7 +441,7 @@ class ClickhouseReferenceDataset(StrEnum):
                 f"""
                 SYSTEM WAIT VIEW {self.all_variants_to_seqr_variants_mv(table_name_builder)}
                 """,
-                timeout=WAIT_VIEW_TIMEOUT_S,  # note: maybe increase this for splice_ai?
+                timeout=self.all_variants_mv_timeout,
             )
         self.refresh_search(table_name_builder)
 
