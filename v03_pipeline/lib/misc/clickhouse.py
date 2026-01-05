@@ -251,9 +251,11 @@ class ClickhouseReferenceDataset(StrEnum):
     SPLICE_AI = 'splice_ai'
     TOPMED = 'topmed'
 
+    @property
     def fully_refreshable(self):
         return self != ClickhouseReferenceDataset.CLINVAR
 
+    @property
     def has_seqr_variants(self):
         return self not in {
             ClickhouseReferenceDataset.GNOMAD_NON_CODING_CONSTRAINT,
@@ -308,6 +310,7 @@ class ClickhouseReferenceDataset(StrEnum):
             ],
         }[(reference_genome, dataset_type)]
 
+    @property
     def search_is_join_table(self):
         return self in {
             ClickhouseReferenceDataset.CLINVAR,
