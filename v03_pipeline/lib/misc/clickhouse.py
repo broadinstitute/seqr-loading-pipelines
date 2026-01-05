@@ -282,6 +282,7 @@ class ClickhouseReferenceDataset(StrEnum):
                 ClickhouseReferenceDataset.LOCAL_CONSTRAINT_MITO,
                 ClickhouseReferenceDataset.MITIMPACT,
                 ClickhouseReferenceDataset.MITOMAP,
+                ClickhouseReferenceDataset.PEXT,
             ],
             (ReferenceGenome.GRCh37, DatasetType.SNV_INDEL): [
                 ClickhouseReferenceDataset.CLINVAR,
