@@ -280,6 +280,7 @@ class ClickhouseReferenceDataset(StrEnum):
         return {
             (ReferenceGenome.GRCh38, DatasetType.MITO): [
                 ClickhouseReferenceDataset.CLINVAR,
+                ClickhouseReferenceDataset.DBNSFP,
                 ClickhouseReferenceDataset.GNOMAD_MITO,
                 ClickhouseReferenceDataset.GNOMAD_MITO_HETEROPLASMY,
                 ClickhouseReferenceDataset.HELIX_MITO,
