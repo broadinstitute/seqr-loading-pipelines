@@ -17,6 +17,7 @@ from v03_pipeline.lib.misc.clickhouse import (
     ClickhouseReferenceDataset,
     delete_family_guids,
     rebuild_gt_stats,
+    refresh_clickhouse_reference_data,
 )
 from v03_pipeline.lib.tasks.write_clickhouse_load_success_file import (
     WriteClickhouseLoadSuccessFileTask,
@@ -87,7 +88,7 @@ def run_refresh_clickhouse_reference_data(
                 )
             ):
                 continue
-            run_refresh_clickhouse_reference_data(
+            refresh_clickhouse_reference_data(
                 reference_genome,
                 dataset_type,
                 run_id,
