@@ -1137,7 +1137,7 @@ def rebuild_gt_stats(
     finalize_refresh_flow(table_name_builder, project_guids)
 
 
-@retry
+@retry()
 def refresh_clickhouse_reference_data(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
