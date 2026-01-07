@@ -265,7 +265,6 @@ class ClickhouseReferenceDataset(StrEnum):
     def has_seqr_variants(self):
         return self not in {
             ClickhouseReferenceDataset.GNOMAD_NON_CODING_CONSTRAINT,
-            ClickhouseReferenceDataset.PEXT,
             ClickhouseReferenceDataset.SCREEN,
         }
 
