@@ -254,7 +254,7 @@ class ClickhouseReferenceDataset(StrEnum):
     @property
     def all_variants_mv_timeout(self):
         return {
-            ClickhouseReferenceDataset.SPLICE_AI: WAIT_VIEW_TIMEOUT_S * 5,
+            ClickhouseReferenceDataset.SPLICE_AI: WAIT_VIEW_TIMEOUT_S * 7,
         }.get(self, WAIT_VIEW_TIMEOUT_S)
 
     @property
