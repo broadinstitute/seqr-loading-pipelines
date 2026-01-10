@@ -129,6 +129,24 @@ class PipelineWorkerTest(MockedReferenceDatasetsTestCase):
             LAYOUT(FLAT(MAX_ARRAY_SIZE 1000000000))
             """,
         )
+        client.execute(
+            f"""
+            CREATE DICTIONARY `GRCh38/SNV_INDEL/reference_data/eigen`
+            (
+                `key` UInt32,
+                `score` Decimal(9, 5)
+            )
+            PRIMARY KEY key
+            SOURCE(
+                CLICKHOUSE(
+                    USER {Env.CLICKHOUSE_WRITER_USER} PASSWORD {Env.CLICKHOUSE_WRITER_PASSWORD}
+                    DB {Env.CLICKHOUSE_DATABASE} TABLE `GRCh38/SNV_INDEL/reference_data/eigen/seqr_variants`
+                )
+            )
+            LIFETIME(0)
+            LAYOUT(FLAT(MAX_ARRAY_SIZE 1000000000))
+            """,
+        )
 
     def tearDown(self):
         super().tearDown()
@@ -147,7 +165,10 @@ class PipelineWorkerTest(MockedReferenceDatasetsTestCase):
     @patch.object(
         ClickhouseReferenceDataset,
         'for_reference_genome_dataset_type',
-        return_value=[ClickhouseReferenceDataset.CLINVAR],
+        return_value=[
+            ClickhouseReferenceDataset.CLINVAR,
+            ClickhouseReferenceDataset.EIGEN,
+        ],
     )
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_ensembl_to_refseq_id',
