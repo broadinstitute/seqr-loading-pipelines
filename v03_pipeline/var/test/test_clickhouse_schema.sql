@@ -402,7 +402,6 @@ REFRESH EVERY 10 YEAR TO `GRCh38/SNV_INDEL/reference_data/eigen/all_variants`
     `variantId` Nullable(String),
     `score` Decimal(9, 5)
 )
-DEFINER = seqr_clickhouse_writer SQL SECURITY DEFINER
 AS SELECT
     concat(`#chr`, '-', `pos(1-based)`, '-', ref, '-', alt) AS variantId,
     CAST(`Eigen-phred_coding`, 'Decimal(9, 5)') AS score
@@ -415,7 +414,6 @@ REFRESH EVERY 10 YEAR TO `GRCh38/SNV_INDEL/reference_data/eigen/seqr_variants`
     `key` UInt32,
     `score` Decimal(9, 5)
 )
-DEFINER = seqr_clickhouse_writer SQL SECURITY DEFINER
 AS SELECT
     key,
     COLUMNS('.*') EXCEPT (version, variantId, key)
