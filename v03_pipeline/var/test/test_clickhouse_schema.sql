@@ -376,3 +376,48 @@ AS SELECT *
 FROM `GRCh38/SNV_INDEL/reference_data/clinvar/seqr_variants`
 LIMIT 1 BY key;
 
+CREATE TABLE `GRCh38/SNV_INDEL/reference_data/eigen/all_variants`
+(
+    `variantId` String,
+    `score` Decimal(9, 5)
+)
+ENGINE = MergeTree
+PRIMARY KEY variantId
+ORDER BY variantId
+SETTINGS index_granularity = 8192;
+
+CREATE TABLE `GRCh38/SNV_INDEL/reference_data/eigen/seqr_variants`
+(
+    `key` UInt32 CODEC(Delta(8), ZSTD(1)),
+    `score` Decimal(9, 5)
+)
+ENGINE = MergeTree
+PRIMARY KEY key
+ORDER BY key
+SETTINGS index_granularity = 8192;
+
+CREATE MATERIALIZED VIEW `GRCh38/SNV_INDEL/reference_data/eigen/all_variants_mv`
+REFRESH EVERY 10 YEAR TO `GRCh38/SNV_INDEL/reference_data/eigen/all_variants`
+(
+    `variantId` Nullable(String),
+    `score` Decimal(9, 5)
+)
+AS SELECT
+    variantId AS variantId,
+    CAST(`Eigen-phred_coding`, 'Decimal(9, 5)') AS score
+FROM null('`variantId` String, `Eigen-phred_coding` Float32')
+SETTINGS input_format_tsv_use_best_effort_in_schema_inference = 0;
+
+CREATE MATERIALIZED VIEW `GRCh38/SNV_INDEL/reference_data/eigen/all_variants_to_seqr_variants_mv`
+REFRESH EVERY 10 YEAR TO `GRCh38/SNV_INDEL/reference_data/eigen/seqr_variants`
+(
+    `key` UInt32,
+    `score` Decimal(9, 5)
+)
+AS SELECT
+    key,
+    COLUMNS('.*') EXCEPT (version, variantId, key)
+FROM `GRCh38/SNV_INDEL/reference_data/eigen/all_variants` AS src
+INNER JOIN `GRCh38/SNV_INDEL/key_lookup` AS dst ON assumeNotNull(src.variantId) = dst.variantId
+LIMIT 1 BY key
+
