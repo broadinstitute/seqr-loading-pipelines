@@ -405,7 +405,7 @@ REFRESH EVERY 10 YEAR TO `GRCh38/SNV_INDEL/reference_data/eigen/all_variants`
 AS SELECT
     concat(`#chr`, '-', `pos(1-based)`, '-', ref, '-', alt) AS variantId,
     CAST(`Eigen-phred_coding`, 'Decimal(9, 5)') AS score
-FROM null('variantId String, Eigen-phred_coding Float32')
+FROM null('`variantId` String, `Eigen-phred_coding` Float32')
 SETTINGS input_format_tsv_use_best_effort_in_schema_inference = 0;
 
 CREATE MATERIALIZED VIEW `GRCh38/SNV_INDEL/reference_data/eigen/all_variants_to_seqr_variants_mv`
