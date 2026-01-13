@@ -59,4 +59,5 @@ class UpdateNewVariantsWithCAIDsTask(BaseUpdateTask):
         ):
             ar_ht = ar_ht.union(ar_ht_chunk)
             ar_ht, _ = checkpoint(ar_ht)
-        return ht.join(ar_ht, 'left')
+        ht = ht.join(ar_ht, 'left')
+        return ht.distinct()
