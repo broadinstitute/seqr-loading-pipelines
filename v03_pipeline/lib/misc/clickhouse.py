@@ -360,7 +360,7 @@ class ClickhouseReferenceDataset(StrEnum):
         if self.search_is_join_table:
             logged_query(
                 f"""
-                SYSTEM REFRESH VIEW {self.seqr_variants_to_search_mv_path(table_name_builder)}
+                SYSTEM START VIEW {self.seqr_variants_to_search_mv_path(table_name_builder)}
                 """,
             )
             logged_query(
@@ -422,7 +422,7 @@ class ClickhouseReferenceDataset(StrEnum):
     ):
         logged_query(
             f"""
-            SYSTEM REFRESH VIEW {self.all_variants_mv(table_name_builder)}
+            SYSTEM START VIEW {self.all_variants_mv(table_name_builder)}
             """,
         )
         logged_query(
@@ -434,7 +434,7 @@ class ClickhouseReferenceDataset(StrEnum):
         if self.has_seqr_variants:
             logged_query(
                 f"""
-                SYSTEM REFRESH VIEW {self.all_variants_to_seqr_variants_mv(table_name_builder)}
+                SYSTEM START VIEW {self.all_variants_to_seqr_variants_mv(table_name_builder)}
                 """,
             )
             logged_query(
