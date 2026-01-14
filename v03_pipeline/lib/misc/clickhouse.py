@@ -360,6 +360,11 @@ class ClickhouseReferenceDataset(StrEnum):
         if self.search_is_join_table:
             logged_query(
                 f"""
+                SYSTEM START VIEW {self.seqr_variants_to_search_mv_path(table_name_builder)}
+                """,
+            )
+            logged_query(
+                f"""
                 SYSTEM REFRESH VIEW {self.seqr_variants_to_search_mv_path(table_name_builder)}
                 """,
             )
@@ -422,6 +427,11 @@ class ClickhouseReferenceDataset(StrEnum):
     ):
         logged_query(
             f"""
+            SYSTEM START VIEW {self.all_variants_mv(table_name_builder)}
+            """,
+        )
+        logged_query(
+            f"""
             SYSTEM REFRESH VIEW {self.all_variants_mv(table_name_builder)}
             """,
         )
@@ -432,6 +442,11 @@ class ClickhouseReferenceDataset(StrEnum):
             timeout=WAIT_VIEW_TIMEOUT_S * 2,  # double the timeout for large downloads
         )
         if self.has_seqr_variants:
+            logged_query(
+                f"""
+                SYSTEM START VIEW {self.all_variants_to_seqr_variants_mv(table_name_builder)}
+                """,
+            )
             logged_query(
                 f"""
                 SYSTEM REFRESH VIEW {self.all_variants_to_seqr_variants_mv(table_name_builder)}
@@ -729,6 +744,11 @@ def refresh_materialized_views(
     staging=False,
 ):
     for materialized_view in materialized_views:
+        logged_query(
+            f"""
+            SYSTEM START VIEW {table_name_builder.staging_dst_table(materialized_view) if staging else table_name_builder.dst_table(materialized_view)}
+            """,
+        )
         logged_query(
             f"""
             SYSTEM REFRESH VIEW {table_name_builder.staging_dst_table(materialized_view) if staging else table_name_builder.dst_table(materialized_view)}
