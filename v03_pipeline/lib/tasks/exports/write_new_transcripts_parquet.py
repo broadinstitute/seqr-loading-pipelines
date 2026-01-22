@@ -17,9 +17,6 @@ from v03_pipeline.lib.tasks.exports.misc import (
     unmap_formatting_annotation_enums,
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
-from v03_pipeline.lib.tasks.update_new_variants_with_caids import (
-    UpdateNewVariantsWithCAIDsTask,
-)
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
@@ -43,8 +40,6 @@ class WriteNewTranscriptsParquetTask(BaseWriteParquetTask):
     def requires(self) -> luigi.Task:
         if self.dataset_type.export_all_callset_variants:
             return self.clone(UpdateVariantAnnotationsTableWithNewSamplesTask)
-        if self.dataset_type.should_send_to_allele_registry:
-            return self.clone(UpdateNewVariantsWithCAIDsTask)
         return self.clone(WriteNewVariantsTableTask)
 
     def create_table(self) -> None:

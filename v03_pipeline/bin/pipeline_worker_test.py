@@ -152,9 +152,6 @@ class PipelineWorkerTest(MockedReferenceDatasetsTestCase):
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_ensembl_to_refseq_id',
     )
-    @patch(
-        'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
-    )
     @patch('v03_pipeline.lib.vep.hl.vep')
     @patch('v03_pipeline.lib.misc.slack._safe_post_to_slack')
     @patch('v03_pipeline.bin.pipeline_worker.logger')
@@ -163,14 +160,12 @@ class PipelineWorkerTest(MockedReferenceDatasetsTestCase):
         mock_logger,
         mock_safe_post_to_slack,
         mock_vep: Mock,
-        mock_register_alleles: Mock,
         mock_load_gencode_ensembl_to_refseq_id: Mock,
         mock_for_reference_genome_dataset_type: Mock,
     ):
         mock_load_gencode_ensembl_to_refseq_id.return_value = hl.dict(
             {'ENST00000327044': 'NM_015658.4'},
         )
-        mock_register_alleles.side_effect = None
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_38_VEP_DATA)
         copy_project_pedigree_to_mocked_dir(
             TEST_PEDIGREE_3_REMAP,
