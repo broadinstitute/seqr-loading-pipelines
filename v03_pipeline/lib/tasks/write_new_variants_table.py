@@ -203,11 +203,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             self.reference_genome,
             self.dataset_type,
         )
-        new_variants_ht = annotate_reference_dataset_globals(
-            new_variants_ht,
-            self.reference_genome,
-            self.dataset_type,
-        )
         return new_variants_ht.annotate_globals(
             updates={
                 hl.Struct(
