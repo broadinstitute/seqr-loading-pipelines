@@ -183,41 +183,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             ),
         )
 
-        # Join new variants against the reference datasets that are not "annotated".
-        for (
-            reference_dataset
-        ) in ReferenceDataset.for_reference_genome_dataset_type_annotations(
-            self.reference_genome,
-            self.dataset_type,
-        ):
-            if reference_dataset.formatting_annotation:
-                continue
-            reference_dataset_ht = self.annotation_dependencies[
-                f'{reference_dataset.value}_ht'
-            ]
-            if reference_dataset.select:
-                reference_dataset_ht = reference_dataset.select(
-                    self.reference_genome,
-                    self.dataset_type,
-                    reference_dataset_ht,
-                )
-            if reference_dataset.filter:
-                reference_dataset_ht = reference_dataset.filter(
-                    self.reference_genome,
-                    self.dataset_type,
-                    reference_dataset_ht,
-                )
-            reference_dataset_ht = reference_dataset_ht.select(
-                **{
-                    f'{reference_dataset.name}': hl.Struct(
-                        **reference_dataset_ht.row_value,
-                    ),
-                },
-            )
-            new_variants_ht = new_variants_ht.join(reference_dataset_ht, 'left')
-            new_variants_ht, _ = checkpoint(new_variants_ht)
         new_variants_ht = new_variants_ht.select_globals(
-            versions=hl.Struct(),
             enums=hl.Struct(),
         )
 

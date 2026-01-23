@@ -192,9 +192,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ),
             key='locus',
             globals=hl.Struct(
-                versions=hl.Struct(
-                    gnomad_genomes='1.0',
-                ),
                 enums=hl.Struct(
                     gnomad_genomes=hl.Struct(),
                 ),
@@ -382,18 +379,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                             ),
                         ),
                     },
-                    versions=hl.Struct(
-                        dbnsfp='1.0',
-                        eigen='1.1',
-                        exac='1.1',
-                        gnomad_exomes='1.0',
-                        gnomad_genomes='1.0',
-                        splice_ai='1.1',
-                        topmed='1.1',
-                        gnomad_non_coding_constraint='1.0',
-                        screen='1.0',
-                        hgmd='1.0',
-                    ),
                     migrations=[],
                     max_key_=29,
                     enums=hl.Struct(
@@ -607,22 +592,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         self.assertTrue(uvatwns_task.complete())
         ht = hl.read_table(uvatwns_task.output().path)
         self.assertEqual(ht.count(), 30)
-        self.assertCountEqual(
-            ht.globals.versions.collect(),
-            [
-                hl.Struct(
-                    dbnsfp='1.0',
-                    eigen='1.1',
-                    exac='1.1',
-                    gnomad_exomes='1.0',
-                    gnomad_genomes='1.0',
-                    splice_ai='1.1',
-                    topmed='1.1',
-                    gnomad_non_coding_constraint='1.0',
-                    screen='1.0',
-                ),
-            ],
-        )
 
     def test_mito_update_vat(
         self,
@@ -655,15 +624,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ht.globals.collect(),
             [
                 hl.Struct(
-                    versions=hl.Struct(
-                        dbnsfp='1.0',
-                        gnomad_mito='1.1',
-                        helix_mito='1.0',
-                        hmtvar='1.1',
-                        mitomap='1.0',
-                        mitimpact='1.0',
-                        local_constraint_mito='1.0',
-                    ),
                     enums=hl.Struct(
                         local_constraint_mito=hl.Struct(),
                         dbnsfp=ReferenceDataset.dbnsfp.enum_globals,
@@ -768,7 +728,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ht.globals.collect(),
             [
                 hl.Struct(
-                    versions=hl.Struct(gnomad_svs='1.1'),
                     enums=hl.Struct(
                         gnomad_svs=hl.Struct(),
                         sv_type=SV_TYPES,
@@ -1223,7 +1182,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ht.globals.collect(),
             [
                 hl.Struct(
-                    versions=hl.Struct(gnomad_svs='1.1'),
                     enums=hl.Struct(
                         gnomad_svs=hl.Struct(),
                         sv_type=SV_TYPES,
@@ -1380,7 +1338,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ht.globals.collect(),
             [
                 hl.Struct(
-                    versions=hl.Struct(),
                     enums=hl.Struct(
                         sv_type=SV_TYPES,
                         sorted_gene_consequences=hl.Struct(

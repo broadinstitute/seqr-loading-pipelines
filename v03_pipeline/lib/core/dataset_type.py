@@ -272,8 +272,6 @@ class DatasetType(StrEnum):
                 shared.rsid,
                 shared.variant_id,
                 shared.xpos,
-                snv_indel.gnomad_non_coding_constraint,
-                snv_indel.screen,
                 shared.rg37_locus,
                 snv_indel.check_ref,
                 snv_indel.sorted_transcript_consequences,

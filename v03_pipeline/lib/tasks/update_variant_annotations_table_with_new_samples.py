@@ -71,7 +71,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
             key_type,
             key=key_type.fields,
             globals=hl.Struct(
-                versions=hl.Struct(),
                 enums=hl.Struct(),
                 updates=hl.empty_set(
                     hl.tstruct(
@@ -128,7 +127,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
 
         new_variants_ht_globals = new_variants_ht.index_globals()
         return ht.select_globals(
-            versions=new_variants_ht_globals.versions,
             enums=new_variants_ht_globals.enums,
             updates=ht.updates.union(new_variants_ht_globals.updates),
             migrations=ht.migrations,
