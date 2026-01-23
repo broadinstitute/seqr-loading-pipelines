@@ -270,7 +270,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             [
                 x
                 for x in ht.select(
-                    'hgmd',
                     'variant_id',
                     'xpos',
                     'screen',
@@ -285,10 +284,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     alleles=['A', 'C'],
-                    hgmd=hl.Struct(
-                        accession='abcdefg',
-                        class_id=3,
-                    ),
                     variant_id='1-871269-A-C',
                     xpos=1000871269,
                     screen=hl.Struct(region_type_ids=[1]),
@@ -300,7 +295,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     alleles=['C', 'T'],
-                    hgmd=None,
                     variant_id='1-874734-C-T',
                     xpos=1000874734,
                     screen=hl.Struct(region_type_ids=[]),
@@ -312,7 +306,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     alleles=['A', 'G'],
-                    hgmd=None,
                     variant_id='1-876499-A-G',
                     xpos=1000876499,
                     screen=hl.Struct(region_type_ids=[]),
@@ -324,7 +317,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     alleles=['G', 'C'],
-                    hgmd=None,
                     variant_id='1-878314-G-C',
                     xpos=1000878314,
                     screen=hl.Struct(region_type_ids=[]),
@@ -336,7 +328,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     alleles=['C', 'T'],
-                    hgmd=None,
                     variant_id='1-878809-C-T',
                     xpos=1000878809,
                     screen=hl.Struct(region_type_ids=[]),
@@ -494,50 +485,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 key_=0,
             ),
         )
-
-    @patch('v03_pipeline.lib.reference_datasets.reference_dataset.FeatureFlag')
-    @patch('v03_pipeline.lib.vep.hl.vep')
-    @patch(
-        'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_ensembl_to_refseq_id',
-    )
-    def test_update_vat_without_accessing_private_datasets(
-        self,
-        mock_load_gencode_ensembl_to_refseq_id: Mock,
-        mock_vep: Mock,
-        mock_rd_ff: Mock,
-    ) -> None:
-        mock_load_gencode_ensembl_to_refseq_id.return_value = hl.dict(
-            {'ENST00000327044': 'NM_015658.4'},
-        )
-        shutil.rmtree(
-            valid_reference_dataset_path(
-                ReferenceGenome.GRCh38,
-                ReferenceDataset.hgmd,
-            ),
-        )
-        mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_38_VEP_DATA)
-        copy_project_pedigree_to_mocked_dir(
-            TEST_PEDIGREE_3_REMAP,
-            ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
-            SampleType.WGS,
-            'R0113_test_project',
-        )
-        worker = luigi.worker.Worker()
-        uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
-            reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
-            callset_path=TEST_SNV_INDEL_VCF,
-            project_guids=['R0113_test_project'],
-            validations_to_skip=[ALL_VALIDATIONS],
-            run_id=TEST_RUN_ID,
-        )
-        worker.add(uvatwns_task)
-        worker.run()
-        self.assertTrue(uvatwns_task.complete())
-        ht = hl.read_table(uvatwns_task.output().path)
-        self.assertEqual(ht.count(), 30)
 
     def test_mito_update_vat(
         self,

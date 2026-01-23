@@ -205,12 +205,12 @@ def unmap_reference_dataset_annotation_enums(
     # Explicit hgmd edge case:
     if hasattr(
         ht,
-        ReferenceDataset.hgmd.value,
+        'hgmd',
     ):
         ht = ht.annotate(
             **{
-                ReferenceDataset.hgmd.value: ht[ReferenceDataset.hgmd.value]
-                .annotate(classification=ht[ReferenceDataset.hgmd.value]['class'])
+                'hgmd': ht['hgmd']
+                .annotate(classification=ht['hgmd']['class'])
                 .drop('class'),
             },
         )

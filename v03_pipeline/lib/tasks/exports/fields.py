@@ -27,11 +27,6 @@ def get_dataset_type_specific_annotations(
 ):
     return {
         DatasetType.SNV_INDEL: lambda ht: {
-            'hgmd': (
-                ht.hgmd
-                if hasattr(ht, 'hgmd')
-                else hl.missing(hl.tstruct(accession=hl.tstr, classification=hl.tstr))
-            ),
             **(
                 {'screenRegionType': ht.screen.region_types.first()}
                 if reference_genome == ReferenceGenome.GRCh38

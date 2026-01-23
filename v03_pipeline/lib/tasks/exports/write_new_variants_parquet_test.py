@@ -145,7 +145,6 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                     'rsid': None,
                     'liftedOverChrom': '1',
                     'liftedOverPos': 874501,
-                    'hgmd': {'accession': 'abcdefg', 'classification': 'DFP'},
                     'screenRegionType': None,
                     'predictions': {
                         'cadd': 23.5,
@@ -273,7 +272,6 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                     'rsid': None,
                     'liftedOverChrom': '1',
                     'liftedOverPos': 69134,
-                    'hgmd': None,
                     'predictions': {
                         'cadd': 15.880000114440918,
                         'eigen': 1.0019999742507935,
