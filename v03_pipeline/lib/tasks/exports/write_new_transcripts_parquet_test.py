@@ -1,6 +1,5 @@
 import os
 from unittest import mock
-from unittest.mock import Mock
 
 import hail as hl
 import luigi.worker
@@ -20,6 +19,7 @@ from v03_pipeline.lib.tasks.exports.write_new_transcripts_parquet import (
     WriteNewTranscriptsParquetTask,
 )
 from v03_pipeline.lib.test.misc import convert_ndarray_to_list
+from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_SNV_INDEL_ANNOTATIONS = (
