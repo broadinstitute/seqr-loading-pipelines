@@ -41,7 +41,6 @@ class MiscTest(unittest.TestCase):
                 'splice_ai',
                 'exac',
                 'topmed',
-                'hgmd',
                 'gnomad_genomes',
                 'eigen',
             ],
@@ -132,7 +131,6 @@ class MiscTest(unittest.TestCase):
                     ),
                 ],
                 gnomad_non_coding_constraint=hl.Struct(z_score=None),
-                hgmd=hl.Struct(accession='abcdefg', class_id=3),
                 gnomad_exomes=hl.Struct(
                     AF=0.0006690866430290043,
                     AN=1440770,
@@ -199,7 +197,6 @@ class MiscTest(unittest.TestCase):
                 'splice_ai',
                 'exac',
                 'topmed',
-                'hgmd',
                 'gnomad_genomes',
                 'eigen',
             ],
@@ -246,7 +243,6 @@ class MiscTest(unittest.TestCase):
                     FAF_AF=0.02474386990070343,
                     Hemi=0,
                 ),
-                hgmd=None,
                 gnomad_genomes=hl.Struct(
                     AF=0.0001722949673421681,
                     AN=5804,
@@ -335,7 +331,6 @@ class MiscTest(unittest.TestCase):
                 CAID='CA502654',
                 check_ref=False,
                 gnomad_non_coding_constraint=hl.Struct(z_score=None),
-                hgmd=hl.Struct(accession='abcdefg', classification='DFP'),
                 gnomad_exomes=hl.Struct(
                     AF=0.0006690866430290043,
                     AN=1440770,
@@ -434,7 +429,6 @@ class MiscTest(unittest.TestCase):
                 CAID='CA502654',
                 check_ref=False,
                 gnomad_non_coding_constraint=hl.Struct(z_score=None),
-                hgmd=hl.Struct(accession='abcdefg', classification='DFP'),
                 gnomad_exomes=hl.Struct(
                     AF=0.0006690866430290043,
                     AN=1440770,

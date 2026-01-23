@@ -201,19 +201,6 @@ def unmap_reference_dataset_annotation_enums(
                     **{annotation_name: ht[annotation_name].drop(f'{enum_name}_id')},
                 )
         unmapped_annotation_name.append(annotation_name)
-
-    # Explicit hgmd edge case:
-    if hasattr(
-        ht,
-        'hgmd',
-    ):
-        ht = ht.annotate(
-            **{
-                'hgmd': ht['hgmd']
-                .annotate(classification=ht['hgmd']['class'])
-                .drop('class'),
-            },
-        )
     return ht.annotate_globals(enums=ht.globals.enums.drop(*unmapped_annotation_name))
 
 
