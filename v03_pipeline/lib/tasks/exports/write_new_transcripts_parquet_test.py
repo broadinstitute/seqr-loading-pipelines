@@ -79,7 +79,7 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
             f.write('')
 
     @mock.patch(
-        'v03_pipeline.lib.tasks.exports.write_new_variants_parquet.WriteNewVariantsTableTask',
+        'v03_pipeline.lib.tasks.exports.write_new_transcripts_parquet.WriteNewVariantsTableTask',
     )
     def test_write_new_transcripts_parquet_test(
         self,
@@ -184,7 +184,7 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
         )
 
     @mock.patch(
-        'v03_pipeline.lib.tasks.exports.write_new_variants_parquet.WriteNewVariantsTableTask',
+        'v03_pipeline.lib.tasks.exports.write_new_transcripts_parquet.WriteNewVariantsTableTask',
     )
     def test_grch37_write_new_transcripts_parquet_test(
         self,
