@@ -14,7 +14,7 @@ from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.misc.clickhouse import ClickhouseReferenceDataset
 from v03_pipeline.lib.misc.validation import ALL_VALIDATIONS, SKIPPABLE_VALIDATIONS
 
-MAX_LOADING_PIPELINE_ATTEMPTS = 3
+MAX_LOADING_PIPELINE_ATTEMPTS = 5
 STRINGIFIED_SKIPPABLE_VALIDATIONS = [f.__name__ for f in SKIPPABLE_VALIDATIONS]
 VALID_FILE_TYPES = ['vcf', 'vcf.gz', 'vcf.bgz', 'mt']
 
