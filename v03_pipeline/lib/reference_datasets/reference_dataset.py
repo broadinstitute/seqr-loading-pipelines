@@ -7,7 +7,7 @@ from typing import Union
 import hail as hl
 import pyspark.sql.dataframe
 
-from v03_pipeline.lib.annotations import snv_indel, sv
+from v03_pipeline.lib.annotations import sv
 from v03_pipeline.lib.annotations.expression_helpers import get_expr_for_variant_id
 from v03_pipeline.lib.core import (
     DatasetType,
