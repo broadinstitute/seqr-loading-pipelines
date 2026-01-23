@@ -110,7 +110,6 @@ class ReferenceDataset(StrEnum):
     def formatting_annotation(self) -> Callable | None:
         return CONFIG[self].get(FORMATTING_ANNOTATION)
 
-
     def version(self, reference_genome: ReferenceGenome) -> str:
         version = CONFIG[self][reference_genome][VERSION]
         if isinstance(version, types.FunctionType):
