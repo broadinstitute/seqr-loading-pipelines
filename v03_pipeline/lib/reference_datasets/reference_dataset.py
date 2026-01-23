@@ -365,34 +365,6 @@ CONFIG = {
             PATH: 'gs://gcp-public-data--gnomad/release/3.1/ht/genomes/gnomad.genomes.v3.1.sites.chrM.ht',
         },
     },
-    ReferenceDataset.gnomad_non_coding_constraint: {
-        FORMATTING_ANNOTATION: snv_indel.gnomad_non_coding_constraint,
-        ReferenceGenome.GRCh38: {
-            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
-            PATH: 'gs://gcp-public-data--gnomad/release/3.1/secondary_analyses/genomic_constraint/constraint_z_genome_1kb.qc.download.txt.gz',
-        },
-    },
-    ReferenceDataset.screen: {
-        ENUMS: {
-            'region_type': [
-                'CTCF-bound',
-                'CTCF-only',
-                'DNase-H3K4me3',
-                'PLS',
-                'dELS',
-                'pELS',
-                'DNase-only',
-                'low-DNase',
-            ],
-        },
-        FORMATTING_ANNOTATION: snv_indel.screen,
-        ReferenceGenome.GRCh38: {
-            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
-            PATH: 'https://downloads.wenglab.org/V3/GRCh38-cCREs.bed',
-        },
-    },
     ReferenceDataset.local_constraint_mito: {
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.MITO]),
