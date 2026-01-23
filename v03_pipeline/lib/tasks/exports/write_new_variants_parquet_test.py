@@ -96,9 +96,14 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             ),
         )
 
+    @mock.patch(
+        'v03_pipeline.lib.tasks.exports.write_new_variants_parquet.WriteNewVariantsTableTask',
+    )
     def test_write_new_variants_parquet_test(
         self,
+        mock_write_new_variants_task,
     ) -> None:
+        mock_write_new_variants_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         task = WriteNewVariantsParquetTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -219,9 +224,14 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             ],
         )
 
+    @mock.patch(
+        'v03_pipeline.lib.tasks.exports.write_new_variants_parquet.WriteNewVariantsTableTask',
+    )
     def test_grch37_write_new_variants_parquet_test(
         self,
+        mock_write_new_variants_task,
     ) -> None:
+        mock_write_new_variants_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         task = WriteNewVariantsParquetTask(
             reference_genome=ReferenceGenome.GRCh37,
