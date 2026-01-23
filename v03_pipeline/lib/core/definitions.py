@@ -3,11 +3,6 @@ from enum import StrEnum
 import hail as hl
 
 
-class AccessControl(StrEnum):
-    PUBLIC = 'public'
-    PRIVATE = 'private'
-
-
 class Sex(StrEnum):
     FEMALE = 'F'
     MALE = 'M'

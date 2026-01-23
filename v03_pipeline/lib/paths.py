@@ -32,11 +32,6 @@ def _v03_reference_dataset_prefix(
     access_control: AccessControl,
     reference_genome: ReferenceGenome,
 ) -> str:
-    root = (
-        Env.PRIVATE_REFERENCE_DATASETS_DIR
-        if access_control == AccessControl.PRIVATE
-        else root
-    )
     return os.path.join(
         root,
         reference_genome.value,

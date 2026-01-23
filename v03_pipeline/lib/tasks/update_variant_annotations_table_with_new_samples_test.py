@@ -515,7 +515,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 ReferenceDataset.hgmd,
             ),
         )
-        mock_rd_ff.ACCESS_PRIVATE_REFERENCE_DATASETS = False
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_38_VEP_DATA)
         copy_project_pedigree_to_mocked_dir(
             TEST_PEDIGREE_3_REMAP,

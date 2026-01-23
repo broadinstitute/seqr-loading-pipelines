@@ -44,7 +44,6 @@ class ReferenceDataset(StrEnum):
     exac = 'exac'
     eigen = 'eigen'
     helix_mito = 'helix_mito'
-    hgmd = 'hgmd'
     hmtvar = 'hmtvar'
     mitimpact = 'mitimpact'
     splice_ai = 'splice_ai'
@@ -71,12 +70,6 @@ class ReferenceDataset(StrEnum):
             for dataset, config in CONFIG.items()
             if dataset_type in config.get(reference_genome, {}).get(DATASET_TYPES, [])
         ]
-        if not FeatureFlag.ACCESS_PRIVATE_REFERENCE_DATASETS:
-            return {
-                dataset
-                for dataset in reference_datasets
-                if dataset.access_control == AccessControl.PUBLIC
-            }
         return set(reference_datasets)
 
     @classmethod
@@ -117,11 +110,6 @@ class ReferenceDataset(StrEnum):
     def formatting_annotation(self) -> Callable | None:
         return CONFIG[self].get(FORMATTING_ANNOTATION)
 
-    @property
-    def access_control(self) -> AccessControl:
-        if self == ReferenceDataset.hgmd:
-            return AccessControl.PRIVATE
-        return AccessControl.PUBLIC
 
     def version(self, reference_genome: ReferenceGenome) -> str:
         version = CONFIG[self][reference_genome][VERSION]
@@ -326,19 +314,6 @@ CONFIG = {
             DATASET_TYPES: frozenset([DatasetType.MITO]),
             VERSION: '1.0',
             PATH: 'https://mitimpact.css-mendel.it/cdn/MitImpact_db_3.1.3.txt.zip',
-        },
-    },
-    ReferenceDataset.hgmd: {
-        ENUMS: {'class': ['DM', 'DM?', 'DP', 'DFP', 'FP', 'R']},
-        ReferenceGenome.GRCh37: {
-            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
-            PATH: 'gs://seqr-reference-data-private/GRCh37/HGMD/HGMD_Pro_2023.1_hg19.vcf.gz',
-        },
-        ReferenceGenome.GRCh38: {
-            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
-            PATH: 'gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2023.1_hg38.vcf.gz',
         },
     },
     ReferenceDataset.gnomad_exomes: {
