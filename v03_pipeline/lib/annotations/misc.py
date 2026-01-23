@@ -15,8 +15,6 @@ from v03_pipeline.lib.annotations.enums import (
 )
 from v03_pipeline.lib.core import DatasetType
 from v03_pipeline.lib.core.definitions import ReferenceGenome
-from v03_pipeline.lib.paths import valid_reference_dataset_path
-from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 
 
 def annotate_formatting_annotation_enum_globals(

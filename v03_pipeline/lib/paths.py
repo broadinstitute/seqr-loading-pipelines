@@ -4,7 +4,6 @@ import os
 import hailtop.fs as hfs
 
 from v03_pipeline.lib.core import (
-    AccessControl,
     DatasetType,
     Env,
     ReferenceGenome,
@@ -29,7 +28,6 @@ def pipeline_prefix(
 
 def _v03_reference_dataset_prefix(
     root: str,
-    access_control: AccessControl,
     reference_genome: ReferenceGenome,
 ) -> str:
     return os.path.join(
@@ -270,7 +268,6 @@ def valid_reference_dataset_path(
     return os.path.join(
         _v03_reference_dataset_prefix(
             Env.REFERENCE_DATASETS_DIR,
-            reference_dataset.access_control,
             reference_genome,
         ),
         reference_dataset.value,
@@ -282,7 +279,6 @@ def ancestry_model_rf_path() -> str:
     return os.path.join(
         _v03_reference_dataset_prefix(
             Env.REFERENCE_DATASETS_DIR,
-            AccessControl.PUBLIC,
             ReferenceGenome.GRCh38,
         ),
         DatasetType.SNV_INDEL,

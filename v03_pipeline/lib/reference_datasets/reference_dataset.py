@@ -10,9 +10,7 @@ import pyspark.sql.dataframe
 from v03_pipeline.lib.annotations import snv_indel, sv
 from v03_pipeline.lib.annotations.expression_helpers import get_expr_for_variant_id
 from v03_pipeline.lib.core import (
-    AccessControl,
     DatasetType,
-    FeatureFlag,
     ReferenceGenome,
 )
 from v03_pipeline.lib.misc.validation import (
