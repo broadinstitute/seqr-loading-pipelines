@@ -1,4 +1,6 @@
 import os
+from unittest import mock
+from unittest.mock import Mock
 
 import hail as hl
 import luigi.worker
@@ -76,9 +78,14 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
         ) as f:
             f.write('')
 
+    @mock.patch(
+        'v03_pipeline.lib.tasks.exports.write_new_variants_parquet.WriteNewVariantsTableTask',
+    )
     def test_write_new_transcripts_parquet_test(
         self,
+        mock_write_new_variants_task,
     ) -> None:
+        mock_write_new_variants_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         task = WriteNewTranscriptsParquetTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -176,9 +183,14 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
             ),
         )
 
+    @mock.patch(
+        'v03_pipeline.lib.tasks.exports.write_new_variants_parquet.WriteNewVariantsTableTask',
+    )
     def test_grch37_write_new_transcripts_parquet_test(
         self,
+        mock_write_new_variants_task,
     ) -> None:
+        mock_write_new_variants_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         task = WriteNewTranscriptsParquetTask(
             reference_genome=ReferenceGenome.GRCh37,
