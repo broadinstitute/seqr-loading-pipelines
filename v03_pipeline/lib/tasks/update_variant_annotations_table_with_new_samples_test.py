@@ -98,36 +98,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         worker.run()
         self.assertFalse(uvatwns_task.complete())
 
-    def test_missing_interval_reference_dataset(
-        self,
-    ) -> None:
-        copy_project_pedigree_to_mocked_dir(
-            TEST_PEDIGREE_3_REMAP,
-            ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
-            SampleType.WGS,
-            'R0113_test_project',
-        )
-        shutil.rmtree(
-            valid_reference_dataset_path(
-                ReferenceGenome.GRCh38,
-                ReferenceDataset.screen,
-            ),
-        )
-        uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
-            reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
-            callset_path=TEST_SNV_INDEL_VCF,
-            project_guids=['R0113_test_project'],
-            validations_to_skip=[ALL_VALIDATIONS],
-            run_id=TEST_RUN_ID,
-        )
-        worker = luigi.worker.Worker()
-        worker.add(uvatwns_task)
-        worker.run()
-        self.assertFalse(uvatwns_task.complete())
-
     @patch(
         'v03_pipeline.lib.tasks.validate_callset.SKIPPABLE_VALIDATIONS',
         [
@@ -272,7 +242,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 for x in ht.select(
                     'variant_id',
                     'xpos',
-                    'screen',
                 ).collect()
                 if x.locus.position <= 878809  # noqa: PLR2004
             ],
@@ -286,7 +255,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     alleles=['A', 'C'],
                     variant_id='1-871269-A-C',
                     xpos=1000871269,
-                    screen=hl.Struct(region_type_ids=[1]),
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -297,7 +265,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     alleles=['C', 'T'],
                     variant_id='1-874734-C-T',
                     xpos=1000874734,
-                    screen=hl.Struct(region_type_ids=[]),
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -308,7 +275,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     alleles=['A', 'G'],
                     variant_id='1-876499-A-G',
                     xpos=1000876499,
-                    screen=hl.Struct(region_type_ids=[]),
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -319,7 +285,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     alleles=['G', 'C'],
                     variant_id='1-878314-G-C',
                     xpos=1000878314,
-                    screen=hl.Struct(region_type_ids=[]),
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -330,7 +295,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     alleles=['C', 'T'],
                     variant_id='1-878809-C-T',
                     xpos=1000878809,
-                    screen=hl.Struct(region_type_ids=[]),
                 ),
             ],
         )

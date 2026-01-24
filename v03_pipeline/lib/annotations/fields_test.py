@@ -14,27 +14,10 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 from v03_pipeline.lib.vep import run_vep
 from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VEP_DATA
 
-TEST_GNOMAD_NONCODING_CONSTRAINT_38_HT = 'v03_pipeline/var/test/reference_datasets/GRCh38/gnomad_non_coding_constraint/1.0.ht'
-TEST_SCREEN_38_HT = 'v03_pipeline/var/test/reference_datasets/GRCh38/screen/1.0.ht'
-
 
 class FieldsTest(MockedDatarootTestCase):
     def setUp(self) -> None:
         super().setUp()
-        shutil.copytree(
-            TEST_GNOMAD_NONCODING_CONSTRAINT_38_HT,
-            valid_reference_dataset_path(
-                ReferenceGenome.GRCh38,
-                ReferenceDataset.gnomad_non_coding_constraint,
-            ),
-        )
-        shutil.copytree(
-            TEST_SCREEN_38_HT,
-            valid_reference_dataset_path(
-                ReferenceGenome.GRCh38,
-                ReferenceDataset.screen,
-            ),
-        )
 
     @patch('v03_pipeline.lib.vep.hl.vep')
     def test_get_formatting_fields(self, mock_vep: Mock) -> None:
@@ -62,8 +45,6 @@ class FieldsTest(MockedDatarootTestCase):
                 ),
                 [
                     'check_ref',
-                    'screen',
-                    'gnomad_non_coding_constraint',
                     'rg37_locus',
                     'rsid',
                     'sorted_motif_feature_consequences',
