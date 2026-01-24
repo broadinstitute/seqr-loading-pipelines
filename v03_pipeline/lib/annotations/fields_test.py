@@ -1,4 +1,3 @@
-import shutil
 from unittest.mock import Mock, patch
 
 import hail as hl

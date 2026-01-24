@@ -1,5 +1,4 @@
 import functools
-import shutil
 from unittest.mock import Mock, PropertyMock, patch
 
 import hail as hl
