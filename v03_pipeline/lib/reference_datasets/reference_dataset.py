@@ -50,10 +50,8 @@ class ReferenceDataset(StrEnum):
     gnomad_exomes = 'gnomad_exomes'
     gnomad_genomes = 'gnomad_genomes'
     gnomad_mito = 'gnomad_mito'
-    gnomad_non_coding_constraint = 'gnomad_non_coding_constraint'
     gnomad_qc = 'gnomad_qc'
     gnomad_svs = 'gnomad_svs'
-    screen = 'screen'
     local_constraint_mito = 'local_constraint_mito'
     mitomap = 'mitomap'
 
