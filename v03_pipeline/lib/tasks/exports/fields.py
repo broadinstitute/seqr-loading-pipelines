@@ -167,8 +167,6 @@ def get_predictions_export_fields(
     dataset_type: DatasetType,
 ):
     return {
-        DatasetType.SNV_INDEL: lambda _: {},
-        DatasetType.MITO: lambda _: {},
         DatasetType.SV: lambda ht: {
             'strvctvre': ht.strvctvre.score,
         },
@@ -180,8 +178,6 @@ def get_predictions_export_fields(
 
 def get_populations_export_fields(ht: hl.Table, dataset_type: DatasetType):
     return {
-        DatasetType.SNV_INDEL: lambda _: {},
-        DatasetType.MITO: lambda _: {},
         DatasetType.SV: lambda ht: {
             'gnomad_svs': hl.Struct(
                 af=ht.gnomad_svs.AF,
@@ -318,11 +314,17 @@ def get_variants_export_fields(
         **get_variant_id_fields(ht, dataset_type),
         **get_lifted_over_position_fields(ht, dataset_type),
         **get_dataset_type_specific_annotations(ht, dataset_type),
-        'predictions': hl.Struct(
-            **get_predictions_export_fields(ht, dataset_type),
-        ),
-        'populations': hl.Struct(
-            **get_populations_export_fields(ht, dataset_type),
+        **(
+            {
+                'predictions': hl.Struct(
+                    **get_predictions_export_fields(ht, dataset_type),
+                ),
+                'populations': hl.Struct(
+                    **get_populations_export_fields(ht, dataset_type),
+                ),
+            }
+            if dataset_type in {DatasetType.SV, DatasetType.GCNV}
+            else {}
         ),
         **get_consequences_fields(ht, reference_genome, dataset_type),
     }
