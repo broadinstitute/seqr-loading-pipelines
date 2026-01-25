@@ -25,11 +25,6 @@ REGULATORY_CONSEQUENCE_TERMS_LOOKUP = hl.dict(
     hl.enumerate(REGULATORY_CONSEQUENCE_TERMS, index_first=False),
 )
 
-N_ALT_REF = 0
-N_ALT_HET = 1
-N_ALT_HOM = 2
-
-
 def AB(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     is_called = hl.is_defined(mt.GT)
     return hl.bind(
