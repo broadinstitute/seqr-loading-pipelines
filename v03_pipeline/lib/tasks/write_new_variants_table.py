@@ -173,7 +173,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             self.dataset_type,
             self.reference_genome,
         )
-        # Adding an arbitrary checkpoint here, seems to help?
+        # Adding an arbitrary checkpoint here, seems to help
         new_variants_ht, _ = checkpoint(new_variants_ht)
 
         # Select down to the formatting annotations fields and
