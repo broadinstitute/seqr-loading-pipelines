@@ -16,7 +16,6 @@ from v03_pipeline.lib.misc.validation import (
     validate_allele_type,
     validate_no_duplicate_variants,
 )
-from v03_pipeline.lib.reference_datasets import dbnsfp
 from v03_pipeline.lib.reference_datasets.misc import (
     compress_floats,
     filter_contigs,
@@ -30,10 +29,7 @@ PATH = 'path'
 
 
 class ReferenceDataset(StrEnum):
-    dbnsfp = 'dbnsfp'
-    exac = 'exac'
     eigen = 'eigen'
-    hmtvar = 'hmtvar'
     splice_ai = 'splice_ai'
     topmed = 'topmed'
     gnomad_coding_and_noncoding = 'gnomad_coding_and_noncoding'
