@@ -15,14 +15,12 @@ from v03_pipeline.lib.misc.math import constrain
 from v03_pipeline.lib.paths import (
     new_variants_table_path,
     project_pedigree_path,
-    valid_reference_dataset_path,
     variant_annotations_table_path,
 )
 from v03_pipeline.lib.reference_datasets.gencode.mapping_gene_ids import (
     load_gencode_ensembl_to_refseq_id,
     load_gencode_gene_symbol_to_gene_id,
 )
-from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )
@@ -45,16 +43,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
     @property
     def annotation_dependencies(self) -> dict[str, hl.Table]:
         deps = {}
-        for (
-            reference_dataset
-        ) in ReferenceDataset.for_reference_genome_dataset_type_annotations(
-            self.reference_genome,
-            self.dataset_type,
-        ):
-            deps[f'{reference_dataset.value}_ht'] = hl.read_table(
-                valid_reference_dataset_path(self.reference_genome, reference_dataset),
-            )
-
         if self.dataset_type.has_gencode_ensembl_to_refseq_id_mapping(
             self.reference_genome,
         ):

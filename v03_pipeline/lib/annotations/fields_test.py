@@ -7,8 +7,6 @@ from v03_pipeline.lib.core import (
     DatasetType,
     ReferenceGenome,
 )
-from v03_pipeline.lib.paths import valid_reference_dataset_path
-from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 from v03_pipeline.lib.vep import run_vep
 from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VEP_DATA
@@ -100,19 +98,6 @@ class FieldsTest(MockedDatarootTestCase):
                         DatasetType.SNV_INDEL.formatting_annotation_fns(
                             reference_genome,
                         ),
-                        **{
-                            f'{reference_dataset}_ht': hl.read_table(
-                                valid_reference_dataset_path(
-                                    reference_genome,
-                                    reference_dataset,
-                                ),
-                            )
-                            for reference_dataset in ReferenceDataset.for_reference_genome_dataset_type_annotations(
-                                reference_genome,
-                                DatasetType.SNV_INDEL,
-                            )
-                            if reference_dataset.formatting_annotation
-                        },
                         **(
                             {
                                 'gencode_ensembl_to_refseq_id_mapping': hl.dict(
