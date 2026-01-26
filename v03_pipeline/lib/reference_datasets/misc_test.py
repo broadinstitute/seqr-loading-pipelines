@@ -1,7 +1,5 @@
 import unittest
 
-import hail as hl
-
 from v03_pipeline.lib.core.definitions import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.misc import vcf_to_ht
 
