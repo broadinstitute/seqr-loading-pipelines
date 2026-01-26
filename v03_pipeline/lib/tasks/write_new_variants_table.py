@@ -176,6 +176,12 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         # Adding an arbitrary checkpoint here, seems to help
         new_variants_ht, _ = checkpoint(new_variants_ht)
 
+        # An additional call to "distinct()" as a safety measure.
+        # At least one case a duplicate variants has slipped through
+        # this method, with the best hypothesis being that
+        # the combination of VEP/repartition is potentially unsafe.
+        new_variants_ht = new_variants_ht.distinct()
+
         # Select down to the formatting annotations fields and
         # any reference dataset collection annotations.
         new_variants_ht = new_variants_ht.select(
@@ -186,16 +192,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                 **self.param_kwargs,
             ),
         )
-
-        new_variants_ht = new_variants_ht.select_globals(
-            enums=hl.Struct(),
-        )
-
-        # An additional call to "distinct()" as a safety measure.
-        # At least one case a duplicate variants has slipped through
-        # this method, with the best hypothesis being that
-        # the combination of VEP/repartition is potentially unsafe.
-        new_variants_ht = new_variants_ht.distinct()
 
         # Add serial integer index
         new_variants_ht = new_variants_ht.add_index(name='key_')
