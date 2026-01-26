@@ -54,7 +54,7 @@ class ReferenceDataset(StrEnum):
         self,
         reference_genome: ReferenceGenome,
     ) -> frozenset[DatasetType]:
-        return CONFIG[self][reference_genome][DATASET_TYPES]
+        return CONFIG[self].get(reference_genome, {}).get(DATASET_TYPES, frozenset())
 
     @property
     def select(
