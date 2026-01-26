@@ -11,7 +11,6 @@ from v03_pipeline.lib.tasks.exports.misc import (
     drop_unexported_fields,
     sorted_hl_struct,
     unmap_formatting_annotation_enums,
-    unmap_reference_dataset_annotation_enums,
 )
 
 TEST_SNV_INDEL_ANNOTATIONS = (
@@ -34,6 +33,7 @@ class MiscTest(unittest.TestCase):
         self.assertCountEqual(
             list(ht.globals.enums.collect()[0].keys()),
             [
+                'hgmd',
                 'screen',
                 'dbnsfp',
                 'gnomad_exomes',
@@ -131,6 +131,7 @@ class MiscTest(unittest.TestCase):
                     ),
                 ],
                 gnomad_non_coding_constraint=hl.Struct(z_score=None),
+                hgmd=hl.Struct(accession='abcdefg', class_id=3),
                 gnomad_exomes=hl.Struct(
                     AF=0.0006690866430290043,
                     AN=1440770,
@@ -192,6 +193,7 @@ class MiscTest(unittest.TestCase):
         self.assertCountEqual(
             list(ht.globals.enums.collect()[0].keys()),
             [
+                'hgmd',
                 'dbnsfp',
                 'gnomad_exomes',
                 'splice_ai',
@@ -234,6 +236,7 @@ class MiscTest(unittest.TestCase):
                     position=69134,
                     reference_genome='GRCh38',
                 ),
+                hgmd=None,
                 gnomad_exomes=hl.Struct(
                     AF=0.026665963232517242,
                     AN=18938,
@@ -327,6 +330,7 @@ class MiscTest(unittest.TestCase):
                 CAID='CA502654',
                 check_ref=False,
                 gnomad_non_coding_constraint=hl.Struct(z_score=None),
+                hgmd=hl.Struct(accession='abcdefg', class_id=3),
                 gnomad_exomes=hl.Struct(
                     AF=0.0006690866430290043,
                     AN=1440770,
@@ -345,7 +349,7 @@ class MiscTest(unittest.TestCase):
                     FAF_AF=0.0002092500071739778,
                     Hemi=0,
                 ),
-                screen=hl.Struct(region_types=[]),
+                screen=hl.Struct(region_type_ids=[]),
                 dbnsfp=hl.Struct(
                     PrimateAI_score=0.5918066501617432,
                     fathmm_MKL_coding_score=0.7174800038337708,
@@ -356,7 +360,7 @@ class MiscTest(unittest.TestCase):
                     VEST4_score=0.39500001072883606,
                     MPC_score=0.01291007362306118,
                     MutPred_score=None,
-                    MutationTaster_pred='D',
+                    MutationTaster_pred_id=0,
                 ),
                 topmed=hl.Struct(
                     AC=41,
@@ -376,7 +380,7 @@ class MiscTest(unittest.TestCase):
                 ),
                 splice_ai=hl.Struct(
                     delta_score=0.0,
-                    splice_consequence='No consequence',
+                    splice_consequence_id=4,
                 ),
                 eigen=hl.Struct(Eigen_phred=2.628000020980835),
                 sortedTranscriptConsequences=[

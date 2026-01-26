@@ -18,7 +18,6 @@ from v03_pipeline.lib.tasks.exports.misc import (
     drop_unexported_fields,
     subset_sorted_transcript_consequences_fields,
     unmap_formatting_annotation_enums,
-    unmap_reference_dataset_annotation_enums,
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
@@ -80,11 +79,6 @@ class WriteNewVariantsParquetTask(BaseWriteParquetTask):
             )
         ht = drop_unexported_fields(ht)
         ht = unmap_formatting_annotation_enums(
-            ht,
-            self.reference_genome,
-            self.dataset_type,
-        )
-        ht = unmap_reference_dataset_annotation_enums(
             ht,
             self.reference_genome,
             self.dataset_type,
