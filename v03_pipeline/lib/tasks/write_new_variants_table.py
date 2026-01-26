@@ -10,7 +10,7 @@ from v03_pipeline.lib.annotations.misc import (
     annotate_formatting_annotation_enum_globals,
 )
 from v03_pipeline.lib.misc.callsets import get_callset_ht
-from v03_pipeline.lib.misc.io import remap_pedigree_hash
+from v03_pipeline.lib.misc.io import remap_pedigree_hash, checkpoint
 from v03_pipeline.lib.misc.math import constrain
 from v03_pipeline.lib.paths import (
     new_variants_table_path,
@@ -173,6 +173,8 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             self.dataset_type,
             self.reference_genome,
         )
+        # Adding an arbitrary checkpoint here, seems to help?
+        new_variants_ht, _ = checkpoint(new_variants_ht)
 
         # Select down to the formatting annotations fields and
         # any reference dataset collection annotations.
