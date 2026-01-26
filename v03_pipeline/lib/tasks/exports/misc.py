@@ -152,58 +152,6 @@ def camelcase_array_structexpression_fields(
     return ht
 
 
-def unmap_reference_dataset_annotation_enums(
-    ht: hl.Table,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-) -> hl.Table:
-    reference_datasets = ReferenceDataset.for_reference_genome_dataset_type_annotations(
-        reference_genome,
-        dataset_type,
-    )
-    unmapped_annotation_name = []
-    for annotation_name in ht.enums:
-        if annotation_name not in reference_datasets:
-            continue
-        for enum_name in ht.enums[annotation_name]:
-            if hasattr(ht[annotation_name], f'{enum_name}_ids'):
-                ht = ht.annotate(
-                    **{
-                        annotation_name: ht[annotation_name].annotate(
-                            **{
-                                f'{enum_name}s': ht[annotation_name][
-                                    f'{enum_name}_ids'
-                                ].map(
-                                    lambda idx: ht.enums[annotation_name][enum_name][  # noqa: B023
-                                        idx
-                                    ],
-                                ),
-                            },
-                        ),
-                    },
-                )
-                ht = ht.annotate(
-                    **{annotation_name: ht[annotation_name].drop(f'{enum_name}_ids')},
-                )
-            else:
-                ht = ht.annotate(
-                    **{
-                        annotation_name: ht[annotation_name].annotate(
-                            **{
-                                enum_name: ht.enums[annotation_name][enum_name][
-                                    ht[annotation_name][f'{enum_name}_id']
-                                ],
-                            },
-                        ),
-                    },
-                )
-                ht = ht.annotate(
-                    **{annotation_name: ht[annotation_name].drop(f'{enum_name}_id')},
-                )
-        unmapped_annotation_name.append(annotation_name)
-    return ht.annotate_globals(enums=ht.globals.enums.drop(*unmapped_annotation_name))
-
-
 def unmap_formatting_annotation_enums(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
