@@ -48,7 +48,8 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         for reference_dataset in ReferenceDataset:
             if (
                 reference_dataset.formatting_annotation
-                and self.dataset_type in reference_dataset.dataset_types
+                and self.dataset_type
+                in reference_dataset.dataset_types(self.reference_genome)
             ):
                 deps[f'{reference_dataset.value}_ht'] = hl.read_table(
                     valid_reference_dataset_path(
