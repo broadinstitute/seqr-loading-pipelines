@@ -571,7 +571,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             [
                 hl.Struct(
                     enums=hl.Struct(
-                        gnomad_svs=hl.Struct(),
                         sv_type=SV_TYPES,
                         sv_type_detail=SV_TYPE_DETAILS,
                         sorted_gene_consequences=hl.Struct(
@@ -1025,7 +1024,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             [
                 hl.Struct(
                     enums=hl.Struct(
-                        gnomad_svs=hl.Struct(),
                         sv_type=SV_TYPES,
                         sv_type_detail=SV_TYPE_DETAILS,
                         sorted_gene_consequences=hl.Struct(
