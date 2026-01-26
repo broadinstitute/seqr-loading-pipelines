@@ -24,11 +24,9 @@ from v03_pipeline.lib.reference_datasets.misc import (
 
 DATASET_TYPES = 'dataset_types'
 FORMATTING_ANNOTATION = 'formatting_annotation'
-FILTER = 'filter'
 SELECT = 'select'
 VERSION = 'version'
 PATH = 'path'
-SPARK_DATAFRAME_PATH = 'spark_dataframe_path'
 
 
 class ReferenceDataset(StrEnum):
@@ -63,12 +61,6 @@ class ReferenceDataset(StrEnum):
         return CONFIG[self][reference_genome][DATASET_TYPES]
 
     @property
-    def filter(
-        self,
-    ) -> Callable[[ReferenceGenome, DatasetType, hl.Table], hl.Table] | None:
-        return CONFIG[self].get(FILTER)
-
-    @property
     def select(
         self,
     ) -> Callable[[ReferenceGenome, DatasetType, hl.Table], hl.Table] | None:
@@ -76,16 +68,6 @@ class ReferenceDataset(StrEnum):
 
     def path(self, reference_genome: ReferenceGenome) -> str | list[str]:
         return CONFIG[self][reference_genome][PATH]
-
-    def path_for_spark_dataframe(
-        self,
-        reference_genome: ReferenceGenome,
-    ) -> str | list[str]:
-        return (
-            CONFIG[self][reference_genome][SPARK_DATAFRAME_PATH]
-            if SPARK_DATAFRAME_PATH in CONFIG[self][reference_genome]
-            else CONFIG[self][reference_genome][PATH]
-        )
 
     def get_ht(
         self,
@@ -124,21 +106,6 @@ class ReferenceDataset(StrEnum):
 
 
 CONFIG = {
-    ReferenceDataset.dbnsfp: {
-        SELECT: dbnsfp.select,
-        ReferenceGenome.GRCh37: {
-            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
-            PATH: 'https://dbnsfp.s3.amazonaws.com/dbNSFP4.7a.zip',
-            SPARK_DATAFRAME_PATH: 'gs://seqr-reference-data/clickhouse/GRCh37/dbnsfp/dbNSFP5.3a_grch37.gz',
-        },
-        ReferenceGenome.GRCh38: {
-            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
-            VERSION: '1.0',
-            PATH: 'https://dbnsfp.s3.amazonaws.com/dbNSFP4.7a.zip',
-            SPARK_DATAFRAME_PATH: 'gs://seqr-reference-data/clickhouse/GRCh38/dbnsfp/dbNSFP5.3a_grch38.gz',
-        },
-    },
     ReferenceDataset.eigen: {
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
