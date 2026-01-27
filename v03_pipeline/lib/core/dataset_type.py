@@ -361,7 +361,7 @@ class DatasetType(StrEnum):
         }[self]
 
     @property
-    def should_write_new_transcripts(self):
+    def should_write_new_variant_details(self):
         return self == DatasetType.SNV_INDEL
 
     @property

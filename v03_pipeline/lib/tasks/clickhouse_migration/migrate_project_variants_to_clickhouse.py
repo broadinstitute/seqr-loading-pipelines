@@ -12,8 +12,8 @@ from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
-from v03_pipeline.lib.tasks.exports.write_new_transcripts_parquet import (
-    WriteNewTranscriptsParquetTask,
+from v03_pipeline.lib.tasks.exports.write_new_variant_details_parquet import (
+    WriteNewVariantDetailsParquetTask,
 )
 from v03_pipeline.lib.tasks.exports.write_new_variants_parquet import (
     WriteNewVariantsParquetTask,
@@ -107,7 +107,7 @@ class MigrateProjectVariantsToClickHouseTask(luigi.WrapperTask):
                             callset_path=None,
                         ),
                     ]
-                    if self.dataset_type.should_write_new_transcripts
+                    if self.dataset_type.should_write_new_variant_details
                     else []
                 ),
                 self.clone(

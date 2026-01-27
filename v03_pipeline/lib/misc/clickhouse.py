@@ -17,7 +17,7 @@ from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.retry import retry
 from v03_pipeline.lib.paths import (
     new_entries_parquet_path,
-    new_transcripts_parquet_path,
+    new_variant_details_parquet_path,
     new_variants_parquet_path,
 )
 
@@ -46,7 +46,7 @@ class ClickHouseTable(StrEnum):
             ClickHouseTable.ANNOTATIONS_DISK: new_variants_parquet_path,
             ClickHouseTable.ANNOTATIONS_MEMORY: new_variants_parquet_path,
             ClickHouseTable.KEY_LOOKUP: new_variants_parquet_path,
-            ClickHouseTable.TRANSCRIPTS: new_transcripts_parquet_path,
+            ClickHouseTable.TRANSCRIPTS: new_variant_details_parquet_path,
             ClickHouseTable.ENTRIES: new_entries_parquet_path,
         }[self]
 
@@ -89,7 +89,7 @@ class ClickHouseTable(StrEnum):
             ClickHouseTable.ANNOTATIONS_MEMORY,
             ClickHouseTable.KEY_LOOKUP,
         ]
-        if dataset_type.should_write_new_transcripts:
+        if dataset_type.should_write_new_variant_details:
             tables = [
                 *tables,
                 ClickHouseTable.TRANSCRIPTS,

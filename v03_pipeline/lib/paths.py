@@ -329,7 +329,7 @@ def new_entries_parquet_path(
     )
 
 
-def new_transcripts_parquet_path(
+def new_variant_details_parquet_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     run_id: str,
@@ -340,7 +340,7 @@ def new_transcripts_parquet_path(
             dataset_type,
         ),
         run_id,
-        'new_transcripts.parquet',
+        'new_variant_details.parquet',
     )
 
 

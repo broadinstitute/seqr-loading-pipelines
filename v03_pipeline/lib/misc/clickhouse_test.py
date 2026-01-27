@@ -34,7 +34,7 @@ from v03_pipeline.lib.misc.clickhouse import (
 )
 from v03_pipeline.lib.paths import (
     new_entries_parquet_path,
-    new_transcripts_parquet_path,
+    new_variant_details_parquet_path,
     new_variants_parquet_path,
     runs_path,
 )
@@ -339,7 +339,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         df = pd.DataFrame({'key': [1, 2, 3, 4], 'transcripts': ['a', 'b', 'c', 'd']})
         write_test_parquet(
             df,
-            new_transcripts_parquet_path(
+            new_variant_details_parquet_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 TEST_RUN_ID,

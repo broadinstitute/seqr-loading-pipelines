@@ -88,7 +88,7 @@ class WriteNewVariantsParquetTask(BaseWriteParquetTask):
             self.reference_genome,
             self.dataset_type,
         )
-        if self.dataset_type.should_write_new_transcripts:
+        if self.dataset_type.should_write_new_variants:
             ht = subset_sorted_transcript_consequences_fields(
                 ht,
                 self.reference_genome,

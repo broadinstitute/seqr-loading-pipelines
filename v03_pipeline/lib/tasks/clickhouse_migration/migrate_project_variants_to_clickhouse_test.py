@@ -9,7 +9,7 @@ from v03_pipeline.lib.core import (
     SampleType,
 )
 from v03_pipeline.lib.paths import (
-    new_transcripts_parquet_path,
+    new_variant_details_parquet_path,
     new_variants_parquet_path,
     pipeline_run_success_file_path,
     project_table_path,
@@ -75,7 +75,7 @@ class WriteVariantsToClickHouseTest(MockedDatarootTestCase):
         )
         self.assertEqual(df.shape[0], 1)
         df = pd.read_parquet(
-            new_transcripts_parquet_path(
+            new_variant_details_parquet_path(
                 ReferenceGenome.GRCh37,
                 DatasetType.SNV_INDEL,
                 TEST_RUN_ID,
