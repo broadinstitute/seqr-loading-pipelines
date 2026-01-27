@@ -28,7 +28,8 @@ def get_dataset_type_specific_annotations(
         DatasetType.SNV_INDEL: lambda _: {},
         DatasetType.MITO: lambda ht: {
             'commonLowHeteroplasmy': ht.common_low_heteroplasmy,
-            'mitomapPathogenic': ht.mitomap.pathogenic,
+            'haplogroupDefining': ht.haplogroup.is_defining,
+            'mitotip': ht.mitotip.trna_prediction,
         },
         DatasetType.SV: lambda ht: {
             'algorithms': ht.algorithms,
@@ -188,35 +189,6 @@ def get_populations_export_fields(ht: hl.Table, dataset_type: DatasetType):
     }[dataset_type](ht)
 
 
-def get_position_fields(ht: hl.Table, dataset_type: DatasetType):
-    if dataset_type in {DatasetType.SV, DatasetType.GCNV}:
-        rg37_contig = reference_independent_contig(ht.rg37_locus_end)
-        return {
-            'chrom': reference_independent_contig(ht.start_locus),
-            'pos': ht.start_locus.position,
-            'end': ht.end_locus.position,
-            'rg37LocusEnd': hl.Struct(
-                contig=rg37_contig,
-                position=hl.or_missing(
-                    hl.is_defined(rg37_contig),
-                    ht.rg37_locus_end.position,
-                ),
-            ),
-        }
-    if dataset_type == DatasetType.MITO:
-        return {
-            'pos': ht.locus.position,
-            'ref': ht.alleles[0],
-            'alt': ht.alleles[1],
-        }
-    return {
-        'chrom': reference_independent_contig(ht.locus),
-        'pos': ht.locus.position,
-        'ref': ht.alleles[0],
-        'alt': ht.alleles[1],
-    }
-
-
 def get_variant_id_fields(
     ht: hl.Table,
     dataset_type: DatasetType,
@@ -225,6 +197,7 @@ def get_variant_id_fields(
         DatasetType.SNV_INDEL: lambda ht: {
             'variantId': ht.variant_id,
             'rsid': ht.rsid,
+            'CAID': hl.missing(hl.tstr),
         },
         DatasetType.MITO: lambda ht: {
             'variantId': ht.variant_id,
@@ -297,24 +270,50 @@ def get_variants_export_fields(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ):
+    if dataset_type in {DatasetType.SV, DatasetType.GCNV}:
+        rg37_contig = reference_independent_contig(ht.rg37_locus_end)
+        position_fields = {
+            'chrom': reference_independent_contig(ht.start_locus),
+            'pos': ht.start_locus.position,
+            'end': ht.end_locus.position,
+            'rg37LocusEnd': hl.Struct(
+                contig=rg37_contig,
+                position=hl.or_missing(
+                    hl.is_defined(rg37_contig),
+                    ht.rg37_locus_end.position,
+                ),
+            ),
+        }
+        return {
+            'key_': ht.key_,
+            'xpos': ht.xpos,
+            **position_fields,
+            **get_variant_id_fields(ht, dataset_type),
+            **get_lifted_over_position_fields(ht, dataset_type),
+            **get_dataset_type_specific_annotations(ht, dataset_type),
+            'predictions': hl.Struct(
+                **get_predictions_export_fields(ht, dataset_type),
+            ),
+            'populations': hl.Struct(
+                **get_populations_export_fields(ht, dataset_type),
+            ),
+            **get_consequences_fields(ht, reference_genome, dataset_type),
+        }
     return {
         'key_': ht.key_,
-        'xpos': ht.xpos,
-        **get_position_fields(ht, dataset_type),
+        **get_dataset_type_specific_annotations(ht, dataset_type),
+        **get_consequences_fields(ht, reference_genome, dataset_type),
+    }
+
+def get_variant_details_export_fields(
+    ht: hl.Table,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+):
+    return {
+        'key_': ht.key_,
         **get_variant_id_fields(ht, dataset_type),
         **get_lifted_over_position_fields(ht, dataset_type),
         **get_dataset_type_specific_annotations(ht, dataset_type),
-        **(
-            {
-                'predictions': hl.Struct(
-                    **get_predictions_export_fields(ht, dataset_type),
-                ),
-                'populations': hl.Struct(
-                    **get_populations_export_fields(ht, dataset_type),
-                ),
-            }
-            if dataset_type in {DatasetType.SV, DatasetType.GCNV}
-            else {}
-        ),
         **get_consequences_fields(ht, reference_genome, dataset_type),
     }

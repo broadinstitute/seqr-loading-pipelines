@@ -14,6 +14,7 @@ from v03_pipeline.lib.tasks.exports.misc import (
     camelcase_array_structexpression_fields,
     reformat_transcripts_for_export,
     unmap_formatting_annotation_enums,
+    get_variant_details_export_fields,
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
@@ -62,7 +63,5 @@ class WriteNewVariantDetailsParquetTask(BaseWriteParquetTask):
         ht = ht.key_by()
         return ht.select(
             key_=ht.key_,
-            transcripts=hl.enumerate(
-                ht.sortedTranscriptConsequences,
-            ).starmap(reformat_transcripts_for_export),
+            **get_variant_details_export_fields(ht, self.reference_genome, self.dataset_type)
         )
