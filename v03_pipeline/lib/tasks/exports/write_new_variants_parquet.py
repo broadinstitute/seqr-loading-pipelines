@@ -77,7 +77,6 @@ class WriteNewVariantsParquetTask(BaseWriteParquetTask):
                     self.run_id,
                 ),
             )
-        ht = drop_unexported_fields(ht)
         ht = unmap_formatting_annotation_enums(
             ht,
             self.reference_genome,
