@@ -94,7 +94,7 @@ class MigrateProjectVariantsToClickHouseTask(luigi.WrapperTask):
                 *(
                     [
                         self.clone(
-                            WriteNewTranscriptsParquetTask,
+                            WriteNewVariantDetailsParquetTask,
                             # Callset Path being required
                             # here is byproduct of the "place all variants"
                             # in the variants path" hack.  In theory

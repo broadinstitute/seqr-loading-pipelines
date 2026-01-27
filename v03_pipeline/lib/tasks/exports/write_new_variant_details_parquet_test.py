@@ -16,7 +16,7 @@ from v03_pipeline.lib.paths import (
     new_variants_table_path,
 )
 from v03_pipeline.lib.tasks.exports.write_new_variant_details_parquet import (
-    WriteNewVariantDetailsParquet,
+    WriteNewVariantDetailsParquetTask,
 )
 from v03_pipeline.lib.test.misc import convert_ndarray_to_list
 from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
@@ -192,7 +192,7 @@ class WriteNewVariantDetailsParquetTest(MockedDatarootTestCase):
     ) -> None:
         mock_write_new_variants_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
-        task = WriteNewTranscriptsParquetTask(
+        task = WriteNewVariantDetailsParquetTask(
             reference_genome=ReferenceGenome.GRCh37,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
