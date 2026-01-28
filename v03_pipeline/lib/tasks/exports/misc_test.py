@@ -308,7 +308,6 @@ class MiscTest(unittest.TestCase):
         ht = ht.annotate(
             sortedTranscriptConsequences=[ht.sortedTranscriptConsequences[0]],
         )
-        print(ht.collect()[0])
         self.assertEqual(
             ht.collect()[0],
             hl.Struct(
