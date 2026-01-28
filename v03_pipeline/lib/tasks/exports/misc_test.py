@@ -57,7 +57,15 @@ class MiscTest(unittest.TestCase):
                     reference_genome='GRCh38',
                 ),
                 alleles=['A', 'G'],
-                clinvar=hl.Struct(alleleId=929885, conflictingPathogenicities=None, goldStars=1, submitters=['Labcorp Genetics (formerly Invitae), Labcorp'], conditions=['not provided'], assertion_ids=[], pathogenicity_id=12),
+                clinvar=hl.Struct(
+                    alleleId=929885,
+                    conflictingPathogenicities=None,
+                    goldStars=1,
+                    submitters=['Labcorp Genetics (formerly Invitae), Labcorp'],
+                    conditions=['not provided'],
+                    assertion_ids=[],
+                    pathogenicity_id=12,
+                ),
                 rg37_locus=hl.Locus(
                     contig=1,
                     position=874501,
@@ -211,7 +219,15 @@ class MiscTest(unittest.TestCase):
             hl.Struct(
                 locus=hl.Locus(contig=1, position=69134, reference_genome='GRCh37'),
                 alleles=['A', 'G'],
-                clinvar=hl.Struct(alleleId=2193183, conflictingPathogenicities=None, goldStars=1, submitters=['Ambry Genetics'], conditions=['not specified'], assertion_ids=[], pathogenicity_id=14),
+                clinvar=hl.Struct(
+                    alleleId=2193183,
+                    conflictingPathogenicities=None,
+                    goldStars=1,
+                    submitters=['Ambry Genetics'],
+                    conditions=['not specified'],
+                    assertion_ids=[],
+                    pathogenicity_id=14,
+                ),
                 rsid=None,
                 sorted_transcript_consequences=[
                     hl.Struct(
@@ -318,7 +334,15 @@ class MiscTest(unittest.TestCase):
                     reference_genome='GRCh38',
                 ),
                 alleles=['A', 'G'],
-                clinvar=hl.Struct(alleleId=929885, conflictingPathogenicities=None, goldStars=1, submitters=['Labcorp Genetics (formerly Invitae), Labcorp'], conditions=['not provided'], assertion_ids=[], pathogenicity_id=12),
+                clinvar=hl.Struct(
+                    alleleId=929885,
+                    conflictingPathogenicities=None,
+                    goldStars=1,
+                    submitters=['Labcorp Genetics (formerly Invitae), Labcorp'],
+                    conditions=['not provided'],
+                    assertion_ids=[],
+                    pathogenicity_id=12,
+                ),
                 rg37_locus=hl.Locus(
                     contig=1,
                     position=874501,
