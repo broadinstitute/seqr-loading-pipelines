@@ -301,5 +301,15 @@ def get_variant_details_export_fields(
         'key_': ht.key_,
         **get_variant_id_fields(ht, dataset_type),
         **get_lifted_over_position_fields(ht, dataset_type),
-        **get_consequences_fields(ht, reference_genome, dataset_type),
+        **(
+            {
+                'sortedMotifFeatureConsequences': ht.sortedMotifFeatureConsequences,
+                'sortedRegulatoryFeatureConsequences': ht.sortedRegulatoryFeatureConsequences,
+            }
+            if reference_genome == ReferenceGenome.GRCh38
+            else {}
+        ),
+        'transcripts': hl.enumerate(
+            ht.sortedTranscriptConsequences,
+        ).starmap(reformat_transcripts_for_export),
     }

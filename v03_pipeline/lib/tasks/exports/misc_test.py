@@ -31,6 +31,7 @@ class MiscTest(unittest.TestCase):
         self.assertCountEqual(
             list(ht.globals.enums.collect()[0].keys()),
             [
+                'clinvar',
                 'hgmd',
                 'screen',
                 'dbnsfp',
@@ -56,6 +57,7 @@ class MiscTest(unittest.TestCase):
                     reference_genome='GRCh38',
                 ),
                 alleles=['A', 'G'],
+                clinvar=hl.Struct(alleleId=929885, conflictingPathogenicities=None, goldStars=1, submitters=['Labcorp Genetics (formerly Invitae), Labcorp'], conditions=['not provided'], assertion_ids=[], pathogenicity_id=12),
                 rg37_locus=hl.Locus(
                     contig=1,
                     position=874501,
@@ -190,6 +192,7 @@ class MiscTest(unittest.TestCase):
         self.assertCountEqual(
             list(ht.globals.enums.collect()[0].keys()),
             [
+                'clinvar',
                 'hgmd',
                 'dbnsfp',
                 'gnomad_exomes',
@@ -208,6 +211,7 @@ class MiscTest(unittest.TestCase):
             hl.Struct(
                 locus=hl.Locus(contig=1, position=69134, reference_genome='GRCh37'),
                 alleles=['A', 'G'],
+                clinvar=hl.Struct(alleleId=2193183, conflictingPathogenicities=None, goldStars=1, submitters=['Ambry Genetics'], conditions=['not specified'], assertion_ids=[], pathogenicity_id=14),
                 rsid=None,
                 sorted_transcript_consequences=[
                     hl.Struct(
@@ -304,6 +308,7 @@ class MiscTest(unittest.TestCase):
         ht = ht.annotate(
             sortedTranscriptConsequences=[ht.sortedTranscriptConsequences[0]],
         )
+        print(ht.collect()[0])
         self.assertEqual(
             ht.collect()[0],
             hl.Struct(
@@ -314,6 +319,7 @@ class MiscTest(unittest.TestCase):
                     reference_genome='GRCh38',
                 ),
                 alleles=['A', 'G'],
+                clinvar=hl.Struct(alleleId=929885, conflictingPathogenicities=None, goldStars=1, submitters=['Labcorp Genetics (formerly Invitae), Labcorp'], conditions=['not provided'], assertion_ids=[], pathogenicity_id=12),
                 rg37_locus=hl.Locus(
                     contig=1,
                     position=874501,
