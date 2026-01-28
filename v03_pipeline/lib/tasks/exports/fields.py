@@ -25,6 +25,7 @@ def get_dataset_type_specific_annotations(
     dataset_type: DatasetType,
 ):
     return {
+        DatasetType.SNV_INDEL: lambda _: {},
         DatasetType.MITO: lambda ht: {
             'commonLowHeteroplasmy': ht.common_low_heteroplasmy,
             'haplogroupDefining': ht.haplogroup.is_defining,
@@ -246,7 +247,9 @@ def get_consequences_fields(
                 if reference_genome == ReferenceGenome.GRCh38
                 else {}
             ),
-            'sortedTranscriptConsequences': ht.sortedTranscriptConsequences,
+            'transcripts': hl.enumerate(ht.sortedTranscriptConsequences).starmap(
+                reformat_transcripts_for_export,
+            ),
         },
         DatasetType.MITO: lambda ht: {
             # MITO transcripts are not exported to their own table,

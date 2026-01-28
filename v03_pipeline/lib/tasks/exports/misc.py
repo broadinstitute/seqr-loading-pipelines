@@ -95,12 +95,12 @@ def subset_consequences_fields(
             sortedMotifFeatureConsequences=ht.sortedMotifFeatureConsequences.map(
                 lambda e: e.select(
                     'consequenceTerms',
-                )
+                ),
             ),
             sortedRegulatoryFeatureConsequences=ht.sortedRegulatoryFeatureConsequences.map(
                 lambda e: e.select(
                     'consequenceTerms',
-                )
+                ),
             ),
         )
     return ht.annotate(

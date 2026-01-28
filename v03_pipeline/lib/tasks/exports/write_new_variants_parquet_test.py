@@ -136,26 +136,14 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             [
                 {
                     'key': 0,
-                    'xpos': 1000876499,
-                    'chrom': '1',
-                    'pos': 876499,
-                    'ref': 'A',
-                    'alt': 'G',
-                    'variantId': '1-876499-A-G',
-                    'rsid': None,
-                    'liftedOverChrom': '1',
-                    'liftedOverPos': 874501,
                     'sortedMotifFeatureConsequences': [
                         {
                             'consequenceTerms': ['TF_binding_site_variant'],
-                            'motifFeatureId': 'ENSM00493959715',
                         },
                     ],
                     'sortedRegulatoryFeatureConsequences': [
                         {
-                            'biotype': 'CTCF_binding_site',
                             'consequenceTerms': ['regulatory_region_variant'],
-                            'regulatoryFeatureId': 'ENSR00000344437',
                         },
                     ],
                     'sortedTranscriptConsequences': [
@@ -212,15 +200,6 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             [
                 {
                     'key': 1424,
-                    'xpos': 1000069134,
-                    'chrom': '1',
-                    'pos': 69134,
-                    'ref': 'A',
-                    'alt': 'G',
-                    'variantId': '1-69134-A-G',
-                    'rsid': None,
-                    'liftedOverChrom': '1',
-                    'liftedOverPos': 69134,
                     'sortedTranscriptConsequences': [
                         {
                             'canonical': 1,
@@ -272,15 +251,9 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             [
                 {
                     'key': 998,
-                    'xpos': 25000000008,
-                    'pos': 8,
-                    'ref': 'G',
-                    'alt': 'T',
-                    'variantId': 'M-8-G-T',
-                    'rsid': 'rs1603218446',
-                    'liftedOverPos': 578,
                     'commonLowHeteroplasmy': True,
-                    'mitomapPathogenic': None,
+                    'haplogroupDefining': False,
+                    'mitotip': 'likely_pathogenic',
                     'sortedTranscriptConsequences': [
                         {
                             'aminoAcids': None,
