@@ -86,10 +86,15 @@ def export_parquet_filterable_transcripts_fields(
     return OrderedDict(sorted(fields.items()))
 
 
-def subset_sorted_transcript_consequences_fields(
+def subset_consequences_fields(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
+    if reference_genome == ReferenceGenome.GRCh38:
+        ht = ht.annotate(
+            sortedMotifFeatureConsequences=ht.sortedMotifFeatureConsequences.select('consequenceTerms'),
+            sortedRegulatoryFeatureConsequences=ht.sortedRegulatoryFeatureConsequences.select('consequenceTerms'),
+        )
     return ht.annotate(
         sortedTranscriptConsequences=hl.enumerate(
             ht.sortedTranscriptConsequences,
