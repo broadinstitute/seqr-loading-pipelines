@@ -25,7 +25,6 @@ def get_dataset_type_specific_annotations(
     dataset_type: DatasetType,
 ):
     return {
-        DatasetType.SNV_INDEL: lambda _: {},
         DatasetType.MITO: lambda ht: {
             'commonLowHeteroplasmy': ht.common_low_heteroplasmy,
             'haplogroupDefining': ht.haplogroup.is_defining,
@@ -305,6 +304,7 @@ def get_variants_export_fields(
         **get_consequences_fields(ht, reference_genome, dataset_type),
     }
 
+
 def get_variant_details_export_fields(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
@@ -314,6 +314,5 @@ def get_variant_details_export_fields(
         'key_': ht.key_,
         **get_variant_id_fields(ht, dataset_type),
         **get_lifted_over_position_fields(ht, dataset_type),
-        **get_dataset_type_specific_annotations(ht, dataset_type),
         **get_consequences_fields(ht, reference_genome, dataset_type),
     }

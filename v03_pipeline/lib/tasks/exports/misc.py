@@ -92,8 +92,16 @@ def subset_consequences_fields(
 ) -> hl.Table:
     if reference_genome == ReferenceGenome.GRCh38:
         ht = ht.annotate(
-            sortedMotifFeatureConsequences=ht.sortedMotifFeatureConsequences.select('consequenceTerms'),
-            sortedRegulatoryFeatureConsequences=ht.sortedRegulatoryFeatureConsequences.select('consequenceTerms'),
+            sortedMotifFeatureConsequences=ht.sortedMotifFeatureConsequences.map(
+                lambda e: e.select(
+                    'consequenceTerms',
+                )
+            ),
+            sortedRegulatoryFeatureConsequences=ht.sortedRegulatoryFeatureConsequences.map(
+                lambda e: e.select(
+                    'consequenceTerms',
+                )
+            ),
         )
     return ht.annotate(
         sortedTranscriptConsequences=hl.enumerate(
