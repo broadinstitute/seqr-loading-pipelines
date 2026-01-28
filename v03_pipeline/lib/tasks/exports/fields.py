@@ -20,12 +20,11 @@ def reference_independent_contig(locus: hl.LocusExpression):
     )
 
 
-def get_dataset_type_specific_annotations(
+def get_dataset_type_specific_variants_annotations(
     ht: hl.Table,
     dataset_type: DatasetType,
 ):
     return {
-        DatasetType.SNV_INDEL: lambda _: {},
         DatasetType.MITO: lambda ht: {
             'commonLowHeteroplasmy': ht.common_low_heteroplasmy,
             'haplogroupDefining': ht.haplogroup.is_defining,
@@ -58,10 +57,33 @@ def get_dataset_type_specific_annotations(
             ),
             'svType': ht.sv_type,
             'svTypeDetail': ht.sv_type_detail,
+            'predictions': hl.Struct(
+                strvctvre=ht.strvctvre.score,
+            ),
+            'populations': hl.Struct(
+                gnomad_svs=hl.Struct(
+                    af=ht.gnomad_svs.AF,
+                    het=ht.gnomad_svs.N_HET,
+                    hom=ht.gnomad_svs.N_HOM,
+                    id=ht.gnomad_svs.ID,
+                ),
+            ),
         },
         DatasetType.GCNV: lambda ht: {
             'numExon': ht.num_exon,
             'svType': ht.sv_type,
+            'predictions': hl.Struct(
+                strvctvre=ht.strvctvre.score,
+            ),
+            'populations': hl.Struct(
+                sv_callset=hl.Struct(
+                    ac=ht.gt_stats.AC,
+                    af=ht.gt_stats.AF,
+                    an=ht.gt_stats.AN,
+                    het=ht.gt_stats.Het,
+                    hom=ht.gt_stats.Hom,
+                ),
+            ),
         },
     }[dataset_type](ht)
 
@@ -153,42 +175,6 @@ def get_entries_export_fields(
     }
 
 
-def get_predictions_export_fields(
-    ht: hl.Table,
-    dataset_type: DatasetType,
-):
-    return {
-        DatasetType.SV: lambda ht: {
-            'strvctvre': ht.strvctvre.score,
-        },
-        DatasetType.GCNV: lambda ht: {
-            'strvctvre': ht.strvctvre.score,
-        },
-    }[dataset_type](ht)
-
-
-def get_populations_export_fields(ht: hl.Table, dataset_type: DatasetType):
-    return {
-        DatasetType.SV: lambda ht: {
-            'gnomad_svs': hl.Struct(
-                af=ht.gnomad_svs.AF,
-                het=ht.gnomad_svs.N_HET,
-                hom=ht.gnomad_svs.N_HOM,
-                id=ht.gnomad_svs.ID,
-            ),
-        },
-        DatasetType.GCNV: lambda ht: {
-            'sv_callset': hl.Struct(
-                ac=ht.gt_stats.AC,
-                af=ht.gt_stats.AF,
-                an=ht.gt_stats.AN,
-                het=ht.gt_stats.Het,
-                hom=ht.gt_stats.Hom,
-            ),
-        },
-    }[dataset_type](ht)
-
-
 def get_variant_id_fields(
     ht: hl.Table,
     dataset_type: DatasetType,
@@ -247,9 +233,7 @@ def get_consequences_fields(
                 if reference_genome == ReferenceGenome.GRCh38
                 else {}
             ),
-            'transcripts': hl.enumerate(ht.sortedTranscriptConsequences).starmap(
-                reformat_transcripts_for_export,
-            ),
+            'sortedTranscriptConsequences': ht.sortedTranscriptConsequences,
         },
         DatasetType.MITO: lambda ht: {
             # MITO transcripts are not exported to their own table,
@@ -292,18 +276,17 @@ def get_variants_export_fields(
             **position_fields,
             **get_variant_id_fields(ht, dataset_type),
             **get_lifted_over_position_fields(ht, dataset_type),
-            **get_dataset_type_specific_annotations(ht, dataset_type),
-            'predictions': hl.Struct(
-                **get_predictions_export_fields(ht, dataset_type),
-            ),
-            'populations': hl.Struct(
-                **get_populations_export_fields(ht, dataset_type),
-            ),
+            **get_dataset_type_specific_variants_annotations(ht, dataset_type),
+            **get_consequences_fields(ht, reference_genome, dataset_type),
+        }
+    if dataset_type == DatasetType.MITO:
+        return {
+            'key_': ht.key_,
+            **get_dataset_type_specific_variants_annotations(ht, dataset_type),
             **get_consequences_fields(ht, reference_genome, dataset_type),
         }
     return {
         'key_': ht.key_,
-        **get_dataset_type_specific_annotations(ht, dataset_type),
         **get_consequences_fields(ht, reference_genome, dataset_type),
     }
 
