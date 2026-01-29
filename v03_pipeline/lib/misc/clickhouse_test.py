@@ -91,20 +91,28 @@ class ClickhouseTest(MockedDatarootTestCase):
             """,
         )
         client.execute(
-            f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`seqrdb_gnomad_genomes_src` VALUES',
+            f"""
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.gnomad_genomes_src (
+                key UInt32,
+                filter_af Decimal(9, 8)
+            ) ENGINE = Memory;
+            """,
+        )
+        client.execute(
+            f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`gnomad_genomes_src` VALUES',
             [(11, 0.06), (12, 0.001), (13, 0.0001)],
         )
         client.execute(
             f"""
             CREATE DICTIONARY {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/reference_data/gnomad_genomes`
             (
-                key Uint32,
+                key UInt32,
                 filter_af Decimal(9, 8)
             )
             PRIMARY KEY key
             SOURCE(CLICKHOUSE(
                 USER {Env.CLICKHOUSE_WRITER_USER} PASSWORD {Env.CLICKHOUSE_WRITER_PASSWORD}
-                DB {Env.CLICKHOUSE_DATABASE} TABLE `seqrdb_gnomad_genomes_src`
+                DB {Env.CLICKHOUSE_DATABASE} TABLE `gnomad_genomes_src`
             ))
             LAYOUT(HASHED())
             LIFETIME(0);
@@ -539,11 +547,11 @@ class ClickhouseTest(MockedDatarootTestCase):
     def test_direct_insert_all_keys(self):
         client = get_clickhouse_client()
         client.execute(
-            f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts` VALUES',
+            f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/variants/details` VALUES',
             [(1, 'a'), (10, 'b'), (7, 'c')],
         )
         direct_insert_all_keys(
-            ClickHouseTable.TRANSCRIPTS,
+            ClickHouseTable.VARIANT_DETAILS,
             TableNameBuilder(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
@@ -551,7 +559,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             ),
         )
         ret = client.execute(
-            f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts`',
+            f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/variants/details`',
         )
         self.assertEqual(
             ret,
@@ -560,7 +568,7 @@ class ClickhouseTest(MockedDatarootTestCase):
 
         # ensure multiple calls are idempotent
         direct_insert_all_keys(
-            ClickHouseTable.TRANSCRIPTS,
+            ClickHouseTable.VARIANT_DETAILS,
             TableNameBuilder(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
@@ -568,7 +576,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             ),
         )
         ret = client.execute(
-            f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts`',
+            f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/variants/details`',
         )
         self.assertEqual(
             ret,

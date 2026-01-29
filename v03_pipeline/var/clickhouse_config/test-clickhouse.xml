@@ -5,6 +5,7 @@
         <default>
           <flatten_nested>0</flatten_nested>
           <join_use_nulls>1</join_use_nulls>
+          <stop_refreshable_materialized_views_on_startup>1</stop_refreshable_materialized_views_on_startup>
         </default>
     </profiles>
 
