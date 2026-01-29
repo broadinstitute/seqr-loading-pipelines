@@ -103,7 +103,7 @@ class PipelineWorkerTest(MockedReferenceDatasetsTestCase):
         )
         client.execute(
             """
-            CREATE DICTIONARY `GRCh38/SNV_INDEL/gnomad_genomes`
+            CREATE DICTIONARY `GRCh38/SNV_INDEL/reference_data/gnomad_genomes`
             (
                 `key` UInt32,
                 `filter_af` Decimal(9, 8)
