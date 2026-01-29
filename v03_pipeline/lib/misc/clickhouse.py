@@ -45,7 +45,7 @@ class ClickHouseTable(StrEnum):
         return {
             ClickHouseTable.VARIANTS_DISK: new_variants_parquet_path,
             ClickHouseTable.VARIANTS_MEMORY: new_variants_parquet_path,
-            ClickHouseTable.KEY_LOOKUP: new_variants_parquet_path,
+            ClickHouseTable.KEY_LOOKUP: new_variant_details_parquet_path,
             ClickHouseTable.VARIANT_DETAILS: new_variant_details_parquet_path,
             ClickHouseTable.ENTRIES: new_entries_parquet_path,
         }[self]

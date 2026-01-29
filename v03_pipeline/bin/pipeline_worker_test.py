@@ -226,7 +226,7 @@ class PipelineWorkerTest(MockedReferenceDatasetsTestCase):
             f"""
             SELECT COUNT(*)
             FROM
-            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/annotations_memory`
+            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/variants_memory`
             """,
         )[0][0]
         self.assertEqual(annotations_count, 30)
