@@ -5,7 +5,7 @@ from enum import Enum
 import hail as hl
 import numpy as np
 
-from v03_pipeline.lib.model import Sex
+from v03_pipeline.lib.core import Sex
 
 DEFAULT_RELATEDNESS_TOLERANCE = 0.2
 PARENT_CHILD_RELATEDNESS_TOLERANCE = 0.4
@@ -30,7 +30,11 @@ class Relation(Enum):
 
     def coefficients_equal(self, coefficients: list[float]) -> bool:
         if self == Relation.PARENT_CHILD:
-            return (coefficients[0] == self.coefficients[0]) and np.allclose(
+            return np.allclose(
+                coefficients[0],
+                self.coefficients[0],
+                atol=0.025,
+            ) and np.allclose(
                 coefficients[1:],
                 self.coefficients[1:],
                 atol=DEFAULT_RELATEDNESS_TOLERANCE,

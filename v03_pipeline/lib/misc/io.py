@@ -9,14 +9,14 @@ from string import Template
 import hail as hl
 import hailtop.fs as hfs
 
+from v03_pipeline.lib.core import DatasetType, Env, ReferenceGenome, Sex
 from v03_pipeline.lib.misc.gcnv import parse_gcnv_genes
 from v03_pipeline.lib.misc.nested_field import parse_nested_field
 from v03_pipeline.lib.misc.validation import SeqrValidationError
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, Sex
 
 BIALLELIC = 2
 B_PER_MB = 1 << 20  # 1024 * 1024
-MB_PER_PARTITION = 128
+MB_PER_PARTITION = 32
 MAX_SAMPLES_SPLIT_MULTI_SHUFFLE = 100
 
 
@@ -76,11 +76,12 @@ def compute_hail_n_partitions(file_size_b: int) -> int:
 @validated_hl_function(
     {
         'RVD error! Keys found out of order': 'Your callset failed while attempting to split multiallelic sites.  This error can occur if the dataset contains both multiallelic variants and duplicated loci.',
+        'array index out of bounds': 'Your callset failed while attempting to split multiallelic sites.  This error can occur if the provided Allele Depth (AD) field does not match the length of the multiallelic site.',
     },
 )
 def split_multi_hts(
     mt: hl.MatrixTable,
-    skip_validation: bool,
+    skip_validate_no_duplicate_variants: bool,
     max_samples_split_multi_shuffle=MAX_SAMPLES_SPLIT_MULTI_SHUFFLE,
 ) -> hl.MatrixTable:
     bi = mt.filter_rows(hl.len(mt.alleles) == BIALLELIC)
@@ -97,7 +98,7 @@ def split_multi_hts(
     mt = split.union_rows(bi)
     # If we've disabled validation (which is expected to throw an exception
     # for duplicate variants, we would like to distinc )
-    if skip_validation:
+    if skip_validate_no_duplicate_variants:
         return mt.distinct_by_row()
     return mt
 
@@ -147,6 +148,7 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
         '.*(?:InvalidHeader|VCFParseError): (.*)$': Template(
             'VCF failed file format validation: $match',
         ),
+        '.*IOException: Gzip-compressed data is corrupt.*': 'Gzip-compressed data is corrupt.',
     },
 )
 def import_vcf(

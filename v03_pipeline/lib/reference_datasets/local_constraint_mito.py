@@ -2,7 +2,7 @@ import os
 
 import hail as hl
 
-from v03_pipeline.lib.model import ReferenceGenome
+from v03_pipeline.lib.core import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.misc import download_zip_file
 
 EXTRACTED_FILE_NAME = 'supplementary_dataset_7.tsv'

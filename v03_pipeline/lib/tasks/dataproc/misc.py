@@ -2,13 +2,18 @@ import re
 
 import luigi
 
-from v03_pipeline.lib.model import ReferenceGenome
+from v03_pipeline.lib.core import Env, ReferenceGenome
+from v03_pipeline.lib.core.constants import (
+    MIGRATION_RUN_ID,
+)
 
 CLUSTER_NAME_PREFIX = 'pipeline-runner'
 
 
 def get_cluster_name(reference_genome: ReferenceGenome, run_id: str):
-    return f'{CLUSTER_NAME_PREFIX}-{reference_genome.value.lower()}-{run_id}'
+    if MIGRATION_RUN_ID in run_id:
+        return f'{Env.DEPLOYMENT_TYPE}-{CLUSTER_NAME_PREFIX}-{reference_genome.value.lower()}-hs-to-clckhse-mgrtn'
+    return f'{Env.DEPLOYMENT_TYPE}-{CLUSTER_NAME_PREFIX}-{reference_genome.value.lower()}-{run_id}'
 
 
 def snake_to_kebab_arg(snake_string: str) -> str:

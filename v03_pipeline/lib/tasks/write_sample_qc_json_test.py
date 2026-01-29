@@ -1,14 +1,20 @@
 import json
+import os
+import shutil
 from unittest.mock import Mock, patch
 
 import hail as hl
 import hailtop.fs as hfs
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.misc.validation import ALL_VALIDATIONS
+from v03_pipeline.lib.paths import ancestry_model_rf_path
 from v03_pipeline.lib.tasks.write_sample_qc_json import WriteSampleQCJsonTask
 from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
-from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
+from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
+    MockedReferenceDatasetsTestCase,
+)
 
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_TDR_METRICS_FILE = 'v03_pipeline/var/test/tdr_metrics.tsv'
@@ -31,39 +37,42 @@ TEST_ANCESTRY_IMPUTATION_MODEL_PATH = (
 )
 
 
-class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
-    @patch(
-        'v03_pipeline.lib.methods.sample_qc.ANCESTRY_RF_MODEL_PATH',
-        TEST_ANCESTRY_IMPUTATION_MODEL_PATH,
-    )
+class WriteSampleQCJsonTaskTest(MockedReferenceDatasetsTestCase):
     @patch('v03_pipeline.lib.methods.sample_qc.assign_population_pcs')
-    @patch('v03_pipeline.lib.methods.sample_qc._get_pop_pca_scores')
+    @patch('v03_pipeline.lib.methods.sample_qc.pc_project')
     @patch('v03_pipeline.lib.tasks.write_sample_qc_json.WriteTDRMetricsFilesTask')
     @patch('v03_pipeline.lib.tasks.write_sample_qc_json.hfs.ls')
     def test_call_sample_qc(
         self,
         mock_ls_tdr_dir: Mock,
         mock_tdr_task: Mock,
-        mock_get_pop_pca_scores: Mock,
+        mock_pc_project: Mock,
         mock_assign_population_pcs: Mock,
     ) -> None:
+        os.makedirs(
+            os.path.dirname(ancestry_model_rf_path()),
+            exist_ok=True,
+        )
+        shutil.copy2(TEST_ANCESTRY_IMPUTATION_MODEL_PATH, ancestry_model_rf_path())
         mock_tdr_task.return_value = MockCompleteTask()
         mock_tdr_table = Mock()
         mock_tdr_table.path = TEST_TDR_METRICS_FILE
+        # Note, hfs.ls is getting mocked in every module not just write_sample_qc_json?
+        # It seems as though hfs is import-cached somehow, which leads to a single
+        # object being used globally.
+        mock_tdr_table.size = 10
         mock_ls_tdr_dir.return_value = [mock_tdr_table]
-        mock_get_pop_pca_scores.return_value = hl.Table.parallelize(
+        mock_pc_project.return_value = hl.Table.parallelize(
             [
                 {
                     's': sample_id,
                     'scores': PCA_SCORES,
-                    'known_pop': 'Unknown',
                 }
                 for sample_id in ('HG00731', 'HG00732', 'HG00733', 'NA19675')
             ],
             hl.tstruct(
                 s=hl.tstr,
                 scores=hl.tarray(hl.tfloat64),
-                known_pop=hl.tstr,
             ),
             key='s',
         )
@@ -105,7 +114,7 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guids=['R0113_test_project'],
-            skip_validation=True,
+            validations_to_skip=[ALL_VALIDATIONS],
         )
         worker.add(task)
         worker.run()

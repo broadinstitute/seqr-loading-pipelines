@@ -15,8 +15,8 @@ from v03_pipeline.lib.annotations.enums import (
     SV_TYPES,
     TRANSCRIPT_CONSEQUENCE_TERMS,
 )
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome
 from v03_pipeline.lib.misc.nested_field import parse_nested_field
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 
 
@@ -85,6 +85,16 @@ def export_parquet_filterable_transcripts_fields(
         }
     # Parquet export expects all fields sorted alphabetically
     return OrderedDict(sorted(fields.items()))
+
+
+def drop_unexported_fields(ht: hl.Table) -> hl.Table:
+    if hasattr(ht, 'clinvar'):
+        ht = ht.drop('clinvar')
+        if hasattr(ht.globals.enums, 'clinvar'):
+            ht = ht.annotate_globals(
+                enums=ht.globals.enums.drop('clinvar'),
+            )
+    return ht
 
 
 def subset_sorted_transcript_consequences_fields(
@@ -191,26 +201,6 @@ def unmap_reference_dataset_annotation_enums(
                     **{annotation_name: ht[annotation_name].drop(f'{enum_name}_id')},
                 )
         unmapped_annotation_name.append(annotation_name)
-
-    # Explicit clinvar edge case:
-    if hasattr(ht, ReferenceDataset.clinvar.value):
-        ht = ht.annotate(
-            **{
-                ReferenceDataset.clinvar.value: ht[
-                    ReferenceDataset.clinvar.value
-                ].annotate(
-                    conflictingPathogenicities=ht[
-                        ReferenceDataset.clinvar.value
-                    ].conflictingPathogenicities.map(
-                        lambda s: s.annotate(
-                            pathogenicity=ht.enums.clinvar.pathogenicity[
-                                s.pathogenicity_id
-                            ],
-                        ).drop('pathogenicity_id'),
-                    ),
-                ),
-            },
-        )
 
     # Explicit hgmd edge case:
     if hasattr(

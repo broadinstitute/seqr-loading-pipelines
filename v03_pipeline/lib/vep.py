@@ -2,7 +2,7 @@ from string import Template
 
 import hail as hl
 
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.core import DatasetType, Env, ReferenceGenome
 
 VEP_CONFIG_URI = Template(
     'file://$vep_reference_datasets_dir/$reference_genome/vep-$reference_genome.json',

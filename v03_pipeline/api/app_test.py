@@ -1,11 +1,13 @@
+from pathlib import Path
+
 from aiohttp import web_exceptions
 from aiohttp.test_utils import AioHTTPTestCase
 
 from v03_pipeline.api.app import init_web_app
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
-CALLSET_PATH = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
+CALLSET_PATH = str(Path('v03_pipeline/var/test/callsets/1kg_30variants.vcf').resolve())
 
 
 class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
@@ -46,7 +48,7 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
 
         body = {
             'callset_path': 'missing.vcf',
-            'projects_to_run': ['project_a'],
+            'project_guids': ['project_a'],
             'sample_type': SampleType.WGS.value,
             'reference_genome': ReferenceGenome.GRCh38.value,
             'dataset_type': DatasetType.SNV_INDEL.value,
@@ -65,10 +67,32 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
                     'callset_path must point to a file that exists' in log.output[0],
                 )
 
+        body = {
+            'callset_path': CALLSET_PATH,
+            'project_guids': ['project_a'],
+            'sample_type': SampleType.WGS.value,
+            'reference_genome': ReferenceGenome.GRCh38.value,
+            'dataset_type': DatasetType.SNV_INDEL.value,
+            'validations_to_skip': ['bad_validation'],
+        }
+        with self.assertLogs(level='ERROR') as log:
+            async with self.client.request(
+                'POST',
+                '/loading_pipeline_enqueue',
+                json=body,
+            ) as resp:
+                self.assertEqual(
+                    resp.status,
+                    web_exceptions.HTTPBadRequest.status_code,
+                )
+                self.assertTrue(
+                    "input_value='bad_validation" in log.output[0],
+                )
+
     async def test_loading_pipeline_enqueue(self):
         body = {
             'callset_path': CALLSET_PATH,
-            'projects_to_run': ['project_a'],
+            'project_guids': ['project_a'],
             'sample_type': SampleType.WGS.value,
             'reference_genome': ReferenceGenome.GRCh38.value,
             'dataset_type': DatasetType.SNV_INDEL.value,
@@ -87,18 +111,22 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
             resp_json,
             {
                 'Successfully queued': {
-                    'callset_path': 'v03_pipeline/var/test/callsets/1kg_30variants.vcf',
+                    'request_type': 'LoadingPipelineRequest',
+                    'callset_path': CALLSET_PATH,
                     'dataset_type': 'SNV_INDEL',
-                    'projects_to_run': ['project_a'],
+                    'project_guids': ['project_a'],
                     'reference_genome': 'GRCh38',
                     'sample_type': 'WGS',
-                    'skip_validation': False,
+                    'skip_check_sex_and_relatedness': False,
+                    'skip_expect_tdr_metrics': False,
+                    'attempt_id': 0,
+                    'validations_to_skip': [],
                 },
             },
         )
 
         # Second request
-        body['projects_to_run'] = ['project_b', 'project_c']
+        body['project_guids'] = ['project_b', 'project_c']
         async with self.client.request(
             'POST',
             '/loading_pipeline_enqueue',
@@ -106,5 +134,5 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
         ) as resp:
             self.assertEqual(
                 resp.status,
-                web_exceptions.HTTPConflict.status_code,
+                web_exceptions.HTTPAccepted.status_code,
             )

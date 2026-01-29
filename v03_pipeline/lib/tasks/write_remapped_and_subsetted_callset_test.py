@@ -5,15 +5,20 @@ from unittest.mock import Mock, patch
 import hail as hl
 import luigi.worker
 
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.misc.io import remap_pedigree_hash
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
-from v03_pipeline.lib.paths import relatedness_check_table_path, sex_check_table_path
+from v03_pipeline.lib.misc.validation import ALL_VALIDATIONS
+from v03_pipeline.lib.paths import (
+    relatedness_check_table_path,
+    sex_check_table_path,
+)
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
 from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
     WriteValidationErrorsForRunTask,
 )
+from v03_pipeline.lib.test.misc import copy_project_pedigree_to_mocked_dir
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
@@ -81,6 +86,13 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
     def test_write_remapped_and_subsetted_callset_task(
         self,
     ) -> None:
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_3_REMAP,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            SampleType.WGS,
+            'R0113_test_project',
+        )
         worker = luigi.worker.Worker()
         wrsc_task = WriteRemappedAndSubsettedCallsetTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -89,9 +101,8 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=[TEST_PEDIGREE_3_REMAP],
             project_i=0,
-            skip_validation=True,
+            validations_to_skip=[ALL_VALIDATIONS],
             skip_expect_tdr_metrics=True,
         )
         worker.add(wrsc_task)
@@ -124,6 +135,13 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
         self,
         mock_ff: Mock,
     ) -> None:
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_4_REMAP,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            SampleType.WGS,
+            'R0114_project4',
+        )
         mock_ff.CHECK_SEX_AND_RELATEDNESS = True
         worker = luigi.worker.Worker()
         wrsc_task = WriteRemappedAndSubsettedCallsetTask(
@@ -133,9 +151,8 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guids=['R0114_project4'],
-            project_pedigree_paths=[TEST_PEDIGREE_4_REMAP],
             project_i=0,
-            skip_validation=True,
+            validations_to_skip=[ALL_VALIDATIONS],
             skip_expect_tdr_metrics=True,
         )
         worker.add(wrsc_task)
@@ -211,6 +228,13 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
         self,
         mock_ff: Mock,
     ) -> None:
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_7,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            SampleType.WGS,
+            'R0114_project4',
+        )
         mock_ff.CHECK_SEX_AND_RELATEDNESS = True
         worker = luigi.worker.Worker()
         wrsc_task = WriteRemappedAndSubsettedCallsetTask(
@@ -220,9 +244,8 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guids=['R0114_project4'],
-            project_pedigree_paths=[TEST_PEDIGREE_7],
             project_i=0,
-            skip_validation=True,
+            validations_to_skip=[ALL_VALIDATIONS],
             skip_expect_tdr_metrics=True,
         )
         worker.add(wrsc_task)
@@ -234,7 +257,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WES,
             callset_path=TEST_VCF,
             project_guids=['R0114_project4'],
-            skip_validation=True,
+            validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
         self.assertTrue(write_validation_errors_task.complete())

@@ -2,7 +2,7 @@ from unittest import mock
 
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.write_success_file import WriteSuccessFileTask
 from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
@@ -24,8 +24,8 @@ class WriteSuccessFileTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path='test_callset',
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=['test_pedigree'],
             run_id='manual__2024-04-03',
+            attempt_id=0,
         )
         worker.add(write_success_file)
         worker.run()

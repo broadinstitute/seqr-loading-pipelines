@@ -5,11 +5,12 @@ import hail as hl
 import luigi.worker
 import pandas as pd
 
-from v03_pipeline.lib.model import (
+from v03_pipeline.lib.core import (
     DatasetType,
     ReferenceGenome,
     SampleType,
 )
+from v03_pipeline.lib.misc.validation import ALL_VALIDATIONS
 from v03_pipeline.lib.paths import (
     new_variants_parquet_path,
     new_variants_table_path,
@@ -107,8 +108,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             project_guids=[
                 'fake_project',
             ],
-            project_pedigree_paths=['fake_pedigree'],
-            skip_validation=True,
+            validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
         worker.add(task)
@@ -131,12 +131,12 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             [
                 {
                     'key': 0,
-                    'xpos': 1000939121,
+                    'xpos': 1000876499,
                     'chrom': '1',
-                    'pos': 939121,
-                    'ref': 'C',
-                    'alt': 'T',
-                    'variantId': '1-939121-C-T',
+                    'pos': 876499,
+                    'ref': 'A',
+                    'alt': 'G',
+                    'variantId': '1-876499-A-G',
                     'rsid': None,
                     'CAID': 'CA502654',
                     'liftedOverChrom': '1',
@@ -181,7 +181,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                             'ac': 42,
                             'af': 0.0002759889466688037,
                             'an': 152180,
-                            'filter_af': 0.0005293028079904616,
+                            'filter_af': 0.10000000149011612,
                             'hemi': 0,
                             'hom': 0,
                         },
@@ -232,8 +232,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             project_guids=[
                 'fake_project',
             ],
-            project_pedigree_paths=['fake_pedigree'],
-            skip_validation=True,
+            validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
         worker.add(task)
@@ -344,8 +343,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             project_guids=[
                 'fake_project',
             ],
-            project_pedigree_paths=['fake_pedigree'],
-            skip_validation=True,
+            validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
         worker.add(task)
@@ -368,11 +366,11 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             [
                 {
                     'key': 998,
-                    'xpos': 25000000578,
-                    'pos': 578,
-                    'ref': 'T',
-                    'alt': 'C',
-                    'variantId': 'M-578-T-C',
+                    'xpos': 25000000008,
+                    'pos': 8,
+                    'ref': 'G',
+                    'alt': 'T',
+                    'variantId': 'M-8-G-T',
                     'rsid': 'rs1603218446',
                     'liftedOverPos': 578,
                     'commonLowHeteroplasmy': True,
@@ -439,8 +437,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             project_guids=[
                 'fake_project',
             ],
-            project_pedigree_paths=['fake_pedigree'],
-            skip_validation=True,
+            validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
         worker.add(task)
@@ -468,7 +465,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                     'pos': 1025886,
                     'end': 1028192,
                     'rg37LocusEnd': {'contig': '1', 'position': 963572},
-                    'variantId': 'all_sample_sets.chr1.final_cleanup_CPX_chr1_1',
+                    'variantId': 'BND_chr1_6',
                     'liftedOverChrom': '1',
                     'liftedOverPos': 961266,
                     'algorithms': 'manta',
@@ -517,8 +514,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             project_guids=[
                 'fake_project',
             ],
-            project_pedigree_paths=['fake_pedigree'],
-            skip_validation=True,
+            validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
         worker.add(task)
@@ -543,14 +539,14 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                     'pos': 939203,
                     'end': 939558,
                     'rg37LocusEnd': {'contig': '1', 'position': 874938},
-                    'variantId': 'R4_variant_0_DUP',
+                    'variantId': 'suffix_16456_DEL',
                     'liftedOverChrom': '1',
                     'liftedOverPos': 874583,
                     'numExon': 1,
                     'svType': 'DUP',
                     'predictions': {'strvctvre': 0.4490000009536743},
                     'populations': {
-                        'seqrPop': {
+                        'sv_callset': {
                             'ac': 1,
                             'af': 4.3387713958509266e-05,
                             'an': 23048,

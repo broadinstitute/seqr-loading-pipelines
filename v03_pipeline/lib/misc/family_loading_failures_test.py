@@ -2,6 +2,7 @@ import unittest
 
 import hail as hl
 
+from v03_pipeline.lib.core import Sex
 from v03_pipeline.lib.misc.family_loading_failures import (
     all_relatedness_checks,
     build_relatedness_check_lookup,
@@ -11,7 +12,6 @@ from v03_pipeline.lib.misc.family_loading_failures import (
 )
 from v03_pipeline.lib.misc.io import import_pedigree
 from v03_pipeline.lib.misc.pedigree import Family, Sample, parse_pedigree_ht_to_families
-from v03_pipeline.lib.model import Sex
 
 TEST_SEX_CHECK_1 = 'v03_pipeline/var/test/sex_check/test_sex_check_1.ht'
 TEST_PEDIGREE_6 = 'v03_pipeline/var/test/pedigrees/test_pedigree_6.tsv'
@@ -227,7 +227,6 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
                 {'s': 'ROS_006_18Y03226_D1', 'predicted_sex': 'F'},
                 {'s': 'ROS_006_18Y03227_D1', 'predicted_sex': 'F'},  # Pedigree Sex U
                 {'s': 'ROS_006_18Y03228_D1', 'predicted_sex': 'F'},
-                {'s': 'ROS_007_19Y05919_D1', 'predicted_sex': 'F'},
                 {'s': 'ROS_007_19Y05939_D1', 'predicted_sex': 'M'},
                 {'s': 'ROS_007_19Y05987_D1', 'predicted_sex': 'U'},  # Pedigree Sex F
                 {'s': 'ROS_007_19Y05989_D1', 'predicted_sex': 'XXX'},
@@ -248,6 +247,7 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             failed_families.values(),
             [
                 [
+                    'Sample ROS_007_19Y05919_D1 has pedigree sex F but is missing from the sex check source',
                     'Sample ROS_007_19Y05939_D1 has pedigree sex F but imputed sex M',
                 ],
             ],

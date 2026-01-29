@@ -3,18 +3,20 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.misc.callsets import get_callset_ht, get_callset_mt
+from v03_pipeline.lib.misc.callsets import get_callset_ht
 from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.paths import (
-    lookup_table_path,
     new_variants_table_path,
+    project_pedigree_path,
+    variant_annotations_table_path,
 )
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )
-from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
-    BaseUpdateVariantAnnotationsTableTask,
+from v03_pipeline.lib.tasks.base.base_update import (
+    BaseUpdateTask,
 )
+from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.update_new_variants_with_caids import (
     UpdateNewVariantsWithCAIDsTask,
 )
@@ -23,8 +25,16 @@ from v03_pipeline.lib.tasks.write_new_variants_table import WriteNewVariantsTabl
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class UpdateVariantAnnotationsTableWithNewSamplesTask(
-    BaseUpdateVariantAnnotationsTableTask,
+    BaseUpdateTask,
 ):
+    def output(self) -> luigi.Target:
+        return GCSorLocalTarget(
+            variant_annotations_table_path(
+                self.reference_genome,
+                self.dataset_type,
+            ),
+        )
+
     def requires(self) -> list[luigi.Task]:
         return [
             *super().requires(),
@@ -43,14 +53,40 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
                                 callset=self.callset_path,
                                 project_guid=project_guid,
                                 remap_pedigree_hash=remap_pedigree_hash(
-                                    self.project_pedigree_paths[i],
+                                    project_pedigree_path(
+                                        self.reference_genome,
+                                        self.dataset_type,
+                                        self.sample_type,
+                                        project_guid,
+                                    ),
                                 ),
                             ),
                         )
-                        for i, project_guid in enumerate(self.project_guids)
+                        for project_guid in self.project_guids
                     ],
                 ),
                 hl.read_table(self.output().path).updates,
+            ),
+        )
+
+    def initialize_table(self) -> hl.Table:
+        key_type = self.dataset_type.table_key_type(self.reference_genome)
+        return hl.Table.parallelize(
+            [],
+            key_type,
+            key=key_type.fields,
+            globals=hl.Struct(
+                versions=hl.Struct(),
+                enums=hl.Struct(),
+                updates=hl.empty_set(
+                    hl.tstruct(
+                        callset=hl.tstr,
+                        project_guid=hl.tstr,
+                        remap_pedigree_hash=hl.tint32,
+                    ),
+                ),
+                migrations=hl.empty_array(hl.tstr),
+                max_key_=hl.int64(-1),
             ),
         )
 
@@ -71,52 +107,30 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
 
         # Union with the new variants table and annotate with the lookup table.
         ht = ht.union(new_variants_ht, unify=True)
-        callset_ht = get_callset_ht(
-            self.reference_genome,
-            self.dataset_type,
-            self.callset_path,
-            self.project_guids,
-        )
-        lookup_ht = None
-        if self.dataset_type.has_lookup_table:
-            lookup_ht = hl.read_table(
-                lookup_table_path(
-                    self.reference_genome,
-                    self.dataset_type,
-                ),
-            )
-            # Variants may have fallen out of the callset and
-            # have been removed from the lookup table during modification.
-            # Ensure we don't proceed with those variants.
-            ht = ht.semi_join(lookup_ht)
-        elif self.dataset_type.gt_stats_from_hl_call_stats:
-            callset_mt = get_callset_mt(
+
+        if self.dataset_type.variant_frequency_annotation_fns:
+            # new_variants_ht consists of variants present in the new callset, fully annotated,
+            # but NOT present in the existing annotations table.
+            # callset_variants_ht consists of variants present in the new callset, fully annotated,
+            # and either present or not present in the existing annotations table.
+            callset_ht = get_callset_ht(
                 self.reference_genome,
                 self.dataset_type,
                 self.callset_path,
                 self.project_guids,
             )
-            callset_mt = callset_mt.annotate_rows(
-                gt_stats=hl.agg.call_stats(callset_mt.GT, callset_mt.alleles),
+            callset_variants_ht = ht.semi_join(callset_ht)
+            non_callset_variants_ht = ht.anti_join(callset_ht)
+            callset_variants_ht = callset_variants_ht.annotate(
+                **get_fields(
+                    callset_variants_ht,
+                    self.dataset_type.variant_frequency_annotation_fns,
+                    callset_ht=callset_ht,
+                    **self.param_kwargs,
+                ),
             )
-            callset_ht = callset_mt.rows()
+            ht = non_callset_variants_ht.union(callset_variants_ht, unify=True)
 
-        # new_variants_ht consists of variants present in the new callset, fully annotated,
-        # but NOT present in the existing annotations table.
-        # callset_variants_ht consists of variants present in the new callset, fully annotated,
-        # and either present or not present in the existing annotations table.
-        callset_variants_ht = ht.semi_join(callset_ht)
-        non_callset_variants_ht = ht.anti_join(callset_ht)
-        callset_variants_ht = callset_variants_ht.annotate(
-            **get_fields(
-                callset_variants_ht,
-                self.dataset_type.variant_frequency_annotation_fns,
-                lookup_ht=lookup_ht,
-                callset_ht=callset_ht,
-                **self.param_kwargs,
-            ),
-        )
-        ht = non_callset_variants_ht.union(callset_variants_ht, unify=True)
         new_variants_ht_globals = new_variants_ht.index_globals()
         return ht.select_globals(
             versions=new_variants_ht_globals.versions,

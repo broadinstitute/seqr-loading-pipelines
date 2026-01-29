@@ -5,7 +5,7 @@ import google.cloud.bigquery
 import hail as hl
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.paths import sex_check_table_path, tdr_metrics_path
 from v03_pipeline.lib.tasks.write_sex_check_table import (
     WriteSexCheckTableTask,
@@ -123,7 +123,6 @@ class WriteSexCheckTableTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path='na',
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=['test_pedigree'],
             run_id='manual__2024-04-03',
         )
         worker.add(write_sex_check_table)

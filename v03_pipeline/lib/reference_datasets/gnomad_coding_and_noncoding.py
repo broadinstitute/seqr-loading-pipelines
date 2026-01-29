@@ -7,7 +7,7 @@ from v03_pipeline.lib.annotations.expression_helpers import (
     get_expr_for_vep_sorted_transcript_consequences_array,
     get_expr_for_worst_transcript_consequence_annotations_struct,
 )
-from v03_pipeline.lib.model import ReferenceGenome
+from v03_pipeline.lib.core import ReferenceGenome
 
 GNOMAD_CODING_NONCODING_HIGH_AF_THRESHOLD = 0.90
 TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP = hl.dict(

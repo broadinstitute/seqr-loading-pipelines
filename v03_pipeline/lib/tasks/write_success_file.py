@@ -1,13 +1,13 @@
 import luigi
 import luigi.util
 
-from v03_pipeline.lib.model.feature_flag import FeatureFlag
+from v03_pipeline.lib.core.feature_flag import FeatureFlag
 from v03_pipeline.lib.paths import pipeline_run_success_file_path
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )
-from v03_pipeline.lib.tasks.dataproc.rsync_to_seqr_app_dirs import (
-    RsyncToSeqrAppDirsTask,
+from v03_pipeline.lib.tasks.dataproc.run_pipeline_on_dataproc import (
+    RunPipelineOnDataprocTask,
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.run_pipeline import RunPipelineTask
@@ -15,6 +15,8 @@ from v03_pipeline.lib.tasks.run_pipeline import RunPipelineTask
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class WriteSuccessFileTask(luigi.Task):
+    attempt_id = luigi.IntParameter()
+
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             pipeline_run_success_file_path(
@@ -26,9 +28,9 @@ class WriteSuccessFileTask(luigi.Task):
 
     def requires(self) -> luigi.Task:
         return (
-            self.clone(RsyncToSeqrAppDirsTask)
+            self.clone(RunPipelineOnDataprocTask, attempt_id=self.attempt_id)
             if FeatureFlag.RUN_PIPELINE_ON_DATAPROC
-            else self.clone(RunPipelineTask)
+            else self.clone(RunPipelineTask, attempt_id=self.attempt_id)
         )
 
     def run(self):

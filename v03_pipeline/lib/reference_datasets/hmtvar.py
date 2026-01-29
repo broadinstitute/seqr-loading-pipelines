@@ -1,8 +1,8 @@
 import hail as hl
 import requests
 
-from v03_pipeline.lib.model.dataset_type import DatasetType
-from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.core.dataset_type import DatasetType
+from v03_pipeline.lib.core.definitions import ReferenceGenome
 
 
 def get_ht(

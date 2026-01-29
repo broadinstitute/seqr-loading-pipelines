@@ -5,15 +5,12 @@ import luigi.util
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.family_entries import (
     compute_callset_family_entries_ht,
+    deduplicate_by_most_non_ref_calls,
     deglobalize_ids,
 )
 from v03_pipeline.lib.paths import (
     new_entries_parquet_path,
     variant_annotations_table_path,
-)
-from v03_pipeline.lib.reference_datasets.reference_dataset import (
-    BaseReferenceDataset,
-    ReferenceDatasetQuery,
 )
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
@@ -21,9 +18,6 @@ from v03_pipeline.lib.tasks.base.base_loading_run_params import (
 from v03_pipeline.lib.tasks.base.base_write_parquet import BaseWriteParquetTask
 from v03_pipeline.lib.tasks.exports.fields import get_entries_export_fields
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
-from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_query import (
-    UpdatedReferenceDatasetQueryTask,
-)
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
@@ -32,7 +26,6 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 )
 
 ANNOTATIONS_TABLE_TASK = 'annotations_table_task'
-HIGH_AF_VARIANTS_TABLE_TASK = 'high_af_variants_table_task'
 REMAPPED_AND_SUBSETTED_CALLSET_TASKS = 'remapped_and_subsetted_callset_tasks'
 
 
@@ -59,20 +52,6 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
                 )
                 for i in range(len(self.project_guids))
             ],
-            **(
-                {
-                    HIGH_AF_VARIANTS_TABLE_TASK: self.clone(
-                        UpdatedReferenceDatasetQueryTask,
-                        reference_dataset_query=ReferenceDatasetQuery.high_af_variants,
-                    ),
-                }
-                if ReferenceDatasetQuery.high_af_variants
-                in BaseReferenceDataset.for_reference_genome_dataset_type(
-                    self.reference_genome,
-                    self.dataset_type,
-                )
-                else {}
-            ),
         }
 
     def create_table(self) -> None:
@@ -93,6 +72,7 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
                 ),
             )
             ht = deglobalize_ids(ht)
+            ht = deduplicate_by_most_non_ref_calls(ht)
             annotations_ht = hl.read_table(
                 variant_annotations_table_path(
                     self.reference_genome,
@@ -100,12 +80,6 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
                 ),
             )
             ht = ht.join(annotations_ht)
-
-            if self.input().get(HIGH_AF_VARIANTS_TABLE_TASK):
-                gnomad_high_af_ht = hl.read_table(
-                    self.input()[HIGH_AF_VARIANTS_TABLE_TASK].path,
-                )
-                ht = ht.join(gnomad_high_af_ht, 'left')
 
             # the family entries ht will contain rows
             # where at least one family is defined... after explosion,

@@ -5,19 +5,21 @@ from enum import StrEnum
 from typing import Union
 
 import hail as hl
+import pyspark.sql.dataframe
 
 from v03_pipeline.lib.annotations import snv_indel, sv
-from v03_pipeline.lib.misc.validation import (
-    validate_allele_type,
-    validate_no_duplicate_variants,
-)
-from v03_pipeline.lib.model import (
+from v03_pipeline.lib.annotations.expression_helpers import get_expr_for_variant_id
+from v03_pipeline.lib.core import (
     AccessControl,
     DatasetType,
     FeatureFlag,
     ReferenceGenome,
 )
-from v03_pipeline.lib.reference_datasets import clinvar, dbnsfp
+from v03_pipeline.lib.misc.validation import (
+    validate_allele_type,
+    validate_no_duplicate_variants,
+)
+from v03_pipeline.lib.reference_datasets import dbnsfp
 from v03_pipeline.lib.reference_datasets.misc import (
     compress_floats,
     filter_contigs,
@@ -34,15 +36,36 @@ FILTER = 'filter'
 SELECT = 'select'
 VERSION = 'version'
 PATH = 'path'
+SPARK_DATAFRAME_PATH = 'spark_dataframe_path'
 
 
-class BaseReferenceDataset:
+class ReferenceDataset(StrEnum):
+    dbnsfp = 'dbnsfp'
+    exac = 'exac'
+    eigen = 'eigen'
+    helix_mito = 'helix_mito'
+    hgmd = 'hgmd'
+    hmtvar = 'hmtvar'
+    mitimpact = 'mitimpact'
+    splice_ai = 'splice_ai'
+    topmed = 'topmed'
+    gnomad_coding_and_noncoding = 'gnomad_coding_and_noncoding'
+    gnomad_exomes = 'gnomad_exomes'
+    gnomad_genomes = 'gnomad_genomes'
+    gnomad_mito = 'gnomad_mito'
+    gnomad_non_coding_constraint = 'gnomad_non_coding_constraint'
+    gnomad_qc = 'gnomad_qc'
+    gnomad_svs = 'gnomad_svs'
+    screen = 'screen'
+    local_constraint_mito = 'local_constraint_mito'
+    mitomap = 'mitomap'
+
     @classmethod
     def for_reference_genome_dataset_type(
         cls,
         reference_genome: ReferenceGenome,
         dataset_type: DatasetType,
-    ) -> set[Union['ReferenceDataset', 'ReferenceDatasetQuery']]:
+    ) -> set[Union['ReferenceDataset']]:
         reference_datasets = [
             dataset
             for dataset, config in CONFIG.items()
@@ -139,6 +162,16 @@ class BaseReferenceDataset:
     def path(self, reference_genome: ReferenceGenome) -> str | list[str]:
         return CONFIG[self][reference_genome][PATH]
 
+    def path_for_spark_dataframe(
+        self,
+        reference_genome: ReferenceGenome,
+    ) -> str | list[str]:
+        return (
+            CONFIG[self][reference_genome][SPARK_DATAFRAME_PATH]
+            if SPARK_DATAFRAME_PATH in CONFIG[self][reference_genome]
+            else CONFIG[self][reference_genome][PATH]
+        )
+
     def get_ht(
         self,
         reference_genome: ReferenceGenome,
@@ -164,71 +197,24 @@ class BaseReferenceDataset:
             enums=self.enum_globals,
         )
 
-
-class ReferenceDataset(BaseReferenceDataset, StrEnum):
-    clinvar = 'clinvar'
-    dbnsfp = 'dbnsfp'
-    exac = 'exac'
-    eigen = 'eigen'
-    helix_mito = 'helix_mito'
-    hgmd = 'hgmd'
-    hmtvar = 'hmtvar'
-    mitimpact = 'mitimpact'
-    splice_ai = 'splice_ai'
-    topmed = 'topmed'
-    gnomad_coding_and_noncoding = 'gnomad_coding_and_noncoding'
-    gnomad_exomes = 'gnomad_exomes'
-    gnomad_genomes = 'gnomad_genomes'
-    gnomad_mito = 'gnomad_mito'
-    gnomad_non_coding_constraint = 'gnomad_non_coding_constraint'
-    gnomad_qc = 'gnomad_qc'
-    gnomad_svs = 'gnomad_svs'
-    screen = 'screen'
-    local_constraint_mito = 'local_constraint_mito'
-    mitomap = 'mitomap'
-
-
-class ReferenceDatasetQuery(BaseReferenceDataset, StrEnum):
-    clinvar_path_variants = 'clinvar_path_variants'
-    high_af_variants = 'high_af_variants'
-
-    @classmethod
-    def for_reference_genome_dataset_type(
-        cls,
-        reference_genome: ReferenceGenome,
-        dataset_type: DatasetType,
-    ) -> set['ReferenceDatasetQuery']:
-        return {
-            dataset
-            for dataset in super().for_reference_genome_dataset_type(
-                reference_genome,
-                dataset_type,
-            )
-            if isinstance(dataset, cls)
-        }
-
-    @property
-    def requires(self) -> ReferenceDataset:
-        return {
-            self.clinvar_path_variants: ReferenceDataset.clinvar,
-            self.high_af_variants: ReferenceDataset.gnomad_genomes,
-        }[self]
-
-    def get_ht(
+    def get_spark_dataframe(
         self,
         reference_genome: ReferenceGenome,
-        dataset_type: DatasetType,
-        reference_dataset_ht: hl.Table,
-    ) -> hl.Table:
+    ) -> pyspark.sql.dataframe.DataFrame:
         module = importlib.import_module(
             f'v03_pipeline.lib.reference_datasets.{self.name}',
         )
-        ht = module.get_ht(reference_dataset_ht)
-        if self.filter:
-            ht = self.filter(reference_genome, dataset_type, ht)
-        return ht.annotate_globals(
-            version=self.version(reference_genome),
+        path = self.path_for_spark_dataframe(reference_genome)
+        ht = module.get_ht(path, reference_genome)
+        for dataset_type in self.dataset_types(reference_genome):
+            validate_allele_type(ht, dataset_type)
+            validate_no_duplicate_variants(ht, reference_genome, dataset_type)
+        # Neither SVs nor interval reference datasets will flow
+        # through this code path, so this is safe to run without conditional logic.
+        ht = ht.annotate(
+            variant_id=get_expr_for_variant_id(ht),
         )
+        return ht.to_spark(flatten=False)
 
 
 CONFIG = {
@@ -242,11 +228,13 @@ CONFIG = {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
             PATH: 'https://dbnsfp.s3.amazonaws.com/dbNSFP4.7a.zip',
+            SPARK_DATAFRAME_PATH: 'gs://seqr-reference-data/clickhouse/GRCh37/dbnsfp/dbNSFP5.3a_grch37.gz',
         },
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
             VERSION: '1.0',
             PATH: 'https://dbnsfp.s3.amazonaws.com/dbNSFP4.7a.zip',
+            SPARK_DATAFRAME_PATH: 'gs://seqr-reference-data/clickhouse/GRCh38/dbnsfp/dbNSFP5.3a_grch38.gz',
         },
     },
     ReferenceDataset.eigen: {
@@ -261,20 +249,6 @@ CONFIG = {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.1',
             PATH: 'gs://seqr-reference-data/GRCh38/eigen/EIGEN_coding_noncoding.liftover_grch38.ht',
-        },
-    },
-    ReferenceDataset.clinvar: {
-        ENUMS: clinvar.ENUMS,
-        FILTER: filter_mito_contigs,
-        ReferenceGenome.GRCh37: {
-            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: clinvar.parse_clinvar_release_date,
-            PATH: 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
-        },
-        ReferenceGenome.GRCh38: {
-            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
-            VERSION: clinvar.parse_clinvar_release_date,
-            PATH: 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
         },
     },
     ReferenceDataset.exac: {
@@ -464,15 +438,7 @@ CONFIG = {
         },
     },
 }
-CONFIG[ReferenceDatasetQuery.clinvar_path_variants] = {
-    EXCLUDE_FROM_ANNOTATIONS: True,
-    **CONFIG[ReferenceDataset.clinvar],
-}
 CONFIG[ReferenceDataset.gnomad_coding_and_noncoding] = {
-    EXCLUDE_FROM_ANNOTATIONS: True,
-    **CONFIG[ReferenceDataset.gnomad_genomes],
-}
-CONFIG[ReferenceDatasetQuery.high_af_variants] = {
     EXCLUDE_FROM_ANNOTATIONS: True,
     **CONFIG[ReferenceDataset.gnomad_genomes],
 }

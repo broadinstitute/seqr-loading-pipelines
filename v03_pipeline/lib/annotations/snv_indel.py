@@ -13,7 +13,7 @@ from v03_pipeline.lib.annotations.vep import (
     transcript_consequences_sort,
     vep_110_transcript_consequences_select,
 )
-from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.core.definitions import ReferenceGenome
 
 MOTIF_CONSEQUENCE_TERMS_LOOKUP = hl.dict(
     hl.enumerate(MOTIF_CONSEQUENCE_TERMS, index_first=False),
@@ -48,26 +48,6 @@ def DP(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
         is_called & hl.is_defined(mt.AD),
         hl.int32(hl.min(hl.sum(mt.AD), 32000)),
         hl.missing(hl.tint32),
-    )
-
-
-def gt_stats(
-    ht: hl.Table,
-    lookup_ht: hl.Table,
-    **_: Any,
-) -> hl.Expression:
-    row = lookup_ht[ht.key]
-    ref_samples = hl.sum(hl.flatten(row.project_stats.ref_samples))
-    het_samples = hl.sum(hl.flatten(row.project_stats.het_samples))
-    hom_samples = hl.sum(hl.flatten(row.project_stats.hom_samples))
-    AC = ref_samples * N_ALT_REF + het_samples * N_ALT_HET + hom_samples * N_ALT_HOM
-    AN = 2 * (ref_samples + het_samples + hom_samples)
-    hom = hom_samples
-    return hl.Struct(
-        AC=AC,
-        AN=AN,
-        AF=hl.float32(AC / AN),
-        hom=hom,
     )
 
 

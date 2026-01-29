@@ -4,12 +4,15 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from v03_pipeline.lib.model import Env
+from v03_pipeline.lib.core import Env
 
 
 class MockedDatarootTestCase(unittest.TestCase):
     def setUp(self) -> None:
-        patcher = patch('v03_pipeline.lib.paths.Env')
+        patcher = patch(
+            'v03_pipeline.lib.paths.Env',
+            wraps=Env,
+        )  # wraps to ensure other attributes behave as they are.
         self.mock_env = patcher.start()
         self.addCleanup(patcher.stop)  # https://stackoverflow.com/a/37534051
         for field_name in Env.__dataclass_fields__:

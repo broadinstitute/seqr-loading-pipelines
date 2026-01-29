@@ -2,7 +2,7 @@ import os
 
 import hail as hl
 
-from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.core.definitions import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.misc import download_zip_file
 
 

@@ -1,14 +1,23 @@
-import json
-import os
 import traceback
 
 import aiofiles
 import aiofiles.os
 from aiohttp import web, web_exceptions
 
-from v03_pipeline.api.model import LoadingPipelineRequest
+from v03_pipeline.api.model import (
+    DeleteFamiliesRequest,
+    LoadingPipelineRequest,
+    PipelineRunnerRequest,
+    RebuildGtStatsRequest,
+    RefreshClickhouseReferenceDataRequest,
+)
+from v03_pipeline.lib.core.environment import Env
 from v03_pipeline.lib.logger import get_logger
-from v03_pipeline.lib.paths import loading_pipeline_queue_path
+from v03_pipeline.lib.misc.runs import is_queue_full, new_run_id
+from v03_pipeline.lib.paths import (
+    loading_pipeline_queue_dir,
+    loading_pipeline_queue_path,
+)
 
 logger = get_logger(__name__)
 
@@ -26,38 +35,62 @@ async def error_middleware(request, handler):
         raise web.HTTPInternalServerError(reason=error_reason) from e
 
 
-async def loading_pipeline_enqueue(request: web.Request) -> web.Response:
+async def _enqueue_request(
+    request: web.Request,
+    model_cls: type[PipelineRunnerRequest],
+) -> web.Response:
+    """Generic helper to enqueue a pipeline request of any type."""
     if not request.body_exists:
         raise web.HTTPUnprocessableEntity
 
+    if is_queue_full():
+        return web.json_response(
+            f'Pipeline queue is full. Please try again later. (limit={Env.LOADING_QUEUE_LIMIT})',
+            status=web_exceptions.HTTPConflict.status_code,
+        )
+
     try:
-        lpr = LoadingPipelineRequest.model_validate(await request.json())
+        model_instance = model_cls.model_validate(await request.json())
     except ValueError as e:
         raise web.HTTPBadRequest from e
 
-    try:
-        async with aiofiles.open(loading_pipeline_queue_path()) as f:
-            return web.json_response(
-                {
-                    'Failed to queue due to in process request': json.loads(
-                        await f.read(),
-                    ),
-                },
-                #
-                # The 409 (Conflict) status code indicates that the request
-                # could not be completed due to a conflict with the current
-                # state of the target resource.
-                #
-                status=web_exceptions.HTTPConflict.status_code,
-            )
-    except FileNotFoundError:
-        pass
+    queue_path = loading_pipeline_queue_path(new_run_id())
+    async with aiofiles.open(queue_path, 'w') as f:
+        await f.write(model_instance.model_dump_json())
 
-    async with aiofiles.open(loading_pipeline_queue_path(), 'w') as f:
-        await f.write(lpr.model_dump_json())
     return web.json_response(
-        {'Successfully queued': lpr.model_dump()},
+        {'Successfully queued': model_instance.model_dump()},
         status=web_exceptions.HTTPAccepted.status_code,
+    )
+
+
+async def loading_pipeline_enqueue(request: web.Request) -> web.Response:
+    return await _enqueue_request(
+        request,
+        LoadingPipelineRequest,
+    )
+
+
+async def delete_families_enqueue(request: web.Request) -> web.Response:
+    return await _enqueue_request(
+        request,
+        DeleteFamiliesRequest,
+    )
+
+
+async def rebuild_gt_stats_enqueue(request: web.Request) -> web.Response:
+    return await _enqueue_request(
+        request,
+        RebuildGtStatsRequest,
+    )
+
+
+async def refresh_clickhouse_reference_dataset_enqueue(
+    request: web.Request,
+) -> web.Response:
+    return await _enqueue_request(
+        request,
+        RefreshClickhouseReferenceDataRequest,
     )
 
 
@@ -67,7 +100,7 @@ async def status(_: web.Request) -> web.Response:
 
 async def init_web_app():
     await aiofiles.os.makedirs(
-        os.path.dirname(loading_pipeline_queue_path()),
+        loading_pipeline_queue_dir(),
         exist_ok=True,
     )
     app = web.Application(middlewares=[error_middleware])
@@ -75,6 +108,12 @@ async def init_web_app():
         [
             web.get('/status', status),
             web.post('/loading_pipeline_enqueue', loading_pipeline_enqueue),
+            web.post('/delete_families_enqueue', delete_families_enqueue),
+            web.post('/rebuild_gt_stats_enqueue', rebuild_gt_stats_enqueue),
+            web.post(
+                '/refresh_clickhouse_reference_dataset_enqueue',
+                refresh_clickhouse_reference_dataset_enqueue,
+            ),
         ],
     )
     return app

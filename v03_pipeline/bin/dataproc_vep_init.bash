@@ -17,6 +17,7 @@ export PROJECT="$(gcloud config get-value project)"
 export DEPLOYMENT_TYPE="$(/usr/share/google/get_metadata_value attributes/DEPLOYMENT_TYPE)"
 export REFERENCE_GENOME="$(/usr/share/google/get_metadata_value attributes/REFERENCE_GENOME)"
 export PIPELINE_RUNNER_APP_VERSION="$(/usr/share/google/get_metadata_value attributes/PIPELINE_RUNNER_APP_VERSION)"
+export REFERENCE_DATASETS_DIR="$(/usr/share/google/get_metadata_value attributes/REFERENCE_DATASETS_DIR)"
 
 # Install docker
 apt-get update

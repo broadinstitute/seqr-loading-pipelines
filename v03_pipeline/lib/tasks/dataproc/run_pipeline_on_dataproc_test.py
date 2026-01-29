@@ -6,7 +6,7 @@ import google.api_core.exceptions
 import google.cloud.dataproc_v1.types.jobs
 import luigi
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.dataproc.run_pipeline_on_dataproc import (
     RunPipelineOnDataprocTask,
 )
@@ -45,8 +45,8 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
             sample_type=SampleType.WGS,
             callset_path='test_callset',
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=['test_pedigree'],
             run_id='manual__2024-04-03',
+            attempt_id=0,
         )
         worker.add(task)
         worker.run()
@@ -54,7 +54,7 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
         mock_logger.error.assert_has_calls(
             [
                 call(
-                    'Job RunPipelineTask-manual__2024-04-03 entered ERROR state',
+                    'Job RunPipelineTask-38-manual__2024-04-03-0 entered ERROR state',
                 ),
             ],
         )
@@ -78,8 +78,8 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
             sample_type=SampleType.WGS,
             callset_path='test_callset',
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=['test_pedigree'],
             run_id='manual__2024-04-04',
+            attempt_id=0,
         )
         worker.add(task)
         worker.run()
@@ -94,14 +94,24 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
     ) -> None:
         mock_create_dataproc_cluster.return_value = MockCompleteTask()
         mock_client = mock_job_controller_client.return_value
-        mock_client.get_job.side_effect = google.api_core.exceptions.NotFound(
-            'job not found',
-        )
-        operation = mock_client.submit_job_as_operation.return_value
-        operation.done.side_effect = [False, True]
-        operation.result.side_effect = Exception(
-            'FailedPrecondition: 400 Job failed with message',
-        )
+        mock_client.get_job.side_effect = [
+            google.api_core.exceptions.NotFound(
+                'job not found',
+            ),
+            google.api_core.exceptions.NotFound(
+                'job not found',
+            ),
+            SimpleNamespace(
+                status=SimpleNamespace(
+                    state=google.cloud.dataproc_v1.types.jobs.JobStatus.State.PENDING,
+                ),
+            ),
+            SimpleNamespace(
+                status=SimpleNamespace(
+                    state=google.cloud.dataproc_v1.types.jobs.JobStatus.State.ERROR,
+                ),
+            ),
+        ]
         worker = luigi.worker.Worker()
         task = RunPipelineOnDataprocTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -109,22 +119,24 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
             sample_type=SampleType.WGS,
             callset_path='test_callset',
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=['test_pedigree'],
             run_id='manual__2024-04-05',
+            attempt_id=1,
         )
         worker.add(task)
-        worker.run()
-        self.assertFalse(task.complete())
+        luigi_task_result = worker.run()
+        self.assertEqual(luigi_task_result, False)
         mock_logger.info.assert_has_calls(
             [
                 call(
-                    'Waiting for job completion RunPipelineTask-manual__2024-04-05',
+                    'Waiting for Job completion RunPipelineTask-38-manual__2024-04-05-1',
                 ),
             ],
         )
 
+    @patch('v03_pipeline.lib.tasks.dataproc.base_run_job_on_dataproc.logger')
     def test_job_success(
         self,
+        mock_logger: Mock,
         mock_job_controller_client: Mock,
         mock_create_dataproc_cluster: Mock,
     ) -> None:
@@ -134,14 +146,20 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
             google.api_core.exceptions.NotFound(
                 'job not found',
             ),
+            google.api_core.exceptions.NotFound(
+                'job not found',
+            ),
+            SimpleNamespace(
+                status=SimpleNamespace(
+                    state=google.cloud.dataproc_v1.types.jobs.JobStatus.State.PENDING,
+                ),
+            ),
             SimpleNamespace(
                 status=SimpleNamespace(
                     state=google.cloud.dataproc_v1.types.jobs.JobStatus.State.DONE,
                 ),
             ),
         ]
-        operation = mock_client.submit_job_as_operation.return_value
-        operation.done.side_effect = [False, True]
         worker = luigi.worker.Worker()
         task = RunPipelineOnDataprocTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -149,9 +167,16 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
             sample_type=SampleType.WGS,
             callset_path='test_callset',
             project_guids=['R0113_test_project'],
-            project_pedigree_paths=['test_pedigree'],
             run_id='manual__2024-04-06',
+            attempt_id=0,
         )
         worker.add(task)
         worker.run()
-        self.assertTrue(task.complete())
+        mock_logger.info.assert_has_calls(
+            [
+                call(
+                    'Waiting for Job completion RunPipelineTask-38-manual__2024-04-06-0',
+                ),
+                call('Job RunPipelineTask-38-manual__2024-04-06-0 is complete'),
+            ],
+        )

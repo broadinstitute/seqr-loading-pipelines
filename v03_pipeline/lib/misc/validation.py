@@ -2,12 +2,14 @@ from typing import Any
 
 import hail as hl
 
-from v03_pipeline.lib.model import (
+from v03_pipeline.lib.core import (
     DatasetType,
+    Env,
     ReferenceGenome,
     SampleType,
 )
 
+ALL_VALIDATIONS = 'all'
 AMBIGUOUS_THRESHOLD_PERC: float = 0.01  # Fraction of samples identified as "ambiguous_sex" above which an error will be thrown.
 MIN_ROWS_PER_CONTIG = 100
 SAMPLE_TYPE_MATCH_THRESHOLD = 0.3
@@ -151,12 +153,18 @@ def validate_imported_field_types(
 
 def validate_sample_type(
     mt: hl.MatrixTable,
-    coding_and_noncoding_variants_ht: hl.Table,
     reference_genome: ReferenceGenome,
     sample_type: SampleType,
+    project_guids: list[str],
+    coding_and_noncoding_variants_ht: hl.Table,
     sample_type_match_threshold: float = SAMPLE_TYPE_MATCH_THRESHOLD,
     **_: Any,
 ) -> None:
+    if all(
+        project_guid in Env.SAMPLE_TYPE_VALIDATION_EXCLUDED_PROJECTS
+        for project_guid in project_guids
+    ):
+        return
     coding_variants_ht = coding_and_noncoding_variants_ht.filter(
         coding_and_noncoding_variants_ht.coding,
     )
@@ -184,3 +192,12 @@ def validate_sample_type(
     if has_noncoding and has_coding and sample_type != SampleType.WGS:
         msg = 'Sample type validation error: dataset sample-type is specified as WES but appears to be WGS because it contains many common non-coding variants'
         raise SeqrValidationError(msg)
+
+
+SKIPPABLE_VALIDATIONS = [
+    validate_allele_depth_length,
+    validate_allele_type,
+    validate_expected_contig_frequency,
+    validate_no_duplicate_variants,
+    validate_sample_type,
+]

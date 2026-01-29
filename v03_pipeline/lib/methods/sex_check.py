@@ -1,6 +1,6 @@
 import hail as hl
 
-from v03_pipeline.lib.model import Sex
+from v03_pipeline.lib.core import Sex
 
 AMBIGUOUS_THRESHOLD_PERC: float = 0.01  # Fraction of samples identified as "ambiguous_sex" above which an error will be thrown.
 AAF_THRESHOLD: float = 0.05  # Alternate allele frequency threshold for `hl.impute_sex`.

@@ -2,9 +2,9 @@ from collections import defaultdict
 
 import hail as hl
 
+from v03_pipeline.lib.core import Sex
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.pedigree import Family, Relation, Sample
-from v03_pipeline.lib.model import Sex
 
 logger = get_logger(__name__)
 
@@ -150,6 +150,11 @@ def get_families_failed_sex_check(
     failed_families = defaultdict(list)
     for family in families:
         for sample_id in family.samples:
+            if sample_id not in sex_check_lookup:
+                failed_families[family].append(
+                    f'Sample {sample_id} has pedigree sex {family.samples[sample_id].sex.value} but is missing from the sex check source',
+                )
+                continue
             # NB: Both Unknown samples in pedigree and Unknown
             # samples in the predicted_sex are precluded from
             # failing the sex check.

@@ -2,9 +2,8 @@ import unittest
 
 import hail as hl
 
-from v03_pipeline.lib.annotations import sv
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.model import DatasetType
+from v03_pipeline.lib.core import DatasetType
 
 
 class SVTest(unittest.TestCase):
@@ -167,77 +166,6 @@ class SVTest(unittest.TestCase):
                         SVTYPE='INS',
                         SVLEN=245,
                     ),
-                ),
-            ],
-        )
-
-    def test_allele_count_annotations(self) -> None:
-        ht = hl.Table.parallelize(
-            [
-                {
-                    'variant_id': 0,
-                    'gt_stats': hl.Struct(
-                        AC=4,
-                        AN=8,
-                        AF=hl.float32(0.5),
-                        Hom=1,
-                        Het=2,
-                    ),
-                },
-                {'variant_id': 1, 'gt_stats': None},
-            ],
-            hl.tstruct(
-                variant_id=hl.tint32,
-                gt_stats=hl.tstruct(
-                    AC=hl.tint32,
-                    AN=hl.tint32,
-                    AF=hl.tfloat32,
-                    Hom=hl.tint32,
-                    Het=hl.tint32,
-                ),
-            ),
-            key='variant_id',
-        )
-        callset_ht = hl.Table.parallelize(
-            [
-                {
-                    'variant_id': 0,
-                    'gt_stats': hl.Struct(
-                        AC=[0, 3],
-                        AN=6,
-                        homozygote_count=[0, 1],
-                    ),
-                },
-                {
-                    'variant_id': 2,
-                    'gt_stats': hl.Struct(
-                        AC=[0, 2],
-                        AN=6,
-                        homozygote_count=[0, 1],
-                    ),
-                },
-            ],
-            hl.tstruct(
-                variant_id=hl.tint32,
-                gt_stats=hl.tstruct(
-                    AC=hl.tarray(hl.tint32),
-                    AN=hl.tint32,
-                    homozygote_count=hl.tarray(hl.tint32),
-                ),
-            ),
-            key='variant_id',
-        )
-        ht = ht.select(gt_stats=sv.gt_stats(ht, callset_ht))
-        self.assertCountEqual(
-            ht.collect(),
-            [
-                hl.Struct(
-                    variant_id=0,
-                    gt_stats=hl.Struct(AC=7, AN=14, AF=0.5, Hom=2, Het=3),
-                ),
-                hl.Struct(
-                    variant_id=1,
-                    gt_stats=hl.Struct(AC=None, AN=None, AF=None, Hom=None, Het=None),
                 ),
             ],
         )

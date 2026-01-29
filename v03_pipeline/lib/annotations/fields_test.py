@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 import hail as hl
 
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.model import (
+from v03_pipeline.lib.core import (
     DatasetType,
     ReferenceGenome,
 )
@@ -148,62 +148,3 @@ class FieldsTest(MockedDatarootTestCase):
                 ),
                 expected_fields,
             )
-
-    def test_get_lookup_table_fields(
-        self,
-    ) -> None:
-        lookup_ht = hl.Table.parallelize(
-            [
-                {
-                    'locus': hl.Locus('chr1', 1, ReferenceGenome.GRCh38.value),
-                    'alleles': ['A', 'C'],
-                    'project_stats': [
-                        [
-                            hl.Struct(
-                                ref_samples=2,
-                                het_samples=2,
-                                hom_samples=2,
-                            ),
-                        ],
-                    ],
-                },
-            ],
-            hl.tstruct(
-                locus=hl.tlocus(ReferenceGenome.GRCh38.value),
-                alleles=hl.tarray(hl.tstr),
-                project_stats=hl.tarray(
-                    hl.tarray(
-                        hl.tstruct(
-                            **dict.fromkeys(
-                                DatasetType.SNV_INDEL.lookup_table_fields_and_genotype_filter_fns,
-                                hl.tint32,
-                            ),
-                        ),
-                    ),
-                ),
-            ),
-            key=('locus', 'alleles'),
-            globals=hl.Struct(
-                updates=hl.set([hl.Struct(callset='abc', project_guid='project_1')]),
-            ),
-        )
-        ht = hl.Table.parallelize(
-            [],
-            hl.tstruct(
-                locus=hl.tlocus(ReferenceGenome.GRCh38.value),
-                alleles=hl.tarray(hl.tstr),
-            ),
-            key=('locus', 'alleles'),
-        )
-        self.assertCountEqual(
-            list(
-                get_fields(
-                    ht,
-                    DatasetType.SNV_INDEL.variant_frequency_annotation_fns,
-                    lookup_ht=lookup_ht,
-                    dataset_type=DatasetType.SNV_INDEL,
-                    reference_genome=ReferenceGenome.GRCh38,
-                ).keys(),
-            ),
-            ['gt_stats'],
-        )

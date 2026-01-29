@@ -5,11 +5,12 @@ import hailtop.fs as hfs
 import luigi.worker
 import pandas as pd
 
-from v03_pipeline.lib.model import (
+from v03_pipeline.lib.core import (
     DatasetType,
     ReferenceGenome,
     SampleType,
 )
+from v03_pipeline.lib.core.constants import MIGRATION_RUN_ID
 from v03_pipeline.lib.paths import (
     metadata_for_run_path,
     new_entries_parquet_path,
@@ -18,7 +19,6 @@ from v03_pipeline.lib.paths import (
     variant_annotations_table_path,
 )
 from v03_pipeline.lib.tasks.clickhouse_migration.migrate_all_projects_to_clickhouse import (
-    MIGRATION_RUN_ID,
     MigrateAllProjectsToClickHouseTask,
 )
 from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
@@ -75,6 +75,8 @@ class MigrateAllProjectsToClickHouseTaskTest(MockedReferenceDatasetsTestCase):
         task = MigrateAllProjectsToClickHouseTask(
             reference_genome=ReferenceGenome.GRCh37,
             dataset_type=DatasetType.SNV_INDEL,
+            run_id=MIGRATION_RUN_ID,
+            attempt_id=0,
         )
         worker.add(task)
         worker.run()

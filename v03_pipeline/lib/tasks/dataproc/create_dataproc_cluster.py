@@ -7,15 +7,16 @@ import luigi
 from google.cloud import dataproc_v1 as dataproc
 from pip._internal.operations import freeze as pip_freeze
 
+from v03_pipeline.lib.core import DatasetType, Env, FeatureFlag, ReferenceGenome
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.gcp import get_service_account_credentials
-from v03_pipeline.lib.model import Env, FeatureFlag, ReferenceGenome
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )
 from v03_pipeline.lib.tasks.dataproc.misc import get_cluster_name
 
 DEBIAN_IMAGE = '2.2.5-debian12'
+DISK_SIZE_GB = 600
 HAIL_VERSION = hl.version().split('-')[0]
 INSTANCE_TYPE = 'n1-highmem-8'
 PKGS = '|'.join(
@@ -26,11 +27,20 @@ PKGS = '|'.join(
     ],
 )
 TIMEOUT_S = 1200
+FAILURE_STATUSES = {
+    google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.UNKNOWN,
+    google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.ERROR,
+    google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.ERROR_DUE_TO_UPDATE,
+}
 
 logger = get_logger(__name__)
 
 
-def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
+def get_cluster_config(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+):
     service_account_credentials = get_service_account_credentials()
     return {
         'project_id': Env.GCLOUD_PROJECT,
@@ -45,6 +55,7 @@ def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
                     'DEPLOYMENT_TYPE': Env.DEPLOYMENT_TYPE,
                     'REFERENCE_GENOME': reference_genome.value,
                     'PIPELINE_RUNNER_APP_VERSION': Env.PIPELINE_RUNNER_APP_VERSION,
+                    'REFERENCE_DATASETS_DIR': Env.REFERENCE_DATASETS_DIR,
                 },
                 'internal_ip_only': False,  # Recent change with 2.2 dataproc images.
                 'service_account': service_account_credentials.service_account_email,
@@ -55,7 +66,7 @@ def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
                 'machine_type_uri': INSTANCE_TYPE,
                 'disk_config': {
                     'boot_disk_type': 'pd-standard',
-                    'boot_disk_size_gb': 100,
+                    'boot_disk_size_gb': DISK_SIZE_GB,
                 },
             },
             'worker_config': {
@@ -63,15 +74,15 @@ def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
                 'machine_type_uri': INSTANCE_TYPE,
                 'disk_config': {
                     'boot_disk_type': 'pd-standard',
-                    'boot_disk_size_gb': 100,
+                    'boot_disk_size_gb': DISK_SIZE_GB,
                 },
             },
             'secondary_worker_config': {
-                'num_instances': Env.GCLOUD_DATAPROC_SECONDARY_WORKERS,
+                'num_instances': dataset_type.dataproc_preemptibles,
                 'machine_type_uri': INSTANCE_TYPE,
                 'disk_config': {
                     'boot_disk_type': 'pd-standard',
-                    'boot_disk_size_gb': 100,
+                    'boot_disk_size_gb': DISK_SIZE_GB,
                 },
                 'is_preemptible': True,
                 'preemptibility': 'PREEMPTIBLE',
@@ -105,16 +116,16 @@ def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
                     'spark-env:EXPECT_TDR_METRICS': '1'
                     if FeatureFlag.EXPECT_TDR_METRICS
                     else '0',
-                    'spark-env:HAIL_SEARCH_DATA_DIR': Env.HAIL_SEARCH_DATA_DIR,
+                    'spark-env:PIPELINE_DATA_DIR': Env.PIPELINE_DATA_DIR,
                     'spark-env:HAIL_TMP_DIR': Env.HAIL_TMP_DIR,
-                    'spark-env:INCLUDE_PIPELINE_VERSION_IN_PREFIX': '1'
-                    if FeatureFlag.INCLUDE_PIPELINE_VERSION_IN_PREFIX
-                    else '0',
                     'spark-env:LOADING_DATASETS_DIR': Env.LOADING_DATASETS_DIR,
                     'spark-env:PRIVATE_REFERENCE_DATASETS_DIR': Env.PRIVATE_REFERENCE_DATASETS_DIR,
                     'spark-env:REFERENCE_DATASETS_DIR': Env.REFERENCE_DATASETS_DIR,
                     'spark-env:CLINGEN_ALLELE_REGISTRY_LOGIN': Env.CLINGEN_ALLELE_REGISTRY_LOGIN,
                     'spark-env:CLINGEN_ALLELE_REGISTRY_PASSWORD': Env.CLINGEN_ALLELE_REGISTRY_PASSWORD,
+                    'spark-env:SAMPLE_TYPE_VALIDATION_EXCLUDED_PROJECTS': ','.join(
+                        Env.SAMPLE_TYPE_VALIDATION_EXCLUDED_PROJECTS,
+                    ),
                 },
             },
             'lifecycle_config': {'idle_delete_ttl': {'seconds': 1200}},
@@ -151,10 +162,9 @@ class CreateDataprocClusterTask(luigi.Task):
             },
         )
 
-    def complete(self) -> bool:
-        if not self.dataset_type.requires_dataproc:
-            msg = f'{self.dataset_type} should not require a dataproc cluster'
-            raise RuntimeError(msg)
+    def safely_get_cluster(
+        self,
+    ):
         try:
             cluster = self.client.get_cluster(
                 request={
@@ -167,12 +177,15 @@ class CreateDataprocClusterTask(luigi.Task):
                 },
             )
         except google.api_core.exceptions.NotFound:
+            return None
+        else:
+            return cluster
+
+    def complete(self) -> bool:
+        cluster = self.safely_get_cluster()
+        if not cluster:
             return False
-        if cluster.status.state in {
-            google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.UNKNOWN,
-            google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.ERROR,
-            google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.ERROR_DUE_TO_UPDATE,
-        }:
+        if cluster.status.state in FAILURE_STATUSES:
             msg = f'Cluster {cluster.cluster_name} entered {cluster.status.state.name} state'
             logger.error(msg)
         # This will return False when the cluster is "CREATING"
@@ -185,20 +198,33 @@ class CreateDataprocClusterTask(luigi.Task):
         if not Env.GCLOUD_PROJECT or not Env.GCLOUD_REGION or not Env.GCLOUD_ZONE:
             msg = 'Environment Variables GCLOUD_PROJECT, GCLOUD_REGION, GCLOUD_ZONE are required for running the pipeline on dataproc.'
             raise RuntimeError(msg)
-        operation = self.client.create_cluster(
-            request={
-                'project_id': Env.GCLOUD_PROJECT,
-                'region': Env.GCLOUD_REGION,
-                'cluster': get_cluster_config(self.reference_genome, self.run_id),
-            },
-        )
+        cluster = self.safely_get_cluster()
+        if not cluster:
+            self.client.create_cluster(
+                request={
+                    'project_id': Env.GCLOUD_PROJECT,
+                    'region': Env.GCLOUD_REGION,
+                    'cluster': get_cluster_config(
+                        self.reference_genome,
+                        self.dataset_type,
+                        self.run_id,
+                    ),
+                },
+            )
         wait_s = 0
         while wait_s < TIMEOUT_S:
-            if operation.done():
-                result = operation.result()  # Will throw on failure!
-                msg = f'Created cluster {result.cluster_name} with cluster uuid: {result.cluster_uuid}'
+            cluster = self.safely_get_cluster()
+            if (
+                cluster.status.state
+                == google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.RUNNING
+            ):
+                msg = f'Created cluster {cluster.cluster_name} with cluster uuid: {cluster.cluster_uuid}'
                 logger.info(msg)
                 break
+            if cluster.status.state in FAILURE_STATUSES:
+                msg = f'Cluster {cluster.cluster_name} entered {cluster.status.state.name} state'
+                logger.error(msg)
+                raise RuntimeError(msg)
             logger.info('Waiting for cluster spinup')
             time.sleep(3)
             wait_s += 3
