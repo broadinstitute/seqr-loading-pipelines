@@ -10,16 +10,18 @@ from v03_pipeline.lib.tasks.variants_migration.load_clickhouse_variants_tables i
     LoadClickhouseVariantsTablesTask,
 )
 
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run variants migration Luigi pipeline."
+        description='Run variants migration Luigi pipeline.',
     )
     parser.add_argument(
-        "--run_all_dataset_types",
-        action="store_true",
-        help="If set, runs the pipeline for all dataset types instead of just SNV_INDEL.",
+        '--run_all_dataset_types',
+        action='store_true',
+        help='If set, runs the pipeline for all dataset types instead of just SNV_INDEL.',
     )
     return parser.parse_args()
+
 
 if __name__ == '__main__':
     args = parse_args()
