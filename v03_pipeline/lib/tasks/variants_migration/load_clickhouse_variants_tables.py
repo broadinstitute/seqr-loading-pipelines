@@ -36,6 +36,24 @@ class LoadClickhouseVariantsTablesTask(luigi.WrapperTask):
             ]
         )
 
+    def complete(self) -> bool:
+        table_name_builder = TableNameBuilder(
+            self.reference_genome,
+            self.dataset_type,
+            self.run_id,
+        )
+        max_key = logged_query(
+            f"""
+            SELECT max(key) FROM {table_name_builder.src_table(ClickHouseTable.VARIANTS_MEMORY)}
+            """,
+        )[0][0]
+        return logged_query(
+            """
+            SELECT 1 FROM {table_name_builder.dst_table(ClickHouseTable.VARIANTS_MEMORY)} where key = %(range_start)s
+            """,
+            {'max_key': max_key},
+        )[0][0]
+
     def run(self) -> None:
         table_name_builder = TableNameBuilder(
             self.reference_genome,
@@ -46,7 +64,6 @@ class LoadClickhouseVariantsTablesTask(luigi.WrapperTask):
             if clickhouse_table == ClickHouseTable.ENTRIES:
                 continue
             clickhouse_table.insert(table_name_builder=table_name_builder)
-
         for (
             clickhouse_reference_data
         ) in ClickhouseReferenceDataset.for_reference_genome_dataset_type(
