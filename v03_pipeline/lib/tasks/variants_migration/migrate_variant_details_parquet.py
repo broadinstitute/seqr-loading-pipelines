@@ -10,6 +10,9 @@ from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )
 from v03_pipeline.lib.tasks.base.base_write_parquet import BaseWriteParquetTask
+from v03_pipeline.lib.tasks.dataproc.base_run_job_on_dataproc import (
+    BaseRunJobOnDataprocTask,
+)
 from v03_pipeline.lib.tasks.exports.fields import get_variant_details_export_fields
 from v03_pipeline.lib.tasks.exports.misc import (
     camelcase_array_structexpression_fields,
@@ -22,7 +25,10 @@ from v03_pipeline.lib.tasks.variants_migration.update_variant_annotations_table_
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
-class MigrateVariantsParquetTask(BaseWriteParquetTask):
+class MigrateVariantDetailsParquetTask(BaseWriteParquetTask):
+    run_id = luigi.Parameter()
+    attempt_id = luigi.IntParameter()
+
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             new_variant_details_parquet_path(
@@ -60,3 +66,9 @@ class MigrateVariantsParquetTask(BaseWriteParquetTask):
                 self.dataset_type,
             ),
         )
+
+
+class MigrateVariantDetailsParquetOnDataprocTask(BaseRunJobOnDataprocTask):
+    @property
+    def task(self) -> luigi.Task:
+        return MigrateVariantDetailsParquetTask
