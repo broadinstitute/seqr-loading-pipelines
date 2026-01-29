@@ -205,6 +205,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             f"""
             CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/variants/details` (
                 key UInt32,
+                variantId String,
                 transcripts String
             ) ENGINE = EmbeddedRocksDB()
             PRIMARY KEY `key`
@@ -364,8 +365,17 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ),
             )
 
-        # Transcripts Parquet
-        df = pd.DataFrame({'key': [1, 2, 3, 4], 'transcripts': ['a', 'b', 'c', 'd']})
+        # Variant Details Parquet
+        df = pd.DataFrame({
+            'key': [1, 2, 3, 4],
+            'variantId': [
+                '1-13-A-C',
+                '2-14-A-T',
+                'Y-19-A-C',
+                'M-12-C-G',
+            ],
+            'transcripts': ['a', 'b', 'c', 'd'],
+        })
         write_test_parquet(
             df,
             new_variant_details_parquet_path(
@@ -548,7 +558,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         client = get_clickhouse_client()
         client.execute(
             f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/variants/details` VALUES',
-            [(1, 'a'), (10, 'b'), (7, 'c')],
+            [(1, 'a', 'e'), (10, 'b', 'f'), (7, 'c', 'g')],
         )
         direct_insert_all_keys(
             ClickHouseTable.VARIANT_DETAILS,
@@ -563,7 +573,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         self.assertEqual(
             ret,
-            [(1, 'a'), (2, 'b'), (3, 'c'), (4, 'd'), (7, 'c'), (10, 'b')],
+            [(1, '1-13-A-C', 'a'), (2, '2-14-A-T', 'b'), (3, 'Y-19-A-C', 'c'), (4, 'M-12-C-G', 'd'), (7, 'c', 'g'), (10, 'b', 'f')],
         )
 
         # ensure multiple calls are idempotent
