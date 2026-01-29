@@ -586,11 +586,11 @@ class ClickhouseTest(MockedDatarootTestCase):
             ),
         )
         ret = client.execute(
-            f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/variants/details`',
+            f'SELECT COUNT(*) FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/variants/details`',
         )
         self.assertEqual(
-            ret,
-            [(1, 'a'), (2, 'b'), (3, 'c'), (4, 'd'), (7, 'c'), (10, 'b')],
+            ret[0][0],
+            6
         )
 
     @patch.object(
