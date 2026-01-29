@@ -674,7 +674,6 @@ def insert_new_entries(
             dictGetOrDefault({ClickhouseReferenceDataset.GNOMAD_GENOMES.search_path(table_name_builder)}, 'filter_af', key, 0) > 0.05
         """
 
-
     dst_list = ', '.join(common)
     src_list = ', '.join([overrides.get(c, c) for c in common])
     logged_query(
