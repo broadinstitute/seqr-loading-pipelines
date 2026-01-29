@@ -101,6 +101,19 @@ class PipelineWorkerTest(MockedReferenceDatasetsTestCase):
             LAYOUT(COMPLEX_KEY_HASHED())
             """,
         )
+        client.execute(
+            """
+            CREATE DICTIONARY `GRCh38/SNV_INDEL/gnomad_genomes`
+            (
+                `key` UInt32,
+                `filter_af` Decimal(9, 8)
+            )
+            PRIMARY KEY key
+            SOURCE(NULL())
+            LIFETIME(0)
+            LAYOUT(COMPLEX_KEY_HASHED())
+            """,
+        )
         with open(TEST_SCHEMA) as f:
             sql = f.read()
         commands = [cmd.strip() for cmd in sql.split(';') if cmd.strip()]
