@@ -15,9 +15,11 @@ from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
 
 
 @luigi.util.inherits(BaseLoadingPipelineParams)
-class UpdateVariantAnnotationsTableWithDroppedReferenceDatasetsTasks(
+class UpdateVariantAnnotationsTableWithDroppedReferenceDatasetsTask(
     BaseUpdateTask,
 ):
+    run_id = luigi.Parameter()
+
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             variant_annotations_table_path(
