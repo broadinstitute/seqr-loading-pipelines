@@ -56,7 +56,7 @@ CREATE TABLE `GRCh38/SNV_INDEL/variants/details`
             ref_type Nullable(String),
             ref_type_length Nullable(Int32),
             type Nullable(String)),
-        fiveutrConsequence Nullable(String)))
+        fiveutrConsequence Nullable(String))),
     `sortedMotifFeatureConsequences` Nested(consequenceTerms Array(Nullable(Enum8('TFBS_ablation' = 0, 'TFBS_amplification' = 1, 'TF_binding_site_variant' = 2, 'TFBS_fusion' = 3, 'TFBS_translocation' = 4))), motifFeatureId Nullable(String)),
     `sortedRegulatoryFeatureConsequences` Nested(biotype Nullable(Enum8('enhancer' = 0, 'promoter' = 1, 'CTCF_binding_site' = 2, 'TF_binding_site' = 3, 'open_chromatin_region' = 4)), consequenceTerms Array(Nullable(Enum8('regulatory_region_ablation' = 0, 'regulatory_region_amplification' = 1, 'regulatory_region_variant' = 2, 'regulatory_region_fusion' = 3))), regulatoryFeatureId Nullable(String))
 )
