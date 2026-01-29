@@ -5,8 +5,8 @@ import luigi.util
 from v03_pipeline.lib.paths import (
     variant_annotations_table_path,
 )
-from v03_pipeline.lib.tasks.base.base_loading_run_params import (
-    BaseLoadingRunParams,
+from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
+    BaseLoadingPipelineParams,
 )
 from v03_pipeline.lib.tasks.base.base_update import (
     BaseUpdateTask,
@@ -14,7 +14,7 @@ from v03_pipeline.lib.tasks.base.base_update import (
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
 
 
-@luigi.util.inherits(BaseLoadingRunParams)
+@luigi.util.inherits(BaseLoadingPipelineParams)
 class UpdateVariantAnnotationsTableWithDroppedReferenceDatasetsTasks(
     BaseUpdateTask,
 ):

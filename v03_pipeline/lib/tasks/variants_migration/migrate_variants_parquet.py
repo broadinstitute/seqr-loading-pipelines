@@ -6,8 +6,8 @@ from v03_pipeline.lib.paths import (
     new_variants_parquet_path,
     variant_annotations_table_path,
 )
-from v03_pipeline.lib.tasks.base.base_loading_run_params import (
-    BaseLoadingRunParams,
+from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
+    BaseLoadingPipelineParams,
 )
 from v03_pipeline.lib.tasks.base.base_write_parquet import BaseWriteParquetTask
 from v03_pipeline.lib.tasks.dataproc.base_run_job_on_dataproc import (
@@ -25,7 +25,7 @@ from v03_pipeline.lib.tasks.variants_migration.update_variant_annotations_table_
 )
 
 
-@luigi.util.inherits(BaseLoadingRunParams)
+@luigi.util.inherits(BaseLoadingPipelineParams)
 class MigrateVariantsParquetTask(BaseWriteParquetTask):
     run_id = luigi.Parameter()
     attempt_id = luigi.IntParameter()

@@ -366,16 +366,18 @@ class ClickhouseTest(MockedDatarootTestCase):
             )
 
         # Variant Details Parquet
-        df = pd.DataFrame({
-            'key': [1, 2, 3, 4],
-            'variantId': [
-                '1-13-A-C',
-                '2-14-A-T',
-                'Y-19-A-C',
-                'M-12-C-G',
-            ],
-            'transcripts': ['a', 'b', 'c', 'd'],
-        })
+        df = pd.DataFrame(
+            {
+                'key': [1, 2, 3, 4],
+                'variantId': [
+                    '1-13-A-C',
+                    '2-14-A-T',
+                    'Y-19-A-C',
+                    'M-12-C-G',
+                ],
+                'transcripts': ['a', 'b', 'c', 'd'],
+            },
+        )
         write_test_parquet(
             df,
             new_variant_details_parquet_path(
@@ -573,7 +575,14 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         self.assertEqual(
             ret,
-            [(1, '1-13-A-C', 'a'), (2, '2-14-A-T', 'b'), (3, 'Y-19-A-C', 'c'), (4, 'M-12-C-G', 'd'), (7, 'c', 'g'), (10, 'b', 'f')],
+            [
+                (1, '1-13-A-C', 'a'),
+                (2, '2-14-A-T', 'b'),
+                (3, 'Y-19-A-C', 'c'),
+                (4, 'M-12-C-G', 'd'),
+                (7, 'c', 'g'),
+                (10, 'b', 'f'),
+            ],
         )
 
         # ensure multiple calls are idempotent
@@ -588,10 +597,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         ret = client.execute(
             f'SELECT COUNT(*) FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/variants/details`',
         )
-        self.assertEqual(
-            ret[0][0],
-            6
-        )
+        self.assertEqual(ret[0][0], 6)
 
     @patch.object(
         ClickhouseReferenceDataset,
