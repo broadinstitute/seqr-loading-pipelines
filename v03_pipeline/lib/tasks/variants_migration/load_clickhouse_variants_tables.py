@@ -23,6 +23,9 @@ from v03_pipeline.lib.tasks.variants_migration.migrate_variants_parquet import (
 
 @luigi.util.inherits(BaseLoadingPipelineParams)
 class LoadClickhouseVariantsTablesTask(luigi.WrapperTask):
+    run_id = luigi.Parameter()
+    attempt_id = luigi.IntParameter()
+
     def requires(self) -> luigi.Task:
         return (
             [
@@ -48,8 +51,10 @@ class LoadClickhouseVariantsTablesTask(luigi.WrapperTask):
             """,
         )[0][0]
         return logged_query(
-            """
-            SELECT 1 FROM {table_name_builder.dst_table(ClickHouseTable.VARIANTS_MEMORY)} where key = %(range_start)s
+            f"""
+            SELECT EXISTS (
+                SELECT 1 FROM {table_name_builder.dst_table(ClickHouseTable.VARIANTS_MEMORY)} where key = %(max_key)s
+            )
             """,
             {'max_key': max_key},
         )[0][0]
@@ -65,26 +70,26 @@ class LoadClickhouseVariantsTablesTask(luigi.WrapperTask):
                 continue
             clickhouse_table.insert(table_name_builder=table_name_builder)
         for (
-            clickhouse_reference_data
+            clickhouse_reference_dataset
         ) in ClickhouseReferenceDataset.for_reference_genome_dataset_type(
             self.reference_genome,
             self.dataset_type,
         ):
-            if clickhouse_reference_data.has_seqr_variants:
+            if clickhouse_reference_dataset.has_seqr_variants:
                 logged_query(
                     f"""
-                    SYSTEM START VIEW {clickhouse_reference_data.all_variants_to_seqr_variants_mv(table_name_builder)}
+                    SYSTEM START VIEW {clickhouse_reference_dataset.all_variants_to_seqr_variants_mv(table_name_builder)}
                     """,
                 )
                 logged_query(
                     f"""
-                    SYSTEM REFRESH VIEW {clickhouse_reference_data.all_variants_to_seqr_variants_mv(table_name_builder)}
+                    SYSTEM REFRESH VIEW {clickhouse_reference_dataset.all_variants_to_seqr_variants_mv(table_name_builder)}
                     """,
                 )
                 logged_query(
                     f"""
-                    SYSTEM WAIT VIEW {clickhouse_reference_data.all_variants_to_seqr_variants_mv(table_name_builder)}
+                    SYSTEM WAIT VIEW {clickhouse_reference_dataset.all_variants_to_seqr_variants_mv(table_name_builder)}
                     """,
-                    timeout=self.all_variants_mv_timeout,
+                    timeout=clickhouse_reference_dataset.all_variants_mv_timeout,
                 )
-            clickhouse_reference_data.refresh_search(table_name_builder)
+            clickhouse_reference_dataset.refresh_search(table_name_builder)
