@@ -283,6 +283,7 @@ def get_variants_export_fields(
         return {
             'key_': ht.key_,
             **get_variant_id_fields(ht, dataset_type),
+            **get_lifted_over_position_fields(ht, dataset_type),
             **get_dataset_type_specific_variants_annotations(ht, dataset_type),
             **get_consequences_fields(ht, reference_genome, dataset_type),
         }

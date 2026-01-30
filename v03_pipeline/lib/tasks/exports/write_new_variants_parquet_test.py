@@ -253,6 +253,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                     'key': 998,
                     'variantId': 'M-8-G-T',
                     'rsid': 'rs1603218446',
+                    'liftedOverPos': 578,
                     'commonLowHeteroplasmy': True,
                     'haplogroupDefining': False,
                     'mitotip': 'likely_pathogenic',
