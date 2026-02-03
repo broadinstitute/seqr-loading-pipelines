@@ -81,6 +81,7 @@ def export_parquet_filterable_transcripts_fields(
             'alphamissensePathogenicity': 'alphamissense.pathogenicity',
             'extendedIntronicSpliceRegionVariant': 'spliceregion.extended_intronic_splice_region_variant',
             'fiveutrConsequence': 'utrannotator.fiveutrConsequence',
+            'isManeSelect': 'isManeSelect',
         }
     # Parquet export expects all fields sorted alphabetically
     return OrderedDict(sorted(fields.items()))
@@ -101,6 +102,9 @@ def subset_consequences_fields(
                 lambda e: e.select(
                     'consequenceTerms',
                 ),
+            ),
+            sortedTranscriptConsequences=ht.sortedTranscriptConsequences.map(
+                lambda e: e.annotate(isManeSelect=hl.is_defined(e.maneSelect)),
             ),
         )
     return ht.annotate(

@@ -154,6 +154,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                             'extendedIntronicSpliceRegionVariant': False,
                             'fiveutrConsequence': None,
                             'geneId': 'ENSG00000187634',
+                            'isManeSelect': True,
                         },
                     ],
                 },
