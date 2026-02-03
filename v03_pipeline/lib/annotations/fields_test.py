@@ -1,4 +1,3 @@
-import shutil
 from unittest.mock import Mock, patch
 
 import hail as hl
@@ -8,33 +7,14 @@ from v03_pipeline.lib.core import (
     DatasetType,
     ReferenceGenome,
 )
-from v03_pipeline.lib.paths import valid_reference_dataset_path
-from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 from v03_pipeline.lib.vep import run_vep
 from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VEP_DATA
-
-TEST_GNOMAD_NONCODING_CONSTRAINT_38_HT = 'v03_pipeline/var/test/reference_datasets/GRCh38/gnomad_non_coding_constraint/1.0.ht'
-TEST_SCREEN_38_HT = 'v03_pipeline/var/test/reference_datasets/GRCh38/screen/1.0.ht'
 
 
 class FieldsTest(MockedDatarootTestCase):
     def setUp(self) -> None:
         super().setUp()
-        shutil.copytree(
-            TEST_GNOMAD_NONCODING_CONSTRAINT_38_HT,
-            valid_reference_dataset_path(
-                ReferenceGenome.GRCh38,
-                ReferenceDataset.gnomad_non_coding_constraint,
-            ),
-        )
-        shutil.copytree(
-            TEST_SCREEN_38_HT,
-            valid_reference_dataset_path(
-                ReferenceGenome.GRCh38,
-                ReferenceDataset.screen,
-            ),
-        )
 
     @patch('v03_pipeline.lib.vep.hl.vep')
     def test_get_formatting_fields(self, mock_vep: Mock) -> None:
@@ -62,8 +42,6 @@ class FieldsTest(MockedDatarootTestCase):
                 ),
                 [
                     'check_ref',
-                    'screen',
-                    'gnomad_non_coding_constraint',
                     'rg37_locus',
                     'rsid',
                     'sorted_motif_feature_consequences',
@@ -120,19 +98,6 @@ class FieldsTest(MockedDatarootTestCase):
                         DatasetType.SNV_INDEL.formatting_annotation_fns(
                             reference_genome,
                         ),
-                        **{
-                            f'{reference_dataset}_ht': hl.read_table(
-                                valid_reference_dataset_path(
-                                    reference_genome,
-                                    reference_dataset,
-                                ),
-                            )
-                            for reference_dataset in ReferenceDataset.for_reference_genome_dataset_type_annotations(
-                                reference_genome,
-                                DatasetType.SNV_INDEL,
-                            )
-                            if reference_dataset.formatting_annotation
-                        },
                         **(
                             {
                                 'gencode_ensembl_to_refseq_id_mapping': hl.dict(

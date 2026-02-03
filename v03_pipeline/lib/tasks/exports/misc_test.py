@@ -8,10 +8,8 @@ from v03_pipeline.lib.core import (
 )
 from v03_pipeline.lib.tasks.exports.misc import (
     camelcase_array_structexpression_fields,
-    drop_unexported_fields,
     sorted_hl_struct,
     unmap_formatting_annotation_enums,
-    unmap_reference_dataset_annotation_enums,
 )
 
 TEST_SNV_INDEL_ANNOTATIONS = (
@@ -25,7 +23,6 @@ TEST_GRCH37_SNV_INDEL_ANNOTATIONS = (
 class MiscTest(unittest.TestCase):
     def test_unmap_formatting_annotation_enums(self) -> None:
         ht = hl.read_table(TEST_SNV_INDEL_ANNOTATIONS)
-        ht = drop_unexported_fields(ht)
         ht = unmap_formatting_annotation_enums(
             ht,
             ReferenceGenome.GRCh38,
@@ -34,6 +31,8 @@ class MiscTest(unittest.TestCase):
         self.assertCountEqual(
             list(ht.globals.enums.collect()[0].keys()),
             [
+                'clinvar',
+                'hgmd',
                 'screen',
                 'dbnsfp',
                 'gnomad_exomes',
@@ -41,7 +40,6 @@ class MiscTest(unittest.TestCase):
                 'splice_ai',
                 'exac',
                 'topmed',
-                'hgmd',
                 'gnomad_genomes',
                 'eigen',
             ],
@@ -59,6 +57,15 @@ class MiscTest(unittest.TestCase):
                     reference_genome='GRCh38',
                 ),
                 alleles=['A', 'G'],
+                clinvar=hl.Struct(
+                    alleleId=929885,
+                    conflictingPathogenicities=None,
+                    goldStars=1,
+                    submitters=['Labcorp Genetics (formerly Invitae), Labcorp'],
+                    conditions=['not provided'],
+                    assertion_ids=[],
+                    pathogenicity_id=12,
+                ),
                 rg37_locus=hl.Locus(
                     contig=1,
                     position=874501,
@@ -185,7 +192,6 @@ class MiscTest(unittest.TestCase):
             ),
         )
         ht = hl.read_table(TEST_GRCH37_SNV_INDEL_ANNOTATIONS)
-        ht = drop_unexported_fields(ht)
         ht = unmap_formatting_annotation_enums(
             ht,
             ReferenceGenome.GRCh37,
@@ -194,12 +200,13 @@ class MiscTest(unittest.TestCase):
         self.assertCountEqual(
             list(ht.globals.enums.collect()[0].keys()),
             [
+                'clinvar',
+                'hgmd',
                 'dbnsfp',
                 'gnomad_exomes',
                 'splice_ai',
                 'exac',
                 'topmed',
-                'hgmd',
                 'gnomad_genomes',
                 'eigen',
             ],
@@ -212,6 +219,15 @@ class MiscTest(unittest.TestCase):
             hl.Struct(
                 locus=hl.Locus(contig=1, position=69134, reference_genome='GRCh37'),
                 alleles=['A', 'G'],
+                clinvar=hl.Struct(
+                    alleleId=2193183,
+                    conflictingPathogenicities=None,
+                    goldStars=1,
+                    submitters=['Ambry Genetics'],
+                    conditions=['not specified'],
+                    assertion_ids=[],
+                    pathogenicity_id=14,
+                ),
                 rsid=None,
                 sorted_transcript_consequences=[
                     hl.Struct(
@@ -237,6 +253,7 @@ class MiscTest(unittest.TestCase):
                     position=69134,
                     reference_genome='GRCh38',
                 ),
+                hgmd=None,
                 gnomad_exomes=hl.Struct(
                     AF=0.026665963232517242,
                     AN=18938,
@@ -246,7 +263,6 @@ class MiscTest(unittest.TestCase):
                     FAF_AF=0.02474386990070343,
                     Hemi=0,
                 ),
-                hgmd=None,
                 gnomad_genomes=hl.Struct(
                     AF=0.0001722949673421681,
                     AN=5804,
@@ -293,113 +309,9 @@ class MiscTest(unittest.TestCase):
             ),
         )
 
-    def test_unmap_reference_dataset_annotation_enums(self) -> None:
-        ht = hl.read_table(TEST_SNV_INDEL_ANNOTATIONS)
-        ht = drop_unexported_fields(ht)
-        ht = unmap_reference_dataset_annotation_enums(
-            ht,
-            ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
-        )
-        self.assertListEqual(
-            list(ht.globals.enums.collect()[0].keys()),
-            [
-                'sorted_motif_feature_consequences',
-                'sorted_regulatory_feature_consequences',
-                'sorted_transcript_consequences',
-            ],
-        )
-        self.assertEqual(
-            ht.drop(
-                'sorted_transcript_consequences',
-                'sorted_regulatory_feature_consequences',
-                'sorted_motif_feature_consequences',
-            ).collect()[0],
-            hl.Struct(
-                key_=0,
-                locus=hl.Locus(
-                    contig='chr1',
-                    position=876499,
-                    reference_genome='GRCh38',
-                ),
-                alleles=['A', 'G'],
-                rg37_locus=hl.Locus(
-                    contig=1,
-                    position=874501,
-                    reference_genome='GRCh37',
-                ),
-                rsid=None,
-                variant_id='1-876499-A-G',
-                xpos=1000876499,
-                gt_stats=hl.Struct(AC=47, AN=81784, AF=0.0005746845272369683, hom=1),
-                CAID='CA502654',
-                check_ref=False,
-                gnomad_non_coding_constraint=hl.Struct(z_score=None),
-                hgmd=hl.Struct(accession='abcdefg', classification='DFP'),
-                gnomad_exomes=hl.Struct(
-                    AF=0.0006690866430290043,
-                    AN=1440770,
-                    AC=964,
-                    Hom=0,
-                    AF_POPMAX_OR_GLOBAL=0.0008023773552849889,
-                    FAF_AF=0.000633420015219599,
-                    Hemi=0,
-                ),
-                gnomad_genomes=hl.Struct(
-                    AF=0.0002759889466688037,
-                    AN=152180,
-                    AC=42,
-                    Hom=0,
-                    AF_POPMAX_OR_GLOBAL=0.10000000149011612,
-                    FAF_AF=0.0002092500071739778,
-                    Hemi=0,
-                ),
-                screen=hl.Struct(region_types=[]),
-                dbnsfp=hl.Struct(
-                    PrimateAI_score=0.5918066501617432,
-                    fathmm_MKL_coding_score=0.7174800038337708,
-                    CADD_phred=23.5,
-                    SIFT_score=0.0010000000474974513,
-                    REVEL_score=0.3109999895095825,
-                    Polyphen2_HVAR_score=0.164000004529953,
-                    VEST4_score=0.39500001072883606,
-                    MPC_score=0.01291007362306118,
-                    MutPred_score=None,
-                    MutationTaster_pred='D',
-                ),
-                topmed=hl.Struct(
-                    AC=41,
-                    AF=0.00032651599030941725,
-                    AN=125568,
-                    Hom=0,
-                    Het=41,
-                ),
-                exac=hl.Struct(
-                    AF_POPMAX=0.0007150234305299819,
-                    AF=0.00019039999460801482,
-                    AC_Adj=20,
-                    AC_Het=20,
-                    AC_Hom=0,
-                    AC_Hemi=None,
-                    AN_Adj=47974,
-                ),
-                splice_ai=hl.Struct(
-                    delta_score=0.0,
-                    splice_consequence='No consequence',
-                ),
-                eigen=hl.Struct(Eigen_phred=2.628000020980835),
-            ),
-        )
-
     def test_camelcase_array_structexpression_fields(self) -> None:
         ht = hl.read_table(TEST_SNV_INDEL_ANNOTATIONS)
-        ht = drop_unexported_fields(ht)
         ht = unmap_formatting_annotation_enums(
-            ht,
-            ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
-        )
-        ht = unmap_reference_dataset_annotation_enums(
             ht,
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
@@ -422,6 +334,15 @@ class MiscTest(unittest.TestCase):
                     reference_genome='GRCh38',
                 ),
                 alleles=['A', 'G'],
+                clinvar=hl.Struct(
+                    alleleId=929885,
+                    conflictingPathogenicities=None,
+                    goldStars=1,
+                    submitters=['Labcorp Genetics (formerly Invitae), Labcorp'],
+                    conditions=['not provided'],
+                    assertion_ids=[],
+                    pathogenicity_id=12,
+                ),
                 rg37_locus=hl.Locus(
                     contig=1,
                     position=874501,
@@ -434,7 +355,7 @@ class MiscTest(unittest.TestCase):
                 CAID='CA502654',
                 check_ref=False,
                 gnomad_non_coding_constraint=hl.Struct(z_score=None),
-                hgmd=hl.Struct(accession='abcdefg', classification='DFP'),
+                hgmd=hl.Struct(accession='abcdefg', class_id=3),
                 gnomad_exomes=hl.Struct(
                     AF=0.0006690866430290043,
                     AN=1440770,
@@ -453,7 +374,7 @@ class MiscTest(unittest.TestCase):
                     FAF_AF=0.0002092500071739778,
                     Hemi=0,
                 ),
-                screen=hl.Struct(region_types=[]),
+                screen=hl.Struct(region_type_ids=[]),
                 dbnsfp=hl.Struct(
                     PrimateAI_score=0.5918066501617432,
                     fathmm_MKL_coding_score=0.7174800038337708,
@@ -464,7 +385,7 @@ class MiscTest(unittest.TestCase):
                     VEST4_score=0.39500001072883606,
                     MPC_score=0.01291007362306118,
                     MutPred_score=None,
-                    MutationTaster_pred='D',
+                    MutationTaster_pred_id=0,
                 ),
                 topmed=hl.Struct(
                     AC=41,
@@ -484,7 +405,7 @@ class MiscTest(unittest.TestCase):
                 ),
                 splice_ai=hl.Struct(
                     delta_score=0.0,
-                    splice_consequence='No consequence',
+                    splice_consequence_id=4,
                 ),
                 eigen=hl.Struct(Eigen_phred=2.628000020980835),
                 sortedTranscriptConsequences=[

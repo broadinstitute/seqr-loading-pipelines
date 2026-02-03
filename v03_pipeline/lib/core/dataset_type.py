@@ -272,8 +272,6 @@ class DatasetType(StrEnum):
                 shared.rsid,
                 shared.variant_id,
                 shared.xpos,
-                snv_indel.gnomad_non_coding_constraint,
-                snv_indel.screen,
                 shared.rg37_locus,
                 snv_indel.check_ref,
                 snv_indel.sorted_transcript_consequences,
@@ -341,10 +339,6 @@ class DatasetType(StrEnum):
         }.get(self, [])
 
     @property
-    def should_send_to_allele_registry(self):
-        return self == DatasetType.SNV_INDEL
-
-    @property
     def filter_invalid_sites(self):
         return self == DatasetType.SNV_INDEL
 
@@ -367,7 +361,7 @@ class DatasetType(StrEnum):
         }[self]
 
     @property
-    def should_write_new_transcripts(self):
+    def should_write_new_variant_details(self):
         return self == DatasetType.SNV_INDEL
 
     @property

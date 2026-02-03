@@ -20,27 +20,15 @@ def reference_independent_contig(locus: hl.LocusExpression):
     )
 
 
-def get_dataset_type_specific_annotations(
+def get_dataset_type_specific_variants_annotations(
     ht: hl.Table,
-    reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ):
     return {
-        DatasetType.SNV_INDEL: lambda ht: {
-            'hgmd': (
-                ht.hgmd
-                if hasattr(ht, 'hgmd')
-                else hl.missing(hl.tstruct(accession=hl.tstr, classification=hl.tstr))
-            ),
-            **(
-                {'screenRegionType': ht.screen.region_types.first()}
-                if reference_genome == ReferenceGenome.GRCh38
-                else {}
-            ),
-        },
         DatasetType.MITO: lambda ht: {
             'commonLowHeteroplasmy': ht.common_low_heteroplasmy,
-            'mitomapPathogenic': ht.mitomap.pathogenic,
+            'haplogroupDefining': ht.haplogroup.is_defining,
+            'mitotip': ht.mitotip.trna_prediction,
         },
         DatasetType.SV: lambda ht: {
             'algorithms': ht.algorithms,
@@ -69,10 +57,33 @@ def get_dataset_type_specific_annotations(
             ),
             'svType': ht.sv_type,
             'svTypeDetail': ht.sv_type_detail,
+            'predictions': hl.Struct(
+                strvctvre=ht.strvctvre.score,
+            ),
+            'populations': hl.Struct(
+                gnomad_svs=hl.Struct(
+                    af=ht.gnomad_svs.AF,
+                    het=ht.gnomad_svs.N_HET,
+                    hom=ht.gnomad_svs.N_HOM,
+                    id=ht.gnomad_svs.ID,
+                ),
+            ),
         },
         DatasetType.GCNV: lambda ht: {
             'numExon': ht.num_exon,
             'svType': ht.sv_type,
+            'predictions': hl.Struct(
+                strvctvre=ht.strvctvre.score,
+            ),
+            'populations': hl.Struct(
+                sv_callset=hl.Struct(
+                    ac=ht.gt_stats.AC,
+                    af=ht.gt_stats.AF,
+                    an=ht.gt_stats.AN,
+                    het=ht.gt_stats.Het,
+                    hom=ht.gt_stats.Hom,
+                ),
+            ),
         },
     }[dataset_type](ht)
 
@@ -147,16 +158,6 @@ def get_entries_export_fields(
         'xpos': ht.xpos,
         **(
             {
-                'is_gnomad_gt_5_percent': hl.or_else(
-                    ht.gnomad_genomes.AF_POPMAX_OR_GLOBAL > FIVE_PERCENT,
-                    False,
-                ),
-            }
-            if dataset_type == DatasetType.SNV_INDEL
-            else {}
-        ),
-        **(
-            {
                 'geneIds': hl.set(ht.sorted_gene_consequences.gene_id)
                 if dataset_type == DatasetType.SV
                 else hl.set(ht.sorted_transcript_consequences.gene_id)
@@ -174,161 +175,6 @@ def get_entries_export_fields(
     }
 
 
-def get_predictions_export_fields(
-    ht: hl.Table,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-):
-    return {
-        DatasetType.SNV_INDEL: lambda ht: {
-            'cadd': ht.dbnsfp.CADD_phred,
-            'eigen': ht.eigen.Eigen_phred,
-            'fathmm': ht.dbnsfp.fathmm_MKL_coding_score,
-            **(
-                {
-                    'gnomad_noncoding': ht.gnomad_non_coding_constraint.z_score,
-                }
-                if reference_genome == ReferenceGenome.GRCh38
-                else {}
-            ),
-            'mpc': ht.dbnsfp.MPC_score,
-            'mut_pred': ht.dbnsfp.MutPred_score,
-            'mut_tester': ht.dbnsfp.MutationTaster_pred,
-            'polyphen': ht.dbnsfp.Polyphen2_HVAR_score,
-            'primate_ai': ht.dbnsfp.PrimateAI_score,
-            'revel': ht.dbnsfp.REVEL_score,
-            'sift': ht.dbnsfp.SIFT_score,
-            'splice_ai': ht.splice_ai.delta_score,
-            'splice_ai_consequence': ht.splice_ai.splice_consequence,
-            'vest': ht.dbnsfp.VEST4_score,
-        },
-        DatasetType.MITO: lambda ht: {
-            'apogee': ht.mitimpact.score,
-            'haplogroup_defining': ht.haplogroup.is_defining,
-            'hmtvar': ht.hmtvar.score,
-            'mitotip': ht.mitotip.trna_prediction,
-            'mut_taster': ht.dbnsfp.MutationTaster_pred,
-            'sift': ht.dbnsfp.SIFT_score,
-            'mlc': ht.local_constraint_mito.score,
-        },
-        DatasetType.SV: lambda ht: {
-            'strvctvre': ht.strvctvre.score,
-        },
-        DatasetType.GCNV: lambda ht: {
-            'strvctvre': ht.strvctvre.score,
-        },
-    }[dataset_type](ht)
-
-
-def get_populations_export_fields(ht: hl.Table, dataset_type: DatasetType):
-    return {
-        DatasetType.SNV_INDEL: lambda ht: {
-            'exac': hl.Struct(
-                ac=ht.exac.AC_Adj,
-                af=ht.exac.AF,
-                an=ht.exac.AN_Adj,
-                filter_af=ht.exac.AF_POPMAX,
-                hemi=ht.exac.AC_Hemi,
-                het=ht.exac.AC_Het,
-                hom=ht.exac.AC_Hom,
-            ),
-            'gnomad_exomes': hl.Struct(
-                ac=ht.gnomad_exomes.AC,
-                af=ht.gnomad_exomes.AF,
-                an=ht.gnomad_exomes.AN,
-                filter_af=ht.gnomad_exomes.AF_POPMAX_OR_GLOBAL,
-                hemi=ht.gnomad_exomes.Hemi,
-                hom=ht.gnomad_exomes.Hom,
-            ),
-            'gnomad_genomes': hl.Struct(
-                ac=ht.gnomad_genomes.AC,
-                af=ht.gnomad_genomes.AF,
-                an=ht.gnomad_genomes.AN,
-                filter_af=ht.gnomad_genomes.AF_POPMAX_OR_GLOBAL,
-                hemi=ht.gnomad_genomes.Hemi,
-                hom=ht.gnomad_genomes.Hom,
-            ),
-            'topmed': hl.Struct(
-                ac=ht.topmed.AC,
-                af=ht.topmed.AF,
-                an=ht.topmed.AN,
-                het=ht.topmed.Het,
-                hom=ht.topmed.Hom,
-            ),
-        },
-        DatasetType.MITO: lambda ht: {
-            'gnomad_mito': hl.Struct(
-                ac=ht.gnomad_mito.AC_hom,
-                af=ht.gnomad_mito.AF_hom,
-                an=ht.gnomad_mito.AN,
-            ),
-            'gnomad_mito_heteroplasmy': hl.Struct(
-                ac=ht.gnomad_mito.AC_het,
-                af=ht.gnomad_mito.AF_hom,
-                an=ht.gnomad_mito.AN,
-                max_hl=ht.gnomad_mito.max_hl,
-            ),
-            'helix': hl.Struct(
-                ac=ht.helix_mito.AC_hom,
-                af=ht.helix_mito.AF_hom,
-                an=ht.helix_mito.AN,
-            ),
-            'helix_heteroplasmy': hl.Struct(
-                ac=ht.helix_mito.AC_het,
-                af=ht.helix_mito.AF_het,
-                an=ht.helix_mito.AN,
-                max_hl=ht.helix_mito.max_hl,
-            ),
-        },
-        DatasetType.SV: lambda ht: {
-            'gnomad_svs': hl.Struct(
-                af=ht.gnomad_svs.AF,
-                het=ht.gnomad_svs.N_HET,
-                hom=ht.gnomad_svs.N_HOM,
-                id=ht.gnomad_svs.ID,
-            ),
-        },
-        DatasetType.GCNV: lambda ht: {
-            'sv_callset': hl.Struct(
-                ac=ht.gt_stats.AC,
-                af=ht.gt_stats.AF,
-                an=ht.gt_stats.AN,
-                het=ht.gt_stats.Het,
-                hom=ht.gt_stats.Hom,
-            ),
-        },
-    }[dataset_type](ht)
-
-
-def get_position_fields(ht: hl.Table, dataset_type: DatasetType):
-    if dataset_type in {DatasetType.SV, DatasetType.GCNV}:
-        rg37_contig = reference_independent_contig(ht.rg37_locus_end)
-        return {
-            'chrom': reference_independent_contig(ht.start_locus),
-            'pos': ht.start_locus.position,
-            'end': ht.end_locus.position,
-            'rg37LocusEnd': hl.Struct(
-                contig=rg37_contig,
-                position=hl.or_missing(
-                    hl.is_defined(rg37_contig),
-                    ht.rg37_locus_end.position,
-                ),
-            ),
-        }
-    if dataset_type == DatasetType.MITO:
-        return {
-            'pos': ht.locus.position,
-            'ref': ht.alleles[0],
-            'alt': ht.alleles[1],
-        }
-    return {
-        'chrom': reference_independent_contig(ht.locus),
-        'pos': ht.locus.position,
-        'ref': ht.alleles[0],
-        'alt': ht.alleles[1],
-    }
-
-
 def get_variant_id_fields(
     ht: hl.Table,
     dataset_type: DatasetType,
@@ -337,7 +183,7 @@ def get_variant_id_fields(
         DatasetType.SNV_INDEL: lambda ht: {
             'variantId': ht.variant_id,
             'rsid': ht.rsid,
-            'CAID': ht.CAID,
+            'CAID': hl.missing(hl.tstr),
         },
         DatasetType.MITO: lambda ht: {
             'variantId': ht.variant_id,
@@ -410,18 +256,61 @@ def get_variants_export_fields(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ):
+    if dataset_type in {DatasetType.SV, DatasetType.GCNV}:
+        rg37_contig = reference_independent_contig(ht.rg37_locus_end)
+        position_fields = {
+            'chrom': reference_independent_contig(ht.start_locus),
+            'pos': ht.start_locus.position,
+            'end': ht.end_locus.position,
+            'rg37LocusEnd': hl.Struct(
+                contig=rg37_contig,
+                position=hl.or_missing(
+                    hl.is_defined(rg37_contig),
+                    ht.rg37_locus_end.position,
+                ),
+            ),
+        }
+        return {
+            'key_': ht.key_,
+            'xpos': ht.xpos,
+            **position_fields,
+            **get_variant_id_fields(ht, dataset_type),
+            **get_lifted_over_position_fields(ht, dataset_type),
+            **get_dataset_type_specific_variants_annotations(ht, dataset_type),
+            **get_consequences_fields(ht, reference_genome, dataset_type),
+        }
+    if dataset_type == DatasetType.MITO:
+        return {
+            'key_': ht.key_,
+            **get_variant_id_fields(ht, dataset_type),
+            **get_lifted_over_position_fields(ht, dataset_type),
+            **get_dataset_type_specific_variants_annotations(ht, dataset_type),
+            **get_consequences_fields(ht, reference_genome, dataset_type),
+        }
     return {
         'key_': ht.key_,
-        'xpos': ht.xpos,
-        **get_position_fields(ht, dataset_type),
+        **get_consequences_fields(ht, reference_genome, dataset_type),
+    }
+
+
+def get_variant_details_export_fields(
+    ht: hl.Table,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+):
+    return {
+        'key_': ht.key_,
         **get_variant_id_fields(ht, dataset_type),
         **get_lifted_over_position_fields(ht, dataset_type),
-        **get_dataset_type_specific_annotations(ht, reference_genome, dataset_type),
-        'predictions': hl.Struct(
-            **get_predictions_export_fields(ht, reference_genome, dataset_type),
+        **(
+            {
+                'sortedMotifFeatureConsequences': ht.sortedMotifFeatureConsequences,
+                'sortedRegulatoryFeatureConsequences': ht.sortedRegulatoryFeatureConsequences,
+            }
+            if reference_genome == ReferenceGenome.GRCh38
+            else {}
         ),
-        'populations': hl.Struct(
-            **get_populations_export_fields(ht, dataset_type),
-        ),
-        **get_consequences_fields(ht, reference_genome, dataset_type),
+        'transcripts': hl.enumerate(
+            ht.sortedTranscriptConsequences,
+        ).starmap(reformat_transcripts_for_export),
     }

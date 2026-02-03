@@ -17,7 +17,7 @@ from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.retry import retry
 from v03_pipeline.lib.paths import (
     new_entries_parquet_path,
-    new_transcripts_parquet_path,
+    new_variant_details_parquet_path,
     new_variants_parquet_path,
 )
 
@@ -32,10 +32,10 @@ STAGING_CLICKHOUSE_DATABASE = 'staging'
 
 
 class ClickHouseTable(StrEnum):
-    ANNOTATIONS_DISK = 'annotations_disk'
-    ANNOTATIONS_MEMORY = 'annotations_memory'
     KEY_LOOKUP = 'key_lookup'
-    TRANSCRIPTS = 'transcripts'
+    VARIANT_DETAILS = 'variants/details'
+    VARIANTS_DISK = 'variants_disk'
+    VARIANTS_MEMORY = 'variants_memory'
     ENTRIES = 'entries'
     PROJECT_GT_STATS = 'project_gt_stats'
     GT_STATS = 'gt_stats'
@@ -43,10 +43,10 @@ class ClickHouseTable(StrEnum):
     @property
     def src_path_fn(self) -> Callable:
         return {
-            ClickHouseTable.ANNOTATIONS_DISK: new_variants_parquet_path,
-            ClickHouseTable.ANNOTATIONS_MEMORY: new_variants_parquet_path,
-            ClickHouseTable.KEY_LOOKUP: new_variants_parquet_path,
-            ClickHouseTable.TRANSCRIPTS: new_transcripts_parquet_path,
+            ClickHouseTable.VARIANTS_DISK: new_variants_parquet_path,
+            ClickHouseTable.VARIANTS_MEMORY: new_variants_parquet_path,
+            ClickHouseTable.KEY_LOOKUP: new_variant_details_parquet_path,
+            ClickHouseTable.VARIANT_DETAILS: new_variant_details_parquet_path,
             ClickHouseTable.ENTRIES: new_entries_parquet_path,
         }[self]
 
@@ -71,13 +71,15 @@ class ClickHouseTable(StrEnum):
     @property
     def insert(self) -> Callable:
         return {
-            ClickHouseTable.ANNOTATIONS_MEMORY: direct_insert_annotations,
+            # Note that VARIANTS_DETAILS is not included here because
+            # of the special logic to ensure writes are made to both tables.
+            ClickHouseTable.VARIANTS_MEMORY: direct_insert_annotations,
             ClickHouseTable.ENTRIES: atomic_insert_entries,
             ClickHouseTable.KEY_LOOKUP: functools.partial(
                 direct_insert_all_keys,
                 clickhouse_table=self,
             ),
-            ClickHouseTable.TRANSCRIPTS: functools.partial(
+            ClickHouseTable.VARIANT_DETAILS: functools.partial(
                 direct_insert_all_keys,
                 clickhouse_table=self,
             ),
@@ -86,13 +88,13 @@ class ClickHouseTable(StrEnum):
     @classmethod
     def for_dataset_type(cls, dataset_type: DatasetType) -> list['ClickHouseTable']:
         tables = [
-            ClickHouseTable.ANNOTATIONS_MEMORY,
+            ClickHouseTable.VARIANTS_MEMORY,
             ClickHouseTable.KEY_LOOKUP,
         ]
-        if dataset_type.should_write_new_transcripts:
+        if dataset_type.should_write_new_variant_details:
             tables = [
                 *tables,
-                ClickHouseTable.TRANSCRIPTS,
+                ClickHouseTable.VARIANT_DETAILS,
             ]
         return [
             *tables,
@@ -100,12 +102,12 @@ class ClickHouseTable(StrEnum):
         ]
 
     @classmethod
-    def for_dataset_type_disk_backed_annotations_tables(
+    def for_dataset_type_disk_backed_variants_tables(
         cls,
         _dataset_type: DatasetType,
     ) -> list['ClickHouseTable']:
         return [
-            ClickHouseTable.ANNOTATIONS_DISK,
+            ClickHouseTable.VARIANTS_DISK,
         ]
 
     @classmethod
@@ -649,23 +651,29 @@ def insert_new_entries(
     if 'geneId_ids' in dst_cols and 'geneIds' in src_cols:
         common = [c for c in common if c not in ('geneId_ids', 'geneIds')]
         common.append('geneId_ids')
-        overrides = {
-            'geneId_ids': (
-                f"""
-                arrayFilter(
-                    x -> x IS NOT NULL,
-                    arrayMap(
-                        g -> dictGetOrNull(
-                            {Env.CLICKHOUSE_DATABASE}.`seqrdb_gene_ids`,
-                            'seqrdb_id',
-                            g
-                        ),
-                        geneIds
-                    )
+        overrides['geneId_ids'] = f"""
+            arrayFilter(
+                x -> x IS NOT NULL,
+                arrayMap(
+                    g -> dictGetOrNull(
+                        {Env.CLICKHOUSE_DATABASE}.`seqrdb_gene_ids`,
+                        'seqrdb_id',
+                        g
+                    ),
+                    geneIds
                 )
-                """
-            ),
-        }
+            )
+        """
+
+    if (
+        'is_gnomad_gt_5_percent' in dst_cols
+        and 'is_gnomad_gt_5_percent' not in src_cols
+    ):
+        common.append('is_gnomad_gt_5_percent')
+        overrides['is_gnomad_gt_5_percent'] = f"""
+            dictGetOrDefault({ClickhouseReferenceDataset.GNOMAD_GENOMES.search_path(table_name_builder)}, 'filter_af', key, 0) > 0.05
+        """
+
     dst_list = ', '.join(common)
     src_list = ', '.join([overrides.get(c, c) for c in common])
     logged_query(
@@ -853,8 +861,8 @@ def direct_insert_annotations(
     table_name_builder: TableNameBuilder,
     **_,
 ) -> None:
-    dst_table = table_name_builder.dst_table(ClickHouseTable.ANNOTATIONS_MEMORY)
-    src_table = table_name_builder.src_table(ClickHouseTable.ANNOTATIONS_MEMORY)
+    dst_table = table_name_builder.dst_table(ClickHouseTable.VARIANTS_MEMORY)
+    src_table = table_name_builder.src_table(ClickHouseTable.VARIANTS_MEMORY)
     drop_staging_db()
     logged_query(
         f"""
@@ -866,16 +874,16 @@ def direct_insert_annotations(
     logged_query(
         f"""
         CREATE TABLE {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys` ENGINE = Set AS (
-            SELECT {ClickHouseTable.ANNOTATIONS_MEMORY.key_field}
+            SELECT {ClickHouseTable.VARIANTS_MEMORY.key_field}
             FROM {src_table} src
             LEFT ANTI JOIN {dst_table} dst
-            ON {ClickHouseTable.ANNOTATIONS_MEMORY.join_condition}
+            ON {ClickHouseTable.VARIANTS_MEMORY.join_condition}
         )
         """,
     )
     for (
         clickhouse_table
-    ) in ClickHouseTable.for_dataset_type_disk_backed_annotations_tables(
+    ) in ClickHouseTable.for_dataset_type_disk_backed_variants_tables(
         table_name_builder.dataset_type,
     ):
         disk_backed_dst_table = table_name_builder.dst_table(clickhouse_table)
@@ -890,8 +898,8 @@ def direct_insert_annotations(
     logged_query(
         f"""
         INSERT INTO {dst_table}
-        SELECT {ClickHouseTable.ANNOTATIONS_MEMORY.select_fields}
-        FROM {src_table} WHERE {ClickHouseTable.ANNOTATIONS_MEMORY.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
+        SELECT {ClickHouseTable.VARIANTS_MEMORY.select_fields}
+        FROM {src_table} WHERE {ClickHouseTable.VARIANTS_MEMORY.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
         """,
     )
     drop_staging_db()

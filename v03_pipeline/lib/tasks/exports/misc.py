@@ -17,7 +17,6 @@ from v03_pipeline.lib.annotations.enums import (
 )
 from v03_pipeline.lib.core import DatasetType, ReferenceGenome
 from v03_pipeline.lib.misc.nested_field import parse_nested_field
-from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 
 
 def snake_to_camelcase(snake_string: str):
@@ -87,20 +86,23 @@ def export_parquet_filterable_transcripts_fields(
     return OrderedDict(sorted(fields.items()))
 
 
-def drop_unexported_fields(ht: hl.Table) -> hl.Table:
-    if hasattr(ht, 'clinvar'):
-        ht = ht.drop('clinvar')
-        if hasattr(ht.globals.enums, 'clinvar'):
-            ht = ht.annotate_globals(
-                enums=ht.globals.enums.drop('clinvar'),
-            )
-    return ht
-
-
-def subset_sorted_transcript_consequences_fields(
+def subset_consequences_fields(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
+    if reference_genome == ReferenceGenome.GRCh38:
+        ht = ht.annotate(
+            sortedMotifFeatureConsequences=ht.sortedMotifFeatureConsequences.map(
+                lambda e: e.select(
+                    'consequenceTerms',
+                ),
+            ),
+            sortedRegulatoryFeatureConsequences=ht.sortedRegulatoryFeatureConsequences.map(
+                lambda e: e.select(
+                    'consequenceTerms',
+                ),
+            ),
+        )
     return ht.annotate(
         sortedTranscriptConsequences=hl.enumerate(
             ht.sortedTranscriptConsequences,
@@ -150,71 +152,6 @@ def camelcase_array_structexpression_fields(
             ),
         )
     return ht
-
-
-def unmap_reference_dataset_annotation_enums(
-    ht: hl.Table,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-) -> hl.Table:
-    reference_datasets = ReferenceDataset.for_reference_genome_dataset_type_annotations(
-        reference_genome,
-        dataset_type,
-    )
-    unmapped_annotation_name = []
-    for annotation_name in ht.enums:
-        if annotation_name not in reference_datasets:
-            continue
-        for enum_name in ht.enums[annotation_name]:
-            if hasattr(ht[annotation_name], f'{enum_name}_ids'):
-                ht = ht.annotate(
-                    **{
-                        annotation_name: ht[annotation_name].annotate(
-                            **{
-                                f'{enum_name}s': ht[annotation_name][
-                                    f'{enum_name}_ids'
-                                ].map(
-                                    lambda idx: ht.enums[annotation_name][enum_name][  # noqa: B023
-                                        idx
-                                    ],
-                                ),
-                            },
-                        ),
-                    },
-                )
-                ht = ht.annotate(
-                    **{annotation_name: ht[annotation_name].drop(f'{enum_name}_ids')},
-                )
-            else:
-                ht = ht.annotate(
-                    **{
-                        annotation_name: ht[annotation_name].annotate(
-                            **{
-                                enum_name: ht.enums[annotation_name][enum_name][
-                                    ht[annotation_name][f'{enum_name}_id']
-                                ],
-                            },
-                        ),
-                    },
-                )
-                ht = ht.annotate(
-                    **{annotation_name: ht[annotation_name].drop(f'{enum_name}_id')},
-                )
-        unmapped_annotation_name.append(annotation_name)
-
-    # Explicit hgmd edge case:
-    if hasattr(
-        ht,
-        ReferenceDataset.hgmd.value,
-    ):
-        ht = ht.annotate(
-            **{
-                ReferenceDataset.hgmd.value: ht[ReferenceDataset.hgmd.value]
-                .annotate(classification=ht[ReferenceDataset.hgmd.value]['class'])
-                .drop('class'),
-            },
-        )
-    return ht.annotate_globals(enums=ht.globals.enums.drop(*unmapped_annotation_name))
 
 
 def unmap_formatting_annotation_enums(

@@ -15,15 +15,10 @@ from v03_pipeline.lib.tasks.base.base_write_parquet import BaseWriteParquetTask
 from v03_pipeline.lib.tasks.exports.fields import get_variants_export_fields
 from v03_pipeline.lib.tasks.exports.misc import (
     camelcase_array_structexpression_fields,
-    drop_unexported_fields,
-    subset_sorted_transcript_consequences_fields,
+    subset_consequences_fields,
     unmap_formatting_annotation_enums,
-    unmap_reference_dataset_annotation_enums,
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
-from v03_pipeline.lib.tasks.update_new_variants_with_caids import (
-    UpdateNewVariantsWithCAIDsTask,
-)
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
@@ -50,8 +45,6 @@ class WriteNewVariantsParquetTask(BaseWriteParquetTask):
             and len(self.project_guids) > 0
         ):
             return self.clone(UpdateVariantAnnotationsTableWithNewSamplesTask)
-        if self.dataset_type.should_send_to_allele_registry:
-            return self.clone(UpdateNewVariantsWithCAIDsTask)
         return self.clone(WriteNewVariantsTableTask)
 
     def create_table(self) -> None:
@@ -83,13 +76,7 @@ class WriteNewVariantsParquetTask(BaseWriteParquetTask):
                     self.run_id,
                 ),
             )
-        ht = drop_unexported_fields(ht)
         ht = unmap_formatting_annotation_enums(
-            ht,
-            self.reference_genome,
-            self.dataset_type,
-        )
-        ht = unmap_reference_dataset_annotation_enums(
             ht,
             self.reference_genome,
             self.dataset_type,
@@ -99,8 +86,8 @@ class WriteNewVariantsParquetTask(BaseWriteParquetTask):
             self.reference_genome,
             self.dataset_type,
         )
-        if self.dataset_type.should_write_new_transcripts:
-            ht = subset_sorted_transcript_consequences_fields(
+        if self.dataset_type.should_write_new_variant_details:
+            ht = subset_consequences_fields(
                 ht,
                 self.reference_genome,
             )

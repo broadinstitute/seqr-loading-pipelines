@@ -7,8 +7,8 @@ from v03_pipeline.lib.tasks.base.base_loading_run_params import (
 from v03_pipeline.lib.tasks.exports.write_new_entries_parquet import (
     WriteNewEntriesParquetTask,
 )
-from v03_pipeline.lib.tasks.exports.write_new_transcripts_parquet import (
-    WriteNewTranscriptsParquetTask,
+from v03_pipeline.lib.tasks.exports.write_new_variant_details_parquet import (
+    WriteNewVariantDetailsParquetTask,
 )
 from v03_pipeline.lib.tasks.exports.write_new_variants_parquet import (
     WriteNewVariantsParquetTask,
@@ -30,8 +30,8 @@ class RunPipelineTask(luigi.WrapperTask):
             self.clone(WriteNewEntriesParquetTask),
             self.clone(WriteNewVariantsParquetTask),
             *(
-                [self.clone(WriteNewTranscriptsParquetTask)]
-                if self.dataset_type.should_write_new_transcripts
+                [self.clone(WriteNewVariantDetailsParquetTask)]
+                if self.dataset_type.should_write_new_variant_details
                 else []
             ),
         ]

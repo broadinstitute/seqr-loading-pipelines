@@ -11,7 +11,6 @@ from v03_pipeline.bin.pipeline_worker import process_queue
 from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.core.environment import Env
 from v03_pipeline.lib.misc.clickhouse import (
-    STAGING_CLICKHOUSE_DATABASE,
     ClickhouseReferenceDataset,
     get_clickhouse_client,
 )
@@ -20,14 +19,14 @@ from v03_pipeline.lib.paths import (
     loading_pipeline_deadletter_queue_dir,
     loading_pipeline_queue_dir,
 )
+from v03_pipeline.lib.test.clickhouse_schema_testcase import ClickhouseSchemaTestCase
 from v03_pipeline.lib.test.misc import copy_project_pedigree_to_mocked_dir
-from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
-    MockedReferenceDatasetsTestCase,
+from v03_pipeline.lib.test.mocked_dataroot_testcase import (
+    MockedDatarootTestCase,
 )
 from v03_pipeline.var.test.vep.mock_vep_data import MOCK_38_VEP_DATA
 
 TEST_PEDIGREE_3_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_3_remap.tsv'
-TEST_SCHEMA = 'v03_pipeline/var/test/test_clickhouse_schema.sql'
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 
 
@@ -40,110 +39,7 @@ class MyFailingTask(luigi.Task):
         return luigi.LocalTarget('output.txt')
 
 
-class PipelineWorkerTest(MockedReferenceDatasetsTestCase):
-    def setUp(self):
-        super().setUp()
-        client = get_clickhouse_client()
-        client.execute(
-            f"""
-            DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};
-            """,
-        )
-        client.execute(
-            f"""
-            DROP DATABASE IF EXISTS {Env.CLICKHOUSE_DATABASE};
-            """,
-        )
-        client.execute(
-            f"""
-            CREATE DATABASE {Env.CLICKHOUSE_DATABASE};
-        """,
-        )
-        client = get_clickhouse_client(database=Env.CLICKHOUSE_DATABASE)
-        client.execute(
-            """
-            CREATE DICTIONARY seqrdb_gene_ids
-            (
-                `gene_id` String,
-                `seqrdb_id` String,
-                `affected` String
-            )
-            PRIMARY KEY gene_id
-            SOURCE(NULL())
-            LIFETIME(0)
-            LAYOUT(HASHED())
-            """,
-        )
-        client.execute(
-            """
-            CREATE DICTIONARY seqrdb_affected_status_dict
-            (
-                `family_guid` String,
-                `sampleId` String,
-                `affected` String
-            )
-            PRIMARY KEY family_guid, sampleId
-            SOURCE(NULL())
-            LIFETIME(0)
-            LAYOUT(COMPLEX_KEY_HASHED())
-            """,
-        )
-        client.execute(
-            """
-            CREATE DICTIONARY `GRCh38/SNV_INDEL/project_partitions_dict`
-            (
-                `project_guid` String,
-                `n_partitions` UInt32
-            )
-            PRIMARY KEY project_guid
-            SOURCE(NULL())
-            LIFETIME(0)
-            LAYOUT(COMPLEX_KEY_HASHED())
-            """,
-        )
-        with open(TEST_SCHEMA) as f:
-            sql = f.read()
-        commands = [cmd.strip() for cmd in sql.split(';') if cmd.strip()]
-        for cmd in commands:
-            client.execute(cmd)
-        client.execute(
-            f"""
-            CREATE DICTIONARY `GRCh38/SNV_INDEL/gt_stats_dict`
-            (
-                `key` UInt32,
-                `ac_wes` UInt64,
-                `ac_wgs` UInt64,
-                `ac_affected` UInt64,
-                `hom_wes` UInt64,
-                `hom_wgs` UInt64,
-                `hom_affected` UInt64
-            )
-            PRIMARY KEY key
-            SOURCE(
-                CLICKHOUSE(
-                    USER {Env.CLICKHOUSE_WRITER_USER} PASSWORD {Env.CLICKHOUSE_WRITER_PASSWORD}
-                    DB {Env.CLICKHOUSE_DATABASE} TABLE `GRCh38/SNV_INDEL/gt_stats`
-                )
-            )
-            LIFETIME(0)
-            LAYOUT(FLAT(MAX_ARRAY_SIZE 1000000000))
-            """,
-        )
-
-    def tearDown(self):
-        super().tearDown()
-        client = get_clickhouse_client()
-        client.execute(
-            f"""
-           DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};
-           """,
-        )
-        client.execute(
-            f"""
-           DROP DATABASE IF EXISTS {Env.CLICKHOUSE_DATABASE};
-           """,
-        )
-
+class PipelineWorkerTest(MockedDatarootTestCase, ClickhouseSchemaTestCase):
     @patch.object(
         ClickhouseReferenceDataset,
         'for_reference_genome_dataset_type',
@@ -151,9 +47,6 @@ class PipelineWorkerTest(MockedReferenceDatasetsTestCase):
     )
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_ensembl_to_refseq_id',
-    )
-    @patch(
-        'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
     )
     @patch('v03_pipeline.lib.vep.hl.vep')
     @patch('v03_pipeline.lib.misc.slack._safe_post_to_slack')
@@ -163,14 +56,12 @@ class PipelineWorkerTest(MockedReferenceDatasetsTestCase):
         mock_logger,
         mock_safe_post_to_slack,
         mock_vep: Mock,
-        mock_register_alleles: Mock,
         mock_load_gencode_ensembl_to_refseq_id: Mock,
         mock_for_reference_genome_dataset_type: Mock,
     ):
         mock_load_gencode_ensembl_to_refseq_id.return_value = hl.dict(
             {'ENST00000327044': 'NM_015658.4'},
         )
-        mock_register_alleles.side_effect = None
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_38_VEP_DATA)
         copy_project_pedigree_to_mocked_dir(
             TEST_PEDIGREE_3_REMAP,
@@ -218,7 +109,7 @@ class PipelineWorkerTest(MockedReferenceDatasetsTestCase):
             f"""
             SELECT COUNT(*)
             FROM
-            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/annotations_memory`
+            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/variants_memory`
             """,
         )[0][0]
         self.assertEqual(annotations_count, 30)

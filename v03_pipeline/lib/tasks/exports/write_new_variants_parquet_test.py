@@ -96,9 +96,14 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             ),
         )
 
+    @mock.patch(
+        'v03_pipeline.lib.tasks.exports.write_new_variants_parquet.WriteNewVariantsTableTask',
+    )
     def test_write_new_variants_parquet_test(
         self,
+        mock_write_new_variants_task,
     ) -> None:
+        mock_write_new_variants_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         task = WriteNewVariantsParquetTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -131,79 +136,14 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             [
                 {
                     'key': 0,
-                    'xpos': 1000876499,
-                    'chrom': '1',
-                    'pos': 876499,
-                    'ref': 'A',
-                    'alt': 'G',
-                    'variantId': '1-876499-A-G',
-                    'rsid': None,
-                    'CAID': 'CA502654',
-                    'liftedOverChrom': '1',
-                    'liftedOverPos': 874501,
-                    'hgmd': {'accession': 'abcdefg', 'classification': 'DFP'},
-                    'screenRegionType': None,
-                    'predictions': {
-                        'cadd': 23.5,
-                        'eigen': 2.628000020980835,
-                        'fathmm': 0.7174800038337708,
-                        'gnomad_noncoding': None,
-                        'mpc': 0.01291007362306118,
-                        'mut_pred': None,
-                        'mut_tester': 'D',
-                        'polyphen': 0.164000004529953,
-                        'primate_ai': 0.5918066501617432,
-                        'revel': 0.3109999895095825,
-                        'sift': 0.0010000000474974513,
-                        'splice_ai': 0.0,
-                        'splice_ai_consequence': 'No consequence',
-                        'vest': 0.39500001072883606,
-                    },
-                    'populations': {
-                        'exac': {
-                            'ac': 20,
-                            'af': 0.00019039999460801482,
-                            'an': 47974,
-                            'filter_af': 0.0007150234305299819,
-                            'hemi': None,
-                            'het': 20,
-                            'hom': 0,
-                        },
-                        'gnomad_exomes': {
-                            'ac': 964,
-                            'af': 0.0006690866430290043,
-                            'an': 1440770,
-                            'filter_af': 0.0008023773552849889,
-                            'hemi': 0,
-                            'hom': 0,
-                        },
-                        'gnomad_genomes': {
-                            'ac': 42,
-                            'af': 0.0002759889466688037,
-                            'an': 152180,
-                            'filter_af': 0.10000000149011612,
-                            'hemi': 0,
-                            'hom': 0,
-                        },
-                        'topmed': {
-                            'ac': 41,
-                            'af': 0.00032651599030941725,
-                            'an': 125568,
-                            'het': 41,
-                            'hom': 0,
-                        },
-                    },
                     'sortedMotifFeatureConsequences': [
                         {
                             'consequenceTerms': ['TF_binding_site_variant'],
-                            'motifFeatureId': 'ENSM00493959715',
                         },
                     ],
                     'sortedRegulatoryFeatureConsequences': [
                         {
-                            'biotype': 'CTCF_binding_site',
                             'consequenceTerms': ['regulatory_region_variant'],
-                            'regulatoryFeatureId': 'ENSR00000344437',
                         },
                     ],
                     'sortedTranscriptConsequences': [
@@ -220,9 +160,14 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             ],
         )
 
+    @mock.patch(
+        'v03_pipeline.lib.tasks.exports.write_new_variants_parquet.WriteNewVariantsTableTask',
+    )
     def test_grch37_write_new_variants_parquet_test(
         self,
+        mock_write_new_variants_task,
     ) -> None:
+        mock_write_new_variants_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         task = WriteNewVariantsParquetTask(
             reference_genome=ReferenceGenome.GRCh37,
@@ -255,66 +200,6 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             [
                 {
                     'key': 1424,
-                    'xpos': 1000069134,
-                    'chrom': '1',
-                    'pos': 69134,
-                    'ref': 'A',
-                    'alt': 'G',
-                    'variantId': '1-69134-A-G',
-                    'rsid': None,
-                    'CAID': 'CA502008',
-                    'liftedOverChrom': '1',
-                    'liftedOverPos': 69134,
-                    'hgmd': None,
-                    'predictions': {
-                        'cadd': 15.880000114440918,
-                        'eigen': 1.0019999742507935,
-                        'fathmm': 0.056940000504255295,
-                        'mpc': 1.8921889066696167,
-                        'mut_pred': 0.3779999911785126,
-                        'mut_tester': 'N',
-                        'polyphen': 0.0010000000474974513,
-                        'primate_ai': 0.37232041358947754,
-                        'revel': 0.07500000298023224,
-                        'sift': 0.1289999932050705,
-                        'splice_ai': 0.019999999552965164,
-                        'splice_ai_consequence': 'Donor gain',
-                        'vest': 0.10700000077486038,
-                    },
-                    'populations': {
-                        'exac': {
-                            'ac': 0,
-                            'af': 0.0016550000291317701,
-                            'an': 66,
-                            'filter_af': None,
-                            'hemi': None,
-                            'het': 0,
-                            'hom': 0,
-                        },
-                        'gnomad_exomes': {
-                            'ac': 505,
-                            'af': 0.026665963232517242,
-                            'an': 18938,
-                            'filter_af': 0.08191808313131332,
-                            'hemi': 0,
-                            'hom': 127,
-                        },
-                        'gnomad_genomes': {
-                            'ac': 1,
-                            'af': 0.0001722949673421681,
-                            'an': 5804,
-                            'filter_af': 0.0005662514013238251,
-                            'hemi': 0,
-                            'hom': 0,
-                        },
-                        'topmed': {
-                            'ac': 95,
-                            'af': 0.0007565619889646769,
-                            'an': 125568,
-                            'het': 95,
-                            'hom': 0,
-                        },
-                    },
                     'sortedTranscriptConsequences': [
                         {
                             'canonical': 1,
@@ -366,40 +251,12 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             [
                 {
                     'key': 998,
-                    'xpos': 25000000008,
-                    'pos': 8,
-                    'ref': 'G',
-                    'alt': 'T',
                     'variantId': 'M-8-G-T',
                     'rsid': 'rs1603218446',
                     'liftedOverPos': 578,
                     'commonLowHeteroplasmy': True,
-                    'mitomapPathogenic': None,
-                    'predictions': {
-                        'apogee': None,
-                        'haplogroup_defining': False,
-                        'hmtvar': 0.05000000074505806,
-                        'mitotip': 'likely_pathogenic',
-                        'mut_taster': None,
-                        'sift': None,
-                        'mlc': 0.12897999584674835,
-                    },
-                    'populations': {
-                        'gnomad_mito': {'ac': 0, 'af': 0.0, 'an': 56433},
-                        'gnomad_mito_heteroplasmy': {
-                            'ac': 0,
-                            'af': 0.0,
-                            'an': 56433,
-                            'max_hl': 0.0,
-                        },
-                        'helix': {'ac': None, 'af': None, 'an': None},
-                        'helix_heteroplasmy': {
-                            'ac': None,
-                            'af': None,
-                            'an': None,
-                            'max_hl': None,
-                        },
-                    },
+                    'haplogroupDefining': False,
+                    'mitotip': 'likely_pathogenic',
                     'sortedTranscriptConsequences': [
                         {
                             'aminoAcids': None,

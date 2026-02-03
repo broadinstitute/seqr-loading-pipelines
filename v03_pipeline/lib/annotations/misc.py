@@ -15,36 +15,6 @@ from v03_pipeline.lib.annotations.enums import (
 )
 from v03_pipeline.lib.core import DatasetType
 from v03_pipeline.lib.core.definitions import ReferenceGenome
-from v03_pipeline.lib.paths import valid_reference_dataset_path
-from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
-
-
-def annotate_reference_dataset_globals(
-    ht: hl.Table,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-) -> hl.Table:
-    for (
-        reference_dataset
-    ) in ReferenceDataset.for_reference_genome_dataset_type_annotations(
-        reference_genome,
-        dataset_type,
-    ):
-        rd_ht = hl.read_table(
-            valid_reference_dataset_path(reference_genome, reference_dataset),
-        )
-        rd_ht_globals = rd_ht.index_globals()
-        ht = ht.annotate_globals(
-            versions=hl.Struct(
-                **ht.globals.versions,
-                **{reference_dataset.name: rd_ht_globals.version},
-            ),
-            enums=hl.Struct(
-                **ht.globals.enums,
-                **{reference_dataset.name: rd_ht_globals.enums},
-            ),
-        )
-    return ht
 
 
 def annotate_formatting_annotation_enum_globals(
@@ -52,6 +22,9 @@ def annotate_formatting_annotation_enum_globals(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> hl.Table:
+    ht = ht.select_globals(
+        enums=hl.Struct(),
+    )
     formatting_annotation_names = {
         fa.__name__ for fa in dataset_type.formatting_annotation_fns(reference_genome)
     }
