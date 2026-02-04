@@ -2,7 +2,7 @@ steps:
 - name: 'gcr.io/kaniko-project/executor:v1.3.0'
   args:
   - --destination=gcr.io/seqr-project/seqr-pipeline-runner:${COMMIT_SHA}
-  - --destination=gcr.io/seqr-project/seqr-pipeline-runner:${CUSTOM_BRANCH_TAG}
+  - --destination=gcr.io/seqr-project/seqr-pipeline-runner:${_CUSTOM_BRANCH_TAG}
   - --dockerfile=v03_pipeline/deploy/Dockerfile
   - --cache=true
   - --cache-ttl=168h
