@@ -46,3 +46,5 @@ jobs:
           gcloud storage rm -r gs://seqr-pipeline-runner-builds/dev/latest/ || echo 'No latest release'
           gcloud storage cp v03_pipeline/bin/* gs://seqr-pipeline-runner-builds/dev/latest/bin/
           gcloud storage cp dist/*.whl gs://seqr-pipeline-runner-builds/dev/latest/pyscripts.zip
+          gcloud storage cp v03_pipeline/bin/* gs://seqr-pipeline-runner-builds/dev/${{ github.event.workflow_run.head_sha }}/bin/
+          gcloud storage cp dist/*.whl gs://seqr-pipeline-runner-builds/dev/${{ github.event.workflow_run.head_sha }}/pyscripts.zip
