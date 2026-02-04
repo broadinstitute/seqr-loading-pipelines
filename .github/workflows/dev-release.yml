@@ -48,3 +48,26 @@ jobs:
           gcloud storage cp dist/*.whl gs://seqr-pipeline-runner-builds/dev/latest/pyscripts.zip
           gcloud storage cp v03_pipeline/bin/* gs://seqr-pipeline-runner-builds/dev/${{ github.event.workflow_run.head_sha }}/bin/
           gcloud storage cp dist/*.whl gs://seqr-pipeline-runner-builds/dev/${{ github.event.workflow_run.head_sha }}/pyscripts.zip
+  docker:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+
+      - name: authenticate to google cloud
+        id: "auth"
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: "${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}"
+          service_account: "${{ secrets.RUN_SA_EMAIL }}"
+
+      - name: "setup gcloud sdk"
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Build and push images
+        run: |-
+          gcloud builds submit --quiet --substitutions="COMMIT_SHA=${{ github.event.workflow_run.head_sha }},CUSTOM_BRANCH_TAG=dev" --config .cloudbuild/docker.cloudbuild.yaml --gcs-log-dir=gs://seqr-github-actions-logs/logs .
+
