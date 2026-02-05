@@ -8,9 +8,14 @@ from v03_pipeline.lib.misc.clickhouse import (
     TableNameBuilder,
     logged_query,
 )
+from v03_pipeline.lib.paths import (
+    new_variant_details_parquet_path,
+    new_variants_parquet_path,
+)
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )
+from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.variants_migration.migrate_variant_details_parquet import (
     MigrateVariantDetailsParquetOnDataprocTask,
     MigrateVariantDetailsParquetTask,
@@ -45,6 +50,24 @@ class LoadClickhouseVariantsTablesTask(luigi.WrapperTask):
             self.dataset_type,
             self.run_id,
         )
+        if not (
+            GCSorLocalFolderTarget(
+                new_variant_details_parquet_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.run_id,
+                ),
+            ).exists()
+        ) or not (
+            GCSorLocalFolderTarget(
+                new_variants_parquet_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.run_id,
+                ),
+            ).exists()
+        ):
+            return False
         max_key = logged_query(
             f"""
             SELECT max(key) FROM {table_name_builder.src_table(ClickHouseTable.VARIANTS_MEMORY)}
