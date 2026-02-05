@@ -54,7 +54,7 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
         mock_logger.error.assert_has_calls(
             [
                 call(
-                    'Job RunPipelineTask-38-manual__2024-04-03-0 entered ERROR state',
+                    'Job RunPipelineTask-38-SNV-INDEL-manual__2024-04-03-0 entered ERROR state',
                 ),
             ],
         )
@@ -128,7 +128,7 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
         mock_logger.info.assert_has_calls(
             [
                 call(
-                    'Waiting for Job completion RunPipelineTask-38-manual__2024-04-05-1',
+                    'Waiting for Job completion RunPipelineTask-38-SNV-INDEL-manual__2024-04-05-1',
                 ),
             ],
         )
@@ -175,8 +175,10 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
         mock_logger.info.assert_has_calls(
             [
                 call(
-                    'Waiting for Job completion RunPipelineTask-38-manual__2024-04-06-0',
+                    'Waiting for Job completion RunPipelineTask-38-SNV-INDEL-manual__2024-04-06-0',
                 ),
-                call('Job RunPipelineTask-38-manual__2024-04-06-0 is complete'),
+                call(
+                    'Job RunPipelineTask-38-SNV-INDEL-manual__2024-04-06-0 is complete',
+                ),
             ],
         )

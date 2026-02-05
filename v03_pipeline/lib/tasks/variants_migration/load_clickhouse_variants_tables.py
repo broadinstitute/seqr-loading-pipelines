@@ -32,17 +32,22 @@ class LoadClickhouseVariantsTablesTask(luigi.WrapperTask):
     attempt_id = luigi.IntParameter()
 
     def requires(self) -> luigi.Task:
-        return (
+        tasks = (
             [
-                self.clone(MigrateVariantDetailsParquetOnDataprocTask),
                 self.clone(MigrateVariantsParquetOnDataprocTask),
             ]
             if FeatureFlag.RUN_PIPELINE_ON_DATAPROC
             else [
-                self.clone(MigrateVariantDetailsParquetTask),
                 self.clone(MigrateVariantsParquetTask),
             ]
         )
+        if self.dataset_type.should_write_new_variant_details:
+            tasks.append(
+                self.clone(MigrateVariantDetailsParquetOnDataprocTask)
+                if FeatureFlag.RUN_PIPELINE_ON_DATAPROC
+                else self.clone(MigrateVariantDetailsParquetTask),
+            )
+        return tasks
 
     def complete(self) -> bool:
         table_name_builder = TableNameBuilder(
