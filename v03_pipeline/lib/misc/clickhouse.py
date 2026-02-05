@@ -912,11 +912,16 @@ def direct_insert_all_keys(
 ) -> None:
     dst_table = table_name_builder.dst_table(clickhouse_table)
     src_table = table_name_builder.src_table(clickhouse_table)
+    settings = ''
+    # Large variant details inserts may OOM
+    if clickhouse_table == ClickHouseTable.VARIANT_DETAILS:
+        settings = 'SETTINGS max_insert_threads = 2'
     logged_query(
         f"""
         INSERT INTO {dst_table}
         SELECT {clickhouse_table.select_fields}
         FROM {src_table}
+        {settings}
         """,
     )
 
