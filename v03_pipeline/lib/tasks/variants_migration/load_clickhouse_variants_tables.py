@@ -8,6 +8,7 @@ from v03_pipeline.lib.misc.clickhouse import (
     TableNameBuilder,
     logged_query,
 )
+from v03_pipeline.lib.misc.retry import retry
 from v03_pipeline.lib.paths import (
     new_variant_details_parquet_path,
     new_variants_parquet_path,
@@ -26,10 +27,10 @@ from v03_pipeline.lib.tasks.variants_migration.migrate_variants_parquet import (
 )
 
 
-@retry
+@retry()
 def refresh_seqr_variant_and_search(
-    clickhouse_reference_dataset: ClickhouseReferenceDataset,
     table_name_builder: TableNameBuilder,
+    clickhouse_reference_dataset: ClickhouseReferenceDataset,
 ):
     if clickhouse_reference_dataset.has_seqr_variants:
         logged_query(
@@ -128,4 +129,7 @@ class LoadClickhouseVariantsTablesTask(luigi.WrapperTask):
             self.reference_genome,
             self.dataset_type,
         ):
-            refresh_seqr_variant_and_search()
+            refresh_seqr_variant_and_search(
+                table_name_builder,
+                clickhouse_reference_dataset,
+            )
