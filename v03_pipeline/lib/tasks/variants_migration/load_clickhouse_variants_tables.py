@@ -26,6 +26,31 @@ from v03_pipeline.lib.tasks.variants_migration.migrate_variants_parquet import (
 )
 
 
+@retry
+def refresh_seqr_variant_and_search(
+    clickhouse_reference_dataset: ClickhouseReferenceDataset,
+    table_name_builder: TableNameBuilder,
+):
+    if clickhouse_reference_dataset.has_seqr_variants:
+        logged_query(
+            f"""
+            SYSTEM START VIEW {clickhouse_reference_dataset.all_variants_to_seqr_variants_mv(table_name_builder)}
+            """,
+        )
+        logged_query(
+            f"""
+            SYSTEM REFRESH VIEW {clickhouse_reference_dataset.all_variants_to_seqr_variants_mv(table_name_builder)}
+            """,
+        )
+        logged_query(
+            f"""
+            SYSTEM WAIT VIEW {clickhouse_reference_dataset.all_variants_to_seqr_variants_mv(table_name_builder)}
+            """,
+            timeout=clickhouse_reference_dataset.all_variants_mv_timeout,
+        )
+    clickhouse_reference_dataset.refresh_search(table_name_builder)
+
+
 @luigi.util.inherits(BaseLoadingPipelineParams)
 class LoadClickhouseVariantsTablesTask(luigi.WrapperTask):
     run_id = luigi.Parameter()
@@ -103,21 +128,4 @@ class LoadClickhouseVariantsTablesTask(luigi.WrapperTask):
             self.reference_genome,
             self.dataset_type,
         ):
-            if clickhouse_reference_dataset.has_seqr_variants:
-                logged_query(
-                    f"""
-                    SYSTEM START VIEW {clickhouse_reference_dataset.all_variants_to_seqr_variants_mv(table_name_builder)}
-                    """,
-                )
-                logged_query(
-                    f"""
-                    SYSTEM REFRESH VIEW {clickhouse_reference_dataset.all_variants_to_seqr_variants_mv(table_name_builder)}
-                    """,
-                )
-                logged_query(
-                    f"""
-                    SYSTEM WAIT VIEW {clickhouse_reference_dataset.all_variants_to_seqr_variants_mv(table_name_builder)}
-                    """,
-                    timeout=clickhouse_reference_dataset.all_variants_mv_timeout,
-                )
-            clickhouse_reference_dataset.refresh_search(table_name_builder)
+            refresh_seqr_variant_and_search()

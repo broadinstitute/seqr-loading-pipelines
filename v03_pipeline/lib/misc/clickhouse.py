@@ -256,7 +256,6 @@ class ClickhouseReferenceDataset(StrEnum):
     @property
     def all_variants_mv_timeout(self):
         return {
-            ClickhouseReferenceDataset.DBNSFP: WAIT_VIEW_TIMEOUT_S * 3,
             ClickhouseReferenceDataset.SPLICE_AI: WAIT_VIEW_TIMEOUT_S * 10,
         }.get(self, WAIT_VIEW_TIMEOUT_S)
 
@@ -377,12 +376,12 @@ class ClickhouseReferenceDataset(StrEnum):
                 """,
                 timeout=WAIT_VIEW_TIMEOUT_S,
             )
-            return
-        logged_query(
-            f"""
-            SYSTEM RELOAD DICTIONARY {self.search_path(table_name_builder)}
-            """,
-        )
+        else:
+            logged_query(
+                f"""
+                SYSTEM RELOAD DICTIONARY {self.search_path(table_name_builder)}
+                """,
+            )
 
     def insert_into_seqr_variants_and_refresh_search(
         self,
