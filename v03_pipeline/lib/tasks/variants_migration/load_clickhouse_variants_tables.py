@@ -122,6 +122,12 @@ class LoadClickhouseVariantsTablesTask(luigi.WrapperTask):
         for clickhouse_table in ClickHouseTable.for_dataset_type(self.dataset_type):
             if clickhouse_table == ClickHouseTable.ENTRIES:
                 continue
+            if clickhouse_table == ClickHouseTable.KEY_LOOKUP:
+                # NB: During testing, noticed that the key lookup bloat would
+                # negatively impact the reference data refresh.  This clears the table.
+                logged_query(
+                    f'TRUNCATE TABLE {table_name_builder.dst_table(clickhouse_table)}',
+                )
             clickhouse_table.insert(table_name_builder=table_name_builder)
         for (
             clickhouse_reference_dataset
