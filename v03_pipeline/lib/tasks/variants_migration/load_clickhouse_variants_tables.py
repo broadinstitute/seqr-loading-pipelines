@@ -28,7 +28,7 @@ from v03_pipeline.lib.tasks.variants_migration.migrate_variants_parquet import (
 
 
 @retry()
-def refresh_seqr_variant_and_search(
+def refresh_seqr_variants_and_search(
     table_name_builder: TableNameBuilder,
     clickhouse_reference_dataset: ClickhouseReferenceDataset,
 ):
@@ -135,7 +135,7 @@ class LoadClickhouseVariantsTablesTask(luigi.WrapperTask):
             self.reference_genome,
             self.dataset_type,
         ):
-            refresh_seqr_variant_and_search(
+            refresh_seqr_variants_and_search(
                 table_name_builder,
                 clickhouse_reference_dataset,
             )
