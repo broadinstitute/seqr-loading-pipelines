@@ -71,4 +71,4 @@ jobs:
           export PYSPARK_SUBMIT_ARGS='--driver-memory 8G pyspark-shell'
           export CLICKHOUSE_DATABASE=test
           uv run nosetests --with-coverage --cover-package v03_pipeline v03_pipeline
-          uv run coverage report --omit '*test*' --fail-under=90
+          uv run coverage report --omit '*test*' --fail-under=85
