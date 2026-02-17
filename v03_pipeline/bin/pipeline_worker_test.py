@@ -8,11 +8,9 @@ import luigi
 import luigi.worker
 
 from v03_pipeline.bin.pipeline_worker import process_queue
-from v03_pipeline.lib.test.clickhouse_schema_testcase import ClickhouseSchemaTestCase
 from v03_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.core.environment import Env
 from v03_pipeline.lib.misc.clickhouse import (
-    STAGING_CLICKHOUSE_DATABASE,
     ClickhouseReferenceDataset,
     get_clickhouse_client,
 )
@@ -21,6 +19,7 @@ from v03_pipeline.lib.paths import (
     loading_pipeline_deadletter_queue_dir,
     loading_pipeline_queue_dir,
 )
+from v03_pipeline.lib.test.clickhouse_schema_testcase import ClickhouseSchemaTestCase
 from v03_pipeline.lib.test.misc import copy_project_pedigree_to_mocked_dir
 from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
     MockedReferenceDatasetsTestCase,
