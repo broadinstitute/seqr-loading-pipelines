@@ -9,6 +9,7 @@ from v03_pipeline.lib.core import Env
 
 class MockedDatarootTestCase(unittest.TestCase):
     def setUp(self) -> None:
+        super().setUp()
         patcher = patch(
             'v03_pipeline.lib.paths.Env',
             wraps=Env,
@@ -20,6 +21,7 @@ class MockedDatarootTestCase(unittest.TestCase):
                 setattr(self.mock_env, field_name, tempfile.TemporaryDirectory().name)
 
     def tearDown(self) -> None:
+        super().tearDown()
         for field_name in Env.__dataclass_fields__:
             if os.path.isdir(getattr(self.mock_env, field_name)):
                 shutil.rmtree(getattr(self.mock_env, field_name))
