@@ -1196,7 +1196,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             (4, 'project_a', 'family_a6', 133456789, 'WGS', 0, 0, CAST([] AS Array(UInt32)), [('sample_a8','HOM')], 1),
             (0, 'project_b', 'family_b1', 123456789, 'WES', 0, 0, CAST([] AS Array(UInt32)), [('sample_b4','REF')], 1),
             (1, 'project_b', 'family_b2', 123456789, 'WES', 0, 0, CAST([] AS Array(UInt32)), [('sample_b5','HET')], 1),
-            (2, 'project_b', 'family_b2', 123456789, 'WES', 0, CAST([] AS Array(UInt32)), [('sample_b5','REF')], 1),
+            (2, 'project_b', 'family_b2', 123456789, 'WES', 0, 0, CAST([] AS Array(UInt32)), [('sample_b5','REF')], 1),
             """,
         )
         logged_query(  # DROP the partition from the non-staging entries to as a non-mv-impacting change.
@@ -1276,7 +1276,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 `xpos` UInt64 CODEC(Delta(8), ZSTD(1)),
                 `sample_type` Enum8('WES' = 0, 'WGS' = 1),
                 `is_gnomad_gt_5_percent` Boolean,
-                `is_annotated_in_any_gene` Boolean DEFAULT length(geneId_ids) > 1,
+                `is_annotated_in_any_gene` Boolean DEFAULT length(geneId_ids) > 0,
                 `geneId_ids` Array(UInt32),
                 `calls` Array(
                     Tuple(
