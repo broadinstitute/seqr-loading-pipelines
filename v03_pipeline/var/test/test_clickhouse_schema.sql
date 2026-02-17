@@ -1,3 +1,68 @@
+CREATE TABLE `GRCh38/SNV_INDEL/variants_disk`
+(
+    `key` UInt32 CODEC(Delta(8), ZSTD(1)),
+    `sortedTranscriptConsequences` Nested(alphamissensePathogenicity Nullable(Decimal(9, 5)), canonical Nullable(UInt8), consequenceTerms Array(Nullable(Enum8('transcript_ablation' = 1, 'splice_acceptor_variant' = 2, 'splice_donor_variant' = 3, 'stop_gained' = 4, 'frameshift_variant' = 5, 'stop_lost' = 6, 'start_lost' = 7, 'inframe_insertion' = 8, 'inframe_deletion' = 9, 'missense_variant' = 10, 'protein_altering_variant' = 11, 'splice_donor_5th_base_variant' = 12, 'splice_region_variant' = 13, 'splice_donor_region_variant' = 14, 'splice_polypyrimidine_tract_variant' = 15, 'incomplete_terminal_codon_variant' = 16, 'start_retained_variant' = 17, 'stop_retained_variant' = 18, 'synonymous_variant' = 19, 'coding_sequence_variant' = 20, 'mature_miRNA_variant' = 21, '5_prime_UTR_variant' = 22, '3_prime_UTR_variant' = 23, 'non_coding_transcript_exon_variant' = 24, 'intron_variant' = 25, 'NMD_transcript_variant' = 26, 'non_coding_transcript_variant' = 27, 'coding_transcript_variant' = 28, 'upstream_gene_variant' = 29, 'downstream_gene_variant' = 30, 'intergenic_variant' = 31, 'sequence_variant' = 32))), extendedIntronicSpliceRegionVariant Nullable(Bool), fiveutrConsequence Nullable(Enum8('5_prime_UTR_premature_start_codon_gain_variant' = 1, '5_prime_UTR_premature_start_codon_loss_variant' = 2, '5_prime_UTR_stop_codon_gain_variant' = 3, '5_prime_UTR_stop_codon_loss_variant' = 4, '5_prime_UTR_uORF_frameshift_variant' = 5)), geneId Nullable(String)),
+    `sortedMotifFeatureConsequences` Nested(consequenceTerms Array(Nullable(Enum8('TFBS_ablation' = 0, 'TFBS_amplification' = 1, 'TF_binding_site_variant' = 2, 'TFBS_fusion' = 3, 'TFBS_translocation' = 4)))),
+    `sortedRegulatoryFeatureConsequences` Nested(consequenceTerms Array(Nullable(Enum8('regulatory_region_ablation' = 0, 'regulatory_region_amplification' = 1, 'regulatory_region_variant' = 2, 'regulatory_region_fusion' = 3))))
+)
+ENGINE = EmbeddedRocksDB()
+PRIMARY KEY key;
+
+CREATE TABLE `GRCh38/SNV_INDEL/variants_memory`
+(
+    `key` UInt32 CODEC(Delta(8), ZSTD(1)),
+    `sortedTranscriptConsequences` Nested(alphamissensePathogenicity Nullable(Decimal(9, 5)), canonical Nullable(UInt8), consequenceTerms Array(Nullable(Enum8('transcript_ablation' = 1, 'splice_acceptor_variant' = 2, 'splice_donor_variant' = 3, 'stop_gained' = 4, 'frameshift_variant' = 5, 'stop_lost' = 6, 'start_lost' = 7, 'inframe_insertion' = 8, 'inframe_deletion' = 9, 'missense_variant' = 10, 'protein_altering_variant' = 11, 'splice_donor_5th_base_variant' = 12, 'splice_region_variant' = 13, 'splice_donor_region_variant' = 14, 'splice_polypyrimidine_tract_variant' = 15, 'incomplete_terminal_codon_variant' = 16, 'start_retained_variant' = 17, 'stop_retained_variant' = 18, 'synonymous_variant' = 19, 'coding_sequence_variant' = 20, 'mature_miRNA_variant' = 21, '5_prime_UTR_variant' = 22, '3_prime_UTR_variant' = 23, 'non_coding_transcript_exon_variant' = 24, 'intron_variant' = 25, 'NMD_transcript_variant' = 26, 'non_coding_transcript_variant' = 27, 'coding_transcript_variant' = 28, 'upstream_gene_variant' = 29, 'downstream_gene_variant' = 30, 'intergenic_variant' = 31, 'sequence_variant' = 32))), extendedIntronicSpliceRegionVariant Nullable(Bool), fiveutrConsequence Nullable(Enum8('5_prime_UTR_premature_start_codon_gain_variant' = 1, '5_prime_UTR_premature_start_codon_loss_variant' = 2, '5_prime_UTR_stop_codon_gain_variant' = 3, '5_prime_UTR_stop_codon_loss_variant' = 4, '5_prime_UTR_uORF_frameshift_variant' = 5)), geneId Nullable(String)),
+    `sortedMotifFeatureConsequences` Nested(consequenceTerms Array(Nullable(Enum8('TFBS_ablation' = 0, 'TFBS_amplification' = 1, 'TF_binding_site_variant' = 2, 'TFBS_fusion' = 3, 'TFBS_translocation' = 4)))),
+    `sortedRegulatoryFeatureConsequences` Nested(consequenceTerms Array(Nullable(Enum8('regulatory_region_ablation' = 0, 'regulatory_region_amplification' = 1, 'regulatory_region_variant' = 2, 'regulatory_region_fusion' = 3))))
+)
+ENGINE = EmbeddedRocksDB()
+PRIMARY KEY key;
+
+CREATE TABLE `GRCh38/SNV_INDEL/variants/details`
+(
+    `key` UInt32 CODEC(Delta(8), ZSTD(1)),
+    `variantId` String,
+    `rsid` Nullable(String),
+    `CAID` Nullable(String),
+    `liftedOverChrom` Nullable(Enum8('1' = 1, '2' = 2, '3' = 3, '4' = 4, '5' = 5, '6' = 6, '7' = 7, '8' = 8, '9' = 9, '10' = 10, '11' = 11, '12' = 12, '13' = 13, '14' = 14, '15' = 15, '16' = 16, '17' = 17, '18' = 18, '19' = 19, '20' = 20, '21' = 21, '22' = 22, 'X' = 23, 'Y' = 24, 'M' = 25)),
+    `liftedOverPos` Nullable(UInt32),
+    `transcripts` Nested(alphamissense Tuple(
+        pathogenicity Nullable(Decimal(9, 5))), aminoAcids Nullable(String), biotype Nullable(String), canonical Nullable(UInt8), codons Nullable(String), consequenceTerms Array(Nullable(Enum8('transcript_ablation' = 1, 'splice_acceptor_variant' = 2, 'splice_donor_variant' = 3, 'stop_gained' = 4, 'frameshift_variant' = 5, 'stop_lost' = 6, 'start_lost' = 7, 'inframe_insertion' = 8, 'inframe_deletion' = 9, 'missense_variant' = 10, 'protein_altering_variant' = 11, 'splice_donor_5th_base_variant' = 12, 'splice_region_variant' = 13, 'splice_donor_region_variant' = 14, 'splice_polypyrimidine_tract_variant' = 15, 'incomplete_terminal_codon_variant' = 16, 'start_retained_variant' = 17, 'stop_retained_variant' = 18, 'synonymous_variant' = 19, 'coding_sequence_variant' = 20, 'mature_miRNA_variant' = 21, '5_prime_UTR_variant' = 22, '3_prime_UTR_variant' = 23, 'non_coding_transcript_exon_variant' = 24, 'intron_variant' = 25, 'NMD_transcript_variant' = 26, 'non_coding_transcript_variant' = 27, 'coding_transcript_variant' = 28, 'upstream_gene_variant' = 29, 'downstream_gene_variant' = 30, 'intergenic_variant' = 31, 'sequence_variant' = 32))), exon Tuple(
+        index Nullable(Int32),
+        total Nullable(Int32)), geneId Nullable(String), hgvsc Nullable(String), hgvsp Nullable(String), intron Tuple(
+        index Nullable(Int32),
+        total Nullable(Int32)), loftee Tuple(
+        isLofNagnag Nullable(Bool),
+        lofFilters Array(Nullable(String))), majorConsequence Nullable(Enum8('transcript_ablation' = 1, 'splice_acceptor_variant' = 2, 'splice_donor_variant' = 3, 'stop_gained' = 4, 'frameshift_variant' = 5, 'stop_lost' = 6, 'start_lost' = 7, 'inframe_insertion' = 8, 'inframe_deletion' = 9, 'missense_variant' = 10, 'protein_altering_variant' = 11, 'splice_donor_5th_base_variant' = 12, 'splice_region_variant' = 13, 'splice_donor_region_variant' = 14, 'splice_polypyrimidine_tract_variant' = 15, 'incomplete_terminal_codon_variant' = 16, 'start_retained_variant' = 17, 'stop_retained_variant' = 18, 'synonymous_variant' = 19, 'coding_sequence_variant' = 20, 'mature_miRNA_variant' = 21, '5_prime_UTR_variant' = 22, '3_prime_UTR_variant' = 23, 'non_coding_transcript_exon_variant' = 24, 'intron_variant' = 25, 'NMD_transcript_variant' = 26, 'non_coding_transcript_variant' = 27, 'coding_transcript_variant' = 28, 'upstream_gene_variant' = 29, 'downstream_gene_variant' = 30, 'intergenic_variant' = 31, 'sequence_variant' = 32)), manePlusClinical Nullable(String), maneSelect Nullable(String), refseqTranscriptId Nullable(String), spliceregion Tuple(
+        extended_intronic_splice_region_variant Nullable(Bool)), transcriptId String, transcriptRank UInt8, utrannotator Tuple(
+        existingInframeOorfs Nullable(Int32),
+        existingOutofframeOorfs Nullable(Int32),
+        existingUorfs Nullable(Int32),
+        fiveutrAnnotation Tuple(
+            AltStop Nullable(String),
+            AltStopDistanceToCDS Nullable(Int32),
+            CapDistanceToStart Nullable(Int32),
+            DistanceToCDS Nullable(Int32),
+            DistanceToStop Nullable(Int32),
+            Evidence Nullable(Bool),
+            FrameWithCDS Nullable(String),
+            KozakContext Nullable(String),
+            KozakStrength Nullable(String),
+            StartDistanceToCDS Nullable(Int32),
+            alt_type Nullable(String),
+            alt_type_length Nullable(Int32),
+            newSTOPDistanceToCDS Nullable(Int32),
+            ref_StartDistanceToCDS Nullable(Int32),
+            ref_type Nullable(String),
+            ref_type_length Nullable(Int32),
+            type Nullable(String)),
+        fiveutrConsequence Nullable(String))),
+    `sortedMotifFeatureConsequences` Nested(consequenceTerms Array(Nullable(Enum8('TFBS_ablation' = 0, 'TFBS_amplification' = 1, 'TF_binding_site_variant' = 2, 'TFBS_fusion' = 3, 'TFBS_translocation' = 4))), motifFeatureId Nullable(String)),
+    `sortedRegulatoryFeatureConsequences` Nested(biotype Nullable(Enum8('enhancer' = 0, 'promoter' = 1, 'CTCF_binding_site' = 2, 'TF_binding_site' = 3, 'open_chromatin_region' = 4)), consequenceTerms Array(Nullable(Enum8('regulatory_region_ablation' = 0, 'regulatory_region_amplification' = 1, 'regulatory_region_variant' = 2, 'regulatory_region_fusion' = 3))), regulatoryFeatureId Nullable(String))
+)
+ENGINE = EmbeddedRocksDB()
+PRIMARY KEY key;
+
 CREATE TABLE `GRCh38/SNV_INDEL/annotations_disk`
 (
     `key` UInt32 CODEC(Delta(8), ZSTD(1)),
