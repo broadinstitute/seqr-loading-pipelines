@@ -158,6 +158,16 @@ def get_entries_export_fields(
         'xpos': ht.xpos,
         **(
             {
+                'is_gnomad_gt_5_percent': hl.or_else(
+                    ht.gnomad_genomes.AF_POPMAX_OR_GLOBAL > FIVE_PERCENT,
+                    False,
+                ),
+            }
+            if dataset_type == DatasetType.SNV_INDEL and hasattr(ht, 'gnomad_genomes')
+            else {}
+        ),
+        **(
+            {
                 'geneIds': hl.set(ht.sorted_gene_consequences.gene_id)
                 if dataset_type == DatasetType.SV
                 else hl.set(ht.sorted_transcript_consequences.gene_id)
