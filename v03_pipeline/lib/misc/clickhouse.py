@@ -113,7 +113,8 @@ class ClickHouseTable(StrEnum):
 
     @classmethod
     def for_dataset_type_variants(
-        cls, dataset_type: DatasetType,
+        cls,
+        dataset_type: DatasetType,
     ) -> list['ClickHouseTable']:
         tables = [
             ClickHouseTable.VARIANTS_MEMORY,
