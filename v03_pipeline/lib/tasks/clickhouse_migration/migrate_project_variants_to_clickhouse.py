@@ -12,13 +12,13 @@ from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
-from v03_pipeline.lib.tasks.exports.write_new_variant_details_parquet import (
+from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
+from v03_pipeline.lib.tasks.variants_migration.write_new_variant_details_parquet import (
     WriteNewVariantDetailsParquetTask,
 )
-from v03_pipeline.lib.tasks.exports.write_new_variants_parquet import (
+from v03_pipeline.lib.tasks.variants_migration.write_new_variants_parquet import (
     WriteNewVariantsParquetTask,
 )
-from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
 
 MAX_SNV_INDEL_ALLELE_LENGTH = 500
 
