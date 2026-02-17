@@ -649,23 +649,28 @@ def insert_new_entries(
     if 'geneId_ids' in dst_cols and 'geneIds' in src_cols:
         common = [c for c in common if c not in ('geneId_ids', 'geneIds')]
         common.append('geneId_ids')
-        overrides = {
-            'geneId_ids': (
-                f"""
-                arrayFilter(
-                    x -> x IS NOT NULL,
-                    arrayMap(
-                        g -> dictGetOrNull(
-                            {Env.CLICKHOUSE_DATABASE}.`seqrdb_gene_ids`,
-                            'seqrdb_id',
-                            g
-                        ),
-                        geneIds
-                    )
+        overrides['geneId_ids'] = f"""
+            arrayFilter(
+                x -> x IS NOT NULL,
+                arrayMap(
+                    g -> dictGetOrNull(
+                        {Env.CLICKHOUSE_DATABASE}.`seqrdb_gene_ids`,
+                        'seqrdb_id',
+                        g
+                    ),
+                    geneIds
                 )
-                """
-            ),
-        }
+            )
+        """
+
+        if (
+            'is_gnomad_gt_5_percent' in dst_cols
+            and 'is_gnomad_gt_5_percent' not in src_cols
+        ):
+            common.append('is_gnomad_gt_5_percent')
+            overrides['is_gnomad_gt_5_percent'] = f"""
+                dictGetOrDefault({ClickhouseReferenceDataset.GNOMAD_GENOMES.search_path(table_name_builder)}, 'filter_af', key, 0) > 0.05
+            """
     dst_list = ', '.join(common)
     src_list = ', '.join([overrides.get(c, c) for c in common])
     logged_query(
