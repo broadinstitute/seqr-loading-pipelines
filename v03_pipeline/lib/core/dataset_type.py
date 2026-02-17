@@ -365,6 +365,10 @@ class DatasetType(StrEnum):
         return self == DatasetType.SNV_INDEL
 
     @property
+    def should_write_new_variant_details(self):
+        return self == DatasetType.SNV_INDEL
+
+    @property
     def overwrite_male_non_par_calls(self) -> None:
         return self == DatasetType.SV
 
