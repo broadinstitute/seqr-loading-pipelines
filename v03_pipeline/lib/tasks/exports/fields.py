@@ -152,7 +152,7 @@ def get_entries_export_fields(
                     False,
                 ),
             }
-            if dataset_type == DatasetType.SNV_INDEL
+            if dataset_type == DatasetType.SNV_INDEL and hasattr(ht, 'gnomad_genomes')
             else {}
         ),
         **(
