@@ -112,6 +112,24 @@ class ClickHouseTable(StrEnum):
         ]
 
     @classmethod
+    def for_dataset_type_variants(
+        cls, dataset_type: DatasetType,
+    ) -> list['ClickHouseTable']:
+        tables = [
+            ClickHouseTable.VARIANTS_MEMORY,
+            ClickHouseTable.KEY_LOOKUP,
+        ]
+        if dataset_type.should_write_new_transcripts:
+            tables = [
+                *tables,
+                ClickHouseTable.VARIANT_DETAILS,
+            ]
+        return [
+            *tables,
+            ClickHouseTable.ENTRIES,
+        ]
+
+    @classmethod
     def for_dataset_type_atomic_entries_update(
         cls,
         dataset_type: DatasetType,

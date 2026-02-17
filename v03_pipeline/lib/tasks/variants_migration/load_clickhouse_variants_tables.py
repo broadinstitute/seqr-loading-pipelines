@@ -119,7 +119,9 @@ class LoadClickhouseVariantsTablesTask(luigi.WrapperTask):
             self.dataset_type,
             self.run_id,
         )
-        for clickhouse_table in ClickHouseTable.for_dataset_type(self.dataset_type):
+        for clickhouse_table in ClickHouseTable.for_dataset_type_variants(
+            self.dataset_type,
+        ):
             if clickhouse_table == ClickHouseTable.ENTRIES:
                 continue
             if clickhouse_table == ClickHouseTable.KEY_LOOKUP:
