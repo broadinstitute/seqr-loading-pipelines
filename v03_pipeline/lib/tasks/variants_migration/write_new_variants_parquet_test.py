@@ -18,7 +18,7 @@ from v03_pipeline.lib.paths import (
     variant_annotations_table_path,
 )
 from v03_pipeline.lib.tasks.variants_migration.write_new_variants_parquet import (
-    WriteNewVariantsParquetTask,
+    WriteNewVariantsParquetForMigrationTask,
 )
 from v03_pipeline.lib.test.misc import convert_ndarray_to_list
 from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
@@ -105,7 +105,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
     ) -> None:
         mock_write_new_variants_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
-        task = WriteNewVariantsParquetTask(
+        task = WriteNewVariantsParquetForMigrationTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
@@ -170,7 +170,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
     ) -> None:
         mock_write_new_variants_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
-        task = WriteNewVariantsParquetTask(
+        task = WriteNewVariantsParquetForMigrationTask(
             reference_genome=ReferenceGenome.GRCh37,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
@@ -221,7 +221,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
     ) -> None:
         write_new_variants_table_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
-        task = WriteNewVariantsParquetTask(
+        task = WriteNewVariantsParquetForMigrationTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.MITO,
             sample_type=SampleType.WGS,
@@ -287,7 +287,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
     ) -> None:
         write_new_variants_table_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
-        task = WriteNewVariantsParquetTask(
+        task = WriteNewVariantsParquetForMigrationTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SV,
             sample_type=SampleType.WGS,
@@ -364,7 +364,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
         )
         update_variant_annotations_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
-        task = WriteNewVariantsParquetTask(
+        task = WriteNewVariantsParquetForMigrationTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.GCNV,
             sample_type=SampleType.WES,

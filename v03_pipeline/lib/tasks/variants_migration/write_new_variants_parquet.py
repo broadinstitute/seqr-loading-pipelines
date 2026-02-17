@@ -26,7 +26,7 @@ from v03_pipeline.lib.tasks.write_new_variants_table import WriteNewVariantsTabl
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
-class WriteNewVariantsParquetTask(BaseWriteParquetTask):
+class WriteNewVariantsParquetForMigrationTask(BaseWriteParquetTask):
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             new_variants_parquet_path(

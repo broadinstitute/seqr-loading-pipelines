@@ -17,7 +17,7 @@ from v03_pipeline.lib.tasks.variants_migration.write_new_variant_details_parquet
     WriteNewVariantDetailsParquetTask,
 )
 from v03_pipeline.lib.tasks.variants_migration.write_new_variants_parquet import (
-    WriteNewVariantsParquetTask,
+    WriteNewVariantsParquetForMigrationTask,
 )
 
 MAX_SNV_INDEL_ALLELE_LENGTH = 500
@@ -111,7 +111,7 @@ class MigrateProjectVariantsToClickHouseTask(luigi.WrapperTask):
                     else []
                 ),
                 self.clone(
-                    WriteNewVariantsParquetTask,
+                    WriteNewVariantsParquetForMigrationTask,
                     callset_path=None,
                 ),
             ],
