@@ -124,6 +124,22 @@ def imported_callset_path(
     )
 
 
+def postprocessed_callset_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    callset_path: str,
+) -> str:
+    return os.path.join(
+        pipeline_prefix(
+            Env.LOADING_DATASETS_DIR,
+            reference_genome,
+            dataset_type,
+        ),
+        'posprocessed_callsets',
+        f'{_callset_path_hash(callset_path)}.mt',
+    )
+
+
 def validation_errors_for_run_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,

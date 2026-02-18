@@ -18,7 +18,9 @@ from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset import (
     UpdatedReferenceDatasetTask,
 )
-from v03_pipeline.lib.tasks.write_imported_callset import WriteImportedCallsetTask
+from v03_pipeline.lib.tasks.write_postprocessed_callset import (
+    WritePostprocessedCallsetTask,
+)
 from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
     WriteValidationErrorsForRunTask,
 )
@@ -62,7 +64,7 @@ class ValidateCallsetTask(BaseUpdateTask):
         )
 
     def requires(self) -> list[luigi.Task]:
-        requirements = [self.clone(WriteImportedCallsetTask)]
+        requirements = [self.clone(WritePostprocessedCallsetTask)]
         if (
             ALL_VALIDATIONS not in self.validations_to_skip
             and 'validate_sample_type' not in self.validations_to_skip
