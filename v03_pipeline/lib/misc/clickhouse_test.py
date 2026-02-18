@@ -36,6 +36,7 @@ from v03_pipeline.lib.paths import (
     new_entries_parquet_path,
     new_transcripts_parquet_path,
     new_variants_parquet_path,
+    new_variant_details_parquet_path,
     runs_path,
 )
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
@@ -399,6 +400,28 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'test.parquet',
                 ),
             )
+
+        # Variant Details Parquet
+        df = pd.DataFrame(
+            {
+                'key': [1, 2, 3, 4],
+                'variantId': [
+                    '1-13-A-C',
+                    '2-14-A-T',
+                    'Y-19-A-C',
+                    'M-12-C-G',
+                ],
+                'transcripts': ['a', 'b', 'c', 'd'],
+            },
+        )
+        write_test_parquet(
+            df,
+            new_variant_details_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
+        )
 
         # Transcripts Parquet
         df = pd.DataFrame({'key': [1, 2, 3, 4], 'transcripts': ['a', 'b', 'c', 'd']})
