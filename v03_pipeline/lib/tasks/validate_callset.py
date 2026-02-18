@@ -8,7 +8,7 @@ from v03_pipeline.lib.misc.validation import (
     SeqrValidationError,
 )
 from v03_pipeline.lib.paths import (
-    imported_callset_path,
+    postprocessed_callset_path,
     valid_reference_dataset_path,
 )
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
@@ -56,7 +56,7 @@ class ValidateCallsetTask(BaseUpdateTask):
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
-            imported_callset_path(
+            postprocessed_callset_path(
                 self.reference_genome,
                 self.dataset_type,
                 self.callset_path,
@@ -86,7 +86,7 @@ class ValidateCallsetTask(BaseUpdateTask):
 
     def update_table(self, mt: hl.MatrixTable) -> hl.MatrixTable:
         mt = hl.read_matrix_table(
-            imported_callset_path(
+            postprocessed_callset_path(
                 self.reference_genome,
                 self.dataset_type,
                 self.callset_path,
