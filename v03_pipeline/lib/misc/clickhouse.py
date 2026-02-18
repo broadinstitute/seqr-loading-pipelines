@@ -49,7 +49,7 @@ class ClickHouseTable(StrEnum):
         return {
             ClickHouseTable.ANNOTATIONS_DISK: new_variants_parquet_path,
             ClickHouseTable.ANNOTATIONS_MEMORY: new_variants_parquet_path,
-            ClickHouseTable.KEY_LOOKUP: new_variant_details_parquet_path,
+            ClickHouseTable.KEY_LOOKUP: new_variants_parquet_path,
             ClickHouseTable.TRANSCRIPTS: new_transcripts_parquet_path,
             ClickHouseTable.VARIANTS_DISK: new_variants_parquet_path,
             ClickHouseTable.VARIANTS_MEMORY: new_variants_parquet_path,
@@ -245,16 +245,6 @@ class TableNameBuilder:
             ),
             '*.parquet',
         )
-        # Short term hack to support key lookup from existing pipeline.
-        if clickhouse_table == ClickHouseTable.KEY_LOOKUP:
-            path = os.path.join(
-                new_variants_parquet_path(
-                    self.reference_genome,
-                    self.dataset_type,
-                    self.run_id,
-                ),
-                '*.parquet',
-            )
         if path.startswith('gs://'):
             return f"gcs({GCS_NAMED_COLLECTION}, url='{path.replace('gs://', GOOGLE_XML_API_PATH)}')"
         return f"file('{path}', 'Parquet')"

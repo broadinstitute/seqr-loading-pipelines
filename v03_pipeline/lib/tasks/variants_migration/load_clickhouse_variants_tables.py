@@ -1,8 +1,12 @@
+import os
+
 import luigi
 import luigi.util
 
 from v03_pipeline.lib.core import FeatureFlag
 from v03_pipeline.lib.misc.clickhouse import (
+    GCS_NAMED_COLLECTION,
+    GOOGLE_XML_API_PATH,
     ClickhouseReferenceDataset,
     ClickHouseTable,
     TableNameBuilder,
@@ -130,6 +134,28 @@ class LoadClickhouseVariantsTablesTask(luigi.WrapperTask):
                 logged_query(
                     f'TRUNCATE TABLE {table_name_builder.dst_table(clickhouse_table)}',
                 )
+                # Special logic for KEY_LOOKUP to handle using the variant_details_table
+                dst_table = table_name_builder.dst_table(ClickHouseTable.KEY_LOOKUP)
+                path = os.path.join(
+                    new_variant_details_parquet_path(
+                        self.reference_genome,
+                        self.dataset_type,
+                        self.run_id,
+                    ),
+                    '*.parquet',
+                )
+                if path.startswith('gs://'):
+                    src_table = f"gcs({GCS_NAMED_COLLECTION}, url='{path.replace('gs://', GOOGLE_XML_API_PATH)}')"
+                else:
+                    src_table = f"file('{path}', 'Parquet')"
+                logged_query(
+                    f"""
+                    INSERT INTO {dst_table}
+                    SELECT {ClickHouseTable.KEY_LOOKUP.select_fields}
+                    FROM {src_table}
+                    """,
+                )
+                continue
             clickhouse_table.insert(table_name_builder=table_name_builder)
         for (
             clickhouse_reference_dataset
