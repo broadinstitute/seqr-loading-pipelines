@@ -2,6 +2,7 @@ import hail as hl
 import luigi
 import luigi.util
 
+from v03_pipeline.lib.misc.callsets import get_additional_row_fields
 from v03_pipeline.lib.misc.io import (
     split_multi_hts,
 )
@@ -23,6 +24,20 @@ from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class WritePostprocessedCallsetTask(BaseWriteTask):
+    def complete(self) -> luigi.Target:
+        if super().complete():
+            mt = hl.read_matrix_table(self.output().path)
+            # Handle case where callset was previously imported
+            # with a different sex/relatedness flag.
+            additional_row_fields = get_additional_row_fields(
+                mt,
+                self.reference_genome,
+                self.dataset_type,
+                self.skip_check_sex_and_relatedness,
+            )
+            return all(hasattr(mt, field) for field in additional_row_fields)
+        return False
+
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             postprocessed_callset_path(
