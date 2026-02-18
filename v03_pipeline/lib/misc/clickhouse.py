@@ -245,6 +245,16 @@ class TableNameBuilder:
             ),
             '*.parquet',
         )
+        # Short term hack to support key lookup from existing pipeline.
+        if clickhouse_table == ClickHouseTable.KEY_LOOKUP:
+            path = os.path.join(
+                new_variants_parquet_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.run_id,
+                ),
+                '*.parquet',
+            )
         if path.startswith('gs://'):
             return f"gcs({GCS_NAMED_COLLECTION}, url='{path.replace('gs://', GOOGLE_XML_API_PATH)}')"
         return f"file('{path}', 'Parquet')"
