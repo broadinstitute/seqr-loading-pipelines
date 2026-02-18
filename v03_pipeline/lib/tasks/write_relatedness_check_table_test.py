@@ -11,7 +11,7 @@ from v03_pipeline.lib.core import (
 )
 from v03_pipeline.lib.misc.io import import_vcf
 from v03_pipeline.lib.paths import (
-    imported_callset_path,
+    postprocessed_callset_path,
     relatedness_check_table_path,
     valid_reference_dataset_path,
 )
@@ -42,7 +42,7 @@ class WriteRelatednessCheckTableTaskTest(MockedDatarootTestCase):
         ht = ht.annotate_globals(validated_sample_type=SampleType.WGS.value)
         ht = ht.annotate_rows(**{'info.AF': ht.info.AF})
         ht.write(
-            imported_callset_path(
+            postprocessed_callset_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 TEST_VCF,
