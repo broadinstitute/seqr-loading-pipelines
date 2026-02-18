@@ -12,13 +12,13 @@ from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
-from v03_pipeline.lib.tasks.exports.write_new_transcripts_parquet import (
-    WriteNewTranscriptsParquetTask,
-)
-from v03_pipeline.lib.tasks.exports.write_new_variants_parquet import (
-    WriteNewVariantsParquetTask,
-)
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
+from v03_pipeline.lib.tasks.variants_migration.write_new_variant_details_parquet import (
+    WriteNewVariantDetailsParquetTask,
+)
+from v03_pipeline.lib.tasks.variants_migration.write_new_variants_parquet import (
+    WriteNewVariantsParquetForMigrationTask,
+)
 
 MAX_SNV_INDEL_ALLELE_LENGTH = 500
 
@@ -94,7 +94,7 @@ class MigrateProjectVariantsToClickHouseTask(luigi.WrapperTask):
                 *(
                     [
                         self.clone(
-                            WriteNewTranscriptsParquetTask,
+                            WriteNewVariantDetailsParquetTask,
                             # Callset Path being required
                             # here is byproduct of the "place all variants"
                             # in the variants path" hack.  In theory
@@ -107,11 +107,11 @@ class MigrateProjectVariantsToClickHouseTask(luigi.WrapperTask):
                             callset_path=None,
                         ),
                     ]
-                    if self.dataset_type.should_write_new_transcripts
+                    if self.dataset_type.should_write_new_variant_details
                     else []
                 ),
                 self.clone(
-                    WriteNewVariantsParquetTask,
+                    WriteNewVariantsParquetForMigrationTask,
                     callset_path=None,
                 ),
             ],

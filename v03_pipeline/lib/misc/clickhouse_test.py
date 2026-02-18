@@ -35,6 +35,7 @@ from v03_pipeline.lib.misc.clickhouse import (
 from v03_pipeline.lib.paths import (
     new_entries_parquet_path,
     new_transcripts_parquet_path,
+    new_variant_details_parquet_path,
     new_variants_parquet_path,
     runs_path,
 )
@@ -44,7 +45,7 @@ TEST_RUN_ID = 'manual__2025-05-07T17-20-59.702114+00-00'
 
 
 class ClickhouseTest(MockedDatarootTestCase):
-    def setUp(self):
+    def setUp(self):  # noqa: PLR0915
         super().setUp()
         client = get_clickhouse_client()
         client.execute(
@@ -230,6 +231,24 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         client.execute(
             f"""
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/variants_memory` (
+                key UInt32,
+                variantId String,
+            ) ENGINE = EmbeddedRocksDB()
+            PRIMARY KEY `key`
+        """,
+        )
+        client.execute(
+            f"""
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/variants_disk` (
+                key UInt32,
+                variantId String,
+            ) ENGINE = EmbeddedRocksDB()
+            PRIMARY KEY `key`
+        """,
+        )
+        client.execute(
+            f"""
             CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` (
                 variantId String,
                 key UInt32,
@@ -337,6 +356,24 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         client.execute(
             f"""
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/variants_memory` (
+                key UInt32,
+                variantId String,
+            ) ENGINE = EmbeddedRocksDB()
+            PRIMARY KEY `key`
+        """,
+        )
+        client.execute(
+            f"""
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/variants_disk` (
+                key UInt32,
+                variantId String,
+            ) ENGINE = EmbeddedRocksDB()
+            PRIMARY KEY `key`
+        """,
+        )
+        client.execute(
+            f"""
             CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/key_lookup` (
                 variantId String,
                 key UInt32,
@@ -363,6 +400,28 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'test.parquet',
                 ),
             )
+
+        # Variant Details Parquet
+        df = pd.DataFrame(
+            {
+                'key': [1, 2, 3, 4],
+                'variantId': [
+                    '1-13-A-C',
+                    '2-14-A-T',
+                    'Y-19-A-C',
+                    'M-12-C-G',
+                ],
+                'transcripts': ['a', 'b', 'c', 'd'],
+            },
+        )
+        write_test_parquet(
+            df,
+            new_variant_details_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
+        )
 
         # Transcripts Parquet
         df = pd.DataFrame({'key': [1, 2, 3, 4], 'transcripts': ['a', 'b', 'c', 'd']})
