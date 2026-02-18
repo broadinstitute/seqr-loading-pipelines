@@ -35,8 +35,8 @@ from v03_pipeline.lib.misc.clickhouse import (
 from v03_pipeline.lib.paths import (
     new_entries_parquet_path,
     new_transcripts_parquet_path,
-    new_variants_parquet_path,
     new_variant_details_parquet_path,
+    new_variants_parquet_path,
     runs_path,
 )
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
@@ -45,7 +45,7 @@ TEST_RUN_ID = 'manual__2025-05-07T17-20-59.702114+00-00'
 
 
 class ClickhouseTest(MockedDatarootTestCase):
-    def setUp(self):
+    def setUp(self):  # noqa: PLR0915
         super().setUp()
         client = get_clickhouse_client()
         client.execute(
