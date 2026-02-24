@@ -12,8 +12,8 @@ from v03_pipeline.lib.misc.validation import ALL_VALIDATIONS
 from v03_pipeline.lib.paths import ancestry_model_rf_path
 from v03_pipeline.lib.tasks.write_sample_qc_json import WriteSampleQCJsonTask
 from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
-from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
-    MockedReferenceDatasetsTestCase,
+from v03_pipeline.lib.test.mocked_dataroot_testcase import (
+    MockedDatarootTestCase,
 )
 
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
@@ -37,7 +37,7 @@ TEST_ANCESTRY_IMPUTATION_MODEL_PATH = (
 )
 
 
-class WriteSampleQCJsonTaskTest(MockedReferenceDatasetsTestCase):
+class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
     @patch('v03_pipeline.lib.methods.sample_qc.assign_population_pcs')
     @patch('v03_pipeline.lib.methods.sample_qc.pc_project')
     @patch('v03_pipeline.lib.tasks.write_sample_qc_json.WriteTDRMetricsFilesTask')

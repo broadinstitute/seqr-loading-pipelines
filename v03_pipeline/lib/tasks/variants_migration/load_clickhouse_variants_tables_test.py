@@ -28,7 +28,7 @@ from v03_pipeline.lib.tasks.variants_migration.update_variant_annotations_table_
     UpdateVariantAnnotationsTableWithDroppedReferenceDatasetsTask,
 )
 from v03_pipeline.lib.test.clickhouse_schema_testcase import ClickhouseSchemaTestCase
-from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
+from v03_pipeline.lib.test.mocked_dataroot_testcase import (
     MockedDatarootTestCase,
 )
 
