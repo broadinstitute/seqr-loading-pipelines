@@ -16,7 +16,7 @@ from v03_pipeline.lib.tasks.exports.write_new_variant_details_parquet import (
     WriteNewVariantDetailsParquetTask,
 )
 from v03_pipeline.lib.tasks.exports.write_new_variants_parquet import (
-    WriteNewVariantsParquetForMigrationTask,
+    WriteNewVariantsParquetTask,
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
 
@@ -111,7 +111,7 @@ class MigrateProjectVariantsToClickHouseTask(luigi.WrapperTask):
                     else []
                 ),
                 self.clone(
-                    WriteNewVariantsParquetForMigrationTask,
+                    WriteNewVariantsParquetTask,
                     callset_path=None,
                 ),
             ],
