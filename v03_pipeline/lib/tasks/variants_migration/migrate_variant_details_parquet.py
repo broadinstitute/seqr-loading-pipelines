@@ -13,7 +13,6 @@ from v03_pipeline.lib.tasks.base.base_write_parquet import BaseWriteParquetTask
 from v03_pipeline.lib.tasks.dataproc.base_run_job_on_dataproc import (
     BaseRunJobOnDataprocTask,
 )
-from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.exports.fields import (
     get_variant_details_export_fields,
 )
@@ -21,6 +20,7 @@ from v03_pipeline.lib.tasks.exports.misc import (
     camelcase_array_structexpression_fields,
     unmap_formatting_annotation_enums,
 )
+from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.variants_migration.update_variant_annotations_table_with_dropped_reference_datasets import (
     UpdateVariantAnnotationsTableWithDroppedReferenceDatasetsTask,
 )
