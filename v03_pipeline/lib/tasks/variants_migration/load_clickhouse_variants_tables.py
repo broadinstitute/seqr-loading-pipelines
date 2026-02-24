@@ -1,12 +1,9 @@
-import os
 
 import luigi
 import luigi.util
 
 from v03_pipeline.lib.core import FeatureFlag
 from v03_pipeline.lib.misc.clickhouse import (
-    GCS_NAMED_COLLECTION,
-    GOOGLE_XML_API_PATH,
     ClickhouseReferenceDataset,
     ClickHouseTable,
     TableNameBuilder,
