@@ -4,7 +4,13 @@ set -eux
 
 REFERENCE_GENOME=$1
 VEP_REFERENCE_DATASETS_DIR=${VEP_REFERENCE_DATASETS_DIR:-/var/seqr/vep-reference-data}
-REFERENCE_DATASETS_DIR=${REFERENCE_DATASETS_DIR:-"gs://seqr-reference-data"} # Note we can "download" from the authoritative source
+DEFAULT_REFERENCE_DATASETS_DIR="gs://seqr-reference-data"
+if [[ -n "${REFERENCE_DATASETS_DIR:-}" && "$REFERENCE_DATASETS_DIR" == gs://* ]]; then
+  echo "Using overridden GCS path: $REFERENCE_DATASETS_DIR"
+else
+  REFERENCE_DATASETS_DIR="$DEFAULT_REFERENCE_DATASETS_DIR"
+  echo "Using default GCS path: $REFERENCE_DATASETS_DIR"
+fi
 
 case $REFERENCE_GENOME in
   GRCh38)
