@@ -128,7 +128,6 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
                     'family_guid': 'abc_1',
                     'sample_type': 'WGS',
                     'xpos': 1000876499,
-                    'is_gnomad_gt_5_percent': True,
                     'geneIds': ['ENSG00000187634'],
                     'filters': [],
                     'calls': [
@@ -162,7 +161,6 @@ class WriteNewEntriesParquetTest(MockedDatarootTestCase):
                     'family_guid': 'abc_1',
                     'sample_type': 'WGS',
                     'xpos': 1000878314,
-                    'is_gnomad_gt_5_percent': False,
                     'geneIds': ['ENSG00000187634'],
                     'filters': ['VQSRTrancheSNP99.00to99.90'],
                     'calls': [
