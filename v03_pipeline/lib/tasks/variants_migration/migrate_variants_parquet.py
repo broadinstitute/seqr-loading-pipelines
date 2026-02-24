@@ -14,8 +14,8 @@ from v03_pipeline.lib.tasks.dataproc.base_run_job_on_dataproc import (
     BaseRunJobOnDataprocTask,
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
-from v03_pipeline.lib.tasks.variants_migration.fields import get_variants_export_fields
-from v03_pipeline.lib.tasks.variants_migration.misc import (
+from v03_pipeline.lib.tasks.exports.fields import get_variants_export_fields
+from v03_pipeline.lib.tasks.exports.misc import (
     camelcase_array_structexpression_fields,
     subset_consequences_fields,
     unmap_formatting_annotation_enums,
