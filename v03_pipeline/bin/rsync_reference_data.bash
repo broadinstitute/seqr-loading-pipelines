@@ -39,11 +39,13 @@ else
   fi
 fi
 
-gsutil -m rsync -rd "gs://seqr-reference-data/vep_data/loftee-beta/$REFERENCE_GENOME.tar.gz" $REFERENCE_DATASETS_DIR/vep_data/loftee-beta/$REFERENCE_GENOME.tar.gz
-gsutil -m rsync -rd "gs://seqr-reference-data/vep/$REFERENCE_GENOME" $REFERENCE_DATASETS_DIR/vep/$REFERENCE_GENOME
+gsutil -m rsync -rd -x '.*\.parquet.*' "gs://seqr-reference-data/v3.1/$REFERENCE_GENOME" $REFERENCE_DATASETS_DIR/$REFERENCE_GENOME
 if ! [[ $REFERENCE_DATASETS_DIR =~ gs://* ]]; then
   touch "$REFERENCE_DATASETS_DIR"/"$REFERENCE_GENOME"/_SUCCESS
-else 
+else
+  # If a different reference datasets dir is provided, sync vep data to the provided bucket.
+  gsutil -m rsync -rd "gs://seqr-reference-data/vep_data/loftee-beta/$REFERENCE_GENOME.tar.gz" $REFERENCE_DATASETS_DIR/vep_data/loftee-beta/$REFERENCE_GENOME.tar.gz
+  gsutil -m rsync -rd "gs://seqr-reference-data/vep/$REFERENCE_GENOME" $REFERENCE_DATASETS_DIR/vep/$REFERENCE_GENOME
   touch _SUCCESS
   gsutil cp _SUCCESS "$REFERENCE_DATASETS_DIR"/"$REFERENCE_GENOME"/_SUCCESS
   rm -rf _SUCCESS
