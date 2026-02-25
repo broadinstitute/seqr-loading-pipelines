@@ -43,8 +43,10 @@ def parse_run_id(latest_queue_path: str) -> str:
         os.path.basename(latest_queue_path),
     )
     if not m:
-        raise ValueError(f'Invalid queue filename: {latest_queue_path}')
+        msg = f'Invalid queue filename: {latest_queue_path}'
+        raise ValueError(msg)
     return m.group(1)
+
 
 def parse_latest_queue_path(
     latest_queue_path: str,
