@@ -37,14 +37,14 @@ signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
 
-def parse_run_id(
-    latest_queue_path: str,
-) -> str:
-    return re.search(
+def parse_run_id(latest_queue_path: str) -> str:
+    m = re.search(
         r'request_(\d{8}-\d{6}-\d{6})\.json',
         os.path.basename(latest_queue_path),
-    ).group(1)
-
+    )
+    if not m:
+        raise ValueError(f'Invalid queue filename: {latest_queue_path}')
+    return m.group(1)
 
 def parse_latest_queue_path(
     latest_queue_path: str,
@@ -63,7 +63,7 @@ def parse_latest_queue_path(
 
 
 def process_queue(local_scheduler=False):
-    run_id = None
+    run_id, prr = None, None
     try:
         latest_queue_path = get_oldest_queue_path()
         if latest_queue_path is None:
