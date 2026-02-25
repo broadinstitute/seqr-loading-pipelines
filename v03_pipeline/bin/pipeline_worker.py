@@ -37,13 +37,18 @@ signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
 
-def parse_latest_queue_path(
+def parse_run_id(
     latest_queue_path: str,
-) -> tuple[PipelineRunnerRequest, str]:
-    run_id = re.search(
+) -> str:
+    return re.search(
         r'request_(\d{8}-\d{6}-\d{6})\.json',
         os.path.basename(latest_queue_path),
     ).group(1)
+
+
+def parse_latest_queue_path(
+    latest_queue_path: str,
+) -> PipelineRunnerRequest:
     with open(latest_queue_path) as f:
         raw_json = json.load(f)
     request_type_name = raw_json['request_type']
@@ -54,8 +59,7 @@ def parse_latest_queue_path(
     if not request_cls:
         msg = f'Unknown request_type: {request_type_name}'
         raise ValueError(msg)
-    prr = request_cls.model_validate(raw_json)
-    return prr, run_id
+    return request_cls.model_validate(raw_json)
 
 
 def process_queue(local_scheduler=False):
@@ -64,7 +68,10 @@ def process_queue(local_scheduler=False):
         latest_queue_path = get_oldest_queue_path()
         if latest_queue_path is None:
             return
-        prr, run_id = parse_latest_queue_path(latest_queue_path)
+        run_id = parse_run_id(latest_queue_path)
+        if not run_id:
+            return
+        prr = parse_latest_queue_path(latest_queue_path)
         REQUEST_HANDLER_MAP[type(prr)](prr, run_id, local_scheduler)
         os.remove(latest_queue_path)
         safe_post_to_slack_success(
