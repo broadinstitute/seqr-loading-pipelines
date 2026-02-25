@@ -9,7 +9,6 @@ import hail as hl
 import hailtop.fs as hfs
 import requests
 
-from v03_pipeline.lib.core.dataset_type import DatasetType
 from v03_pipeline.lib.core.definitions import ReferenceGenome
 from v03_pipeline.lib.core.environment import Env
 from v03_pipeline.lib.misc.io import split_multi_hts
@@ -31,49 +30,6 @@ def generate_random_string(length=5):
     """Generates a random string of the specified length."""
     letters = string.ascii_letters + string.digits
     return ''.join(random.choice(letters) for i in range(length))  # noqa: S311
-
-
-def get_enum_select_fields(
-    ht: hl.Table,
-    enums: dict | None,
-) -> dict[str, hl.Expression]:
-    enum_select_fields = {}
-    for field_name, values in (enums or {}).items():
-        if not hasattr(ht, field_name):
-            if hasattr(ht, f'{field_name}_id') or hasattr(ht, f'{field_name}_ids'):
-                continue
-            error = f'Unused enum {field_name}'
-            raise ValueError(error)
-
-        lookup = hl.dict(
-            hl.enumerate(values, index_first=False).extend(
-                # NB: adding missing values here allows us to
-                # hard fail if a mapped key is present and has an unexpected value
-                # but propagate missing values.
-                [(hl.missing(hl.tstr), hl.missing(hl.tint32))],
-            ),
-        )
-        # NB: this conditioning on type is "outside" the hail expression context.
-        if (
-            isinstance(ht[field_name].dtype, hl.tarray | hl.tset)
-            and ht[field_name].dtype.element_type == hl.tstr
-        ):
-            enum_select_fields[f'{field_name}_ids'] = ht[field_name].map(
-                lambda x: lookup[x],  # noqa: B023
-            )
-        else:
-            enum_select_fields[f'{field_name}_id'] = lookup[ht[field_name]]
-    return enum_select_fields
-
-
-def filter_mito_contigs(
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    ht: hl.Table,
-) -> hl.Table:
-    if dataset_type == DatasetType.MITO:
-        return ht.filter(ht.locus.contig == reference_genome.mito_contig)
-    return ht.filter(ht.locus.contig != reference_genome.mito_contig)
 
 
 def filter_contigs(ht, reference_genome: ReferenceGenome):

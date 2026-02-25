@@ -1,4 +1,5 @@
 import os
+from unittest import mock
 
 import hail as hl
 import luigi.worker
@@ -11,13 +12,14 @@ from v03_pipeline.lib.core import (
 )
 from v03_pipeline.lib.misc.validation import ALL_VALIDATIONS
 from v03_pipeline.lib.paths import (
-    new_transcripts_parquet_path,
+    new_variant_details_parquet_path,
     new_variants_table_path,
 )
-from v03_pipeline.lib.tasks.exports.write_new_transcripts_parquet import (
-    WriteNewTranscriptsParquetTask,
+from v03_pipeline.lib.tasks.exports.write_new_variant_details_parquet import (
+    WriteNewVariantDetailsParquetTask,
 )
 from v03_pipeline.lib.test.misc import convert_ndarray_to_list
+from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_SNV_INDEL_ANNOTATIONS = (
@@ -30,7 +32,7 @@ TEST_GRCH37_SNV_INDEL_ANNOTATIONS = (
 TEST_RUN_ID = 'manual__2024-04-03'
 
 
-class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
+class WriteNewVariantDetailsParquetTest(MockedDatarootTestCase):
     def setUp(self) -> None:
         super().setUp()
         ht = hl.read_table(
@@ -56,7 +58,7 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
 
         # Make an incomplete parquet to validate overwrite-ing.
         os.makedirs(
-            new_transcripts_parquet_path(
+            new_variant_details_parquet_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 TEST_RUN_ID,
@@ -65,7 +67,7 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
         )
         with open(
             os.path.join(
-                new_transcripts_parquet_path(
+                new_variant_details_parquet_path(
                     ReferenceGenome.GRCh38,
                     DatasetType.SNV_INDEL,
                     TEST_RUN_ID,
@@ -76,11 +78,16 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
         ) as f:
             f.write('')
 
-    def test_write_new_transcripts_parquet_test(
+    @mock.patch(
+        'v03_pipeline.lib.tasks.exports.write_new_variant_details_parquet.WriteNewVariantsTableTask',
+    )
+    def test_write_new_variant_details_parquet_test(
         self,
+        mock_write_new_variants_task,
     ) -> None:
+        mock_write_new_variants_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
-        task = WriteNewTranscriptsParquetTask(
+        task = WriteNewVariantDetailsParquetTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
@@ -96,14 +103,27 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
         self.assertTrue(task.output().exists())
         self.assertTrue(task.complete())
         df = pd.read_parquet(
-            new_transcripts_parquet_path(
+            new_variant_details_parquet_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 TEST_RUN_ID,
             ),
         )
         export_json = convert_ndarray_to_list(df.head(1).to_dict('records'))
-        self.assertListEqual(list(export_json[0].keys()), ['key', 'transcripts'])
+        self.assertListEqual(
+            list(export_json[0].keys()),
+            [
+                'key',
+                'variantId',
+                'rsid',
+                'CAID',
+                'liftedOverChrom',
+                'liftedOverPos',
+                'sortedMotifFeatureConsequences',
+                'sortedRegulatoryFeatureConsequences',
+                'transcripts',
+            ],
+        )
         self.assertEqual(
             export_json[0]['key'],
             0,
@@ -176,11 +196,16 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
             ),
         )
 
-    def test_grch37_write_new_transcripts_parquet_test(
+    @mock.patch(
+        'v03_pipeline.lib.tasks.exports.write_new_variant_details_parquet.WriteNewVariantsTableTask',
+    )
+    def test_grch37_write_new_variant_details_parquet_test(
         self,
+        mock_write_new_variants_task,
     ) -> None:
+        mock_write_new_variants_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
-        task = WriteNewTranscriptsParquetTask(
+        task = WriteNewVariantDetailsParquetTask(
             reference_genome=ReferenceGenome.GRCh37,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
@@ -197,7 +222,7 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
         self.assertTrue(task.complete())
         df = pd.read_parquet(
             os.path.join(
-                new_transcripts_parquet_path(
+                new_variant_details_parquet_path(
                     ReferenceGenome.GRCh37,
                     DatasetType.SNV_INDEL,
                     TEST_RUN_ID,
@@ -205,11 +230,23 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
             ),
         )
         export_json = convert_ndarray_to_list(df.head(1).to_dict('records'))
-        self.assertListEqual(list(export_json[0].keys()), ['key', 'transcripts'])
+        self.assertListEqual(
+            list(export_json[0].keys()),
+            [
+                'key',
+                'variantId',
+                'rsid',
+                'CAID',
+                'liftedOverChrom',
+                'liftedOverPos',
+                'transcripts',
+            ],
+        )
         self.assertEqual(
             export_json[0]['key'],
             1424,
         )
+        self.assertEqual(export_json[0]['CAID'], None)
         self.assertEqual(
             export_json[0]['transcripts'][0],
             {

@@ -66,7 +66,6 @@ jobs:
           scandir: './v03_pipeline/bin'
       - name: Unit Tests
         run: |
-          export ACCESS_PRIVATE_REFERENCE_DATASETS=1
           export CLICKHOUSE_OPTIMIZE_TABLE_WAIT_S=1
           export PYSPARK_SUBMIT_ARGS='--driver-memory 8G pyspark-shell'
           export CLICKHOUSE_DATABASE=test

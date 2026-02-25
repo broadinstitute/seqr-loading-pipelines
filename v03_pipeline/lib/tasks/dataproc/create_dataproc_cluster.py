@@ -107,9 +107,6 @@ def get_cluster_config(
                     'spark:spark.memory.storageFraction': '0.2',
                     'spark:spark.executorEnv.HAIL_WORKER_OFF_HEAP_MEMORY_PER_CORE_MB': '6323',
                     'spark:spark.speculation': 'true',
-                    'spark-env:ACCESS_PRIVATE_REFERENCE_DATASETS': '1'
-                    if FeatureFlag.ACCESS_PRIVATE_REFERENCE_DATASETS
-                    else '0',
                     'spark-env:CHECK_SEX_AND_RELATEDNESS': '1'
                     if FeatureFlag.CHECK_SEX_AND_RELATEDNESS
                     else '0',
@@ -119,7 +116,6 @@ def get_cluster_config(
                     'spark-env:PIPELINE_DATA_DIR': Env.PIPELINE_DATA_DIR,
                     'spark-env:HAIL_TMP_DIR': Env.HAIL_TMP_DIR,
                     'spark-env:LOADING_DATASETS_DIR': Env.LOADING_DATASETS_DIR,
-                    'spark-env:PRIVATE_REFERENCE_DATASETS_DIR': Env.PRIVATE_REFERENCE_DATASETS_DIR,
                     'spark-env:REFERENCE_DATASETS_DIR': Env.REFERENCE_DATASETS_DIR,
                     'spark-env:CLINGEN_ALLELE_REGISTRY_LOGIN': Env.CLINGEN_ALLELE_REGISTRY_LOGIN,
                     'spark-env:CLINGEN_ALLELE_REGISTRY_PASSWORD': Env.CLINGEN_ALLELE_REGISTRY_PASSWORD,

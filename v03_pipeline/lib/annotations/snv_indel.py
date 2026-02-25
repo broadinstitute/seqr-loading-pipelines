@@ -25,10 +25,6 @@ REGULATORY_CONSEQUENCE_TERMS_LOOKUP = hl.dict(
     hl.enumerate(REGULATORY_CONSEQUENCE_TERMS, index_first=False),
 )
 
-N_ALT_REF = 0
-N_ALT_HET = 1
-N_ALT_HOM = 2
-
 
 def AB(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     is_called = hl.is_defined(mt.GT)
@@ -51,45 +47,12 @@ def DP(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     )
 
 
-def gnomad_non_coding_constraint(
-    ht: hl.Table,
-    gnomad_non_coding_constraint_ht: hl.Table,
-    **_: Any,
-) -> hl.Expression:
-    return hl.Struct(
-        z_score=(
-            gnomad_non_coding_constraint_ht.index(ht.locus, all_matches=True)
-            .filter(
-                lambda x: hl.is_defined(x['z_score']),
-            )
-            .z_score.first()
-        ),
-    )
-
-
 def rg38_locus(
     ht: hl.Table,
     **_: Any,
 ) -> hl.Expression | None:
     liftover.add_rg37_liftover()
     return hl.liftover(ht.locus, ReferenceGenome.GRCh38.value)
-
-
-def screen(
-    ht: hl.Table,
-    screen_ht: hl.Table,
-    **_: Any,
-) -> hl.Expression:
-    return hl.Struct(
-        region_type_ids=(
-            screen_ht.index(
-                ht.locus,
-                all_matches=True,
-            ).flatmap(
-                lambda x: x['region_type_ids'],
-            )
-        ),
-    )
 
 
 def check_ref(ht: hl.Table, **_: Any) -> hl.BooleanExpression:
