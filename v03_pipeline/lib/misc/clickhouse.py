@@ -17,7 +17,6 @@ from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.retry import retry
 from v03_pipeline.lib.paths import (
     new_entries_parquet_path,
-    new_transcripts_parquet_path,
     new_variant_details_parquet_path,
     new_variants_parquet_path,
 )
@@ -33,10 +32,7 @@ STAGING_CLICKHOUSE_DATABASE = 'staging'
 
 
 class ClickHouseTable(StrEnum):
-    ANNOTATIONS_DISK = 'annotations_disk'
-    ANNOTATIONS_MEMORY = 'annotations_memory'
     KEY_LOOKUP = 'key_lookup'
-    TRANSCRIPTS = 'transcripts'
     VARIANT_DETAILS = 'variants/details'
     VARIANTS_DISK = 'variants_disk'
     VARIANTS_MEMORY = 'variants_memory'
@@ -47,12 +43,9 @@ class ClickHouseTable(StrEnum):
     @property
     def src_path_fn(self) -> Callable:
         return {
-            ClickHouseTable.ANNOTATIONS_DISK: new_variants_parquet_path,
-            ClickHouseTable.ANNOTATIONS_MEMORY: new_variants_parquet_path,
-            ClickHouseTable.KEY_LOOKUP: new_variants_parquet_path,
-            ClickHouseTable.TRANSCRIPTS: new_transcripts_parquet_path,
             ClickHouseTable.VARIANTS_DISK: new_variants_parquet_path,
             ClickHouseTable.VARIANTS_MEMORY: new_variants_parquet_path,
+            ClickHouseTable.KEY_LOOKUP: new_variant_details_parquet_path,
             ClickHouseTable.VARIANT_DETAILS: new_variant_details_parquet_path,
             ClickHouseTable.ENTRIES: new_entries_parquet_path,
         }[self]
@@ -78,14 +71,11 @@ class ClickHouseTable(StrEnum):
     @property
     def insert(self) -> Callable:
         return {
-            ClickHouseTable.ANNOTATIONS_MEMORY: direct_insert_annotations,
-            ClickHouseTable.VARIANTS_MEMORY: direct_insert_variants,
+            # Note that VARIANTS_DETAILS is not included here because
+            # of the special logic to ensure writes are made to both tables.
+            ClickHouseTable.VARIANTS_MEMORY: direct_insert_annotations,
             ClickHouseTable.ENTRIES: atomic_insert_entries,
             ClickHouseTable.KEY_LOOKUP: functools.partial(
-                direct_insert_all_keys,
-                clickhouse_table=self,
-            ),
-            ClickHouseTable.TRANSCRIPTS: functools.partial(
                 direct_insert_all_keys,
                 clickhouse_table=self,
             ),
@@ -98,29 +88,10 @@ class ClickHouseTable(StrEnum):
     @classmethod
     def for_dataset_type(cls, dataset_type: DatasetType) -> list['ClickHouseTable']:
         tables = [
-            ClickHouseTable.ANNOTATIONS_MEMORY,
-            ClickHouseTable.KEY_LOOKUP,
-        ]
-        if dataset_type.should_write_new_transcripts:
-            tables = [
-                *tables,
-                ClickHouseTable.TRANSCRIPTS,
-            ]
-        return [
-            *tables,
-            ClickHouseTable.ENTRIES,
-        ]
-
-    @classmethod
-    def for_dataset_type_variants(
-        cls,
-        dataset_type: DatasetType,
-    ) -> list['ClickHouseTable']:
-        tables = [
             ClickHouseTable.VARIANTS_MEMORY,
             ClickHouseTable.KEY_LOOKUP,
         ]
-        if dataset_type.should_write_new_transcripts:
+        if dataset_type.should_write_new_variant_details:
             tables = [
                 *tables,
                 ClickHouseTable.VARIANT_DETAILS,
@@ -128,6 +99,15 @@ class ClickHouseTable(StrEnum):
         return [
             *tables,
             ClickHouseTable.ENTRIES,
+        ]
+
+    @classmethod
+    def for_dataset_type_disk_backed_variants_tables(
+        cls,
+        _dataset_type: DatasetType,
+    ) -> list['ClickHouseTable']:
+        return [
+            ClickHouseTable.VARIANTS_DISK,
         ]
 
     @classmethod
@@ -396,12 +376,12 @@ class ClickhouseReferenceDataset(StrEnum):
                 """,
                 timeout=WAIT_VIEW_TIMEOUT_S,
             )
-            return
-        logged_query(
-            f"""
-            SYSTEM RELOAD DICTIONARY {self.search_path(table_name_builder)}
-            """,
-        )
+        else:
+            logged_query(
+                f"""
+                SYSTEM RELOAD DICTIONARY {self.search_path(table_name_builder)}
+                """,
+            )
 
     def insert_into_seqr_variants_and_refresh_search(
         self,
@@ -877,7 +857,7 @@ def exchange_tables(
         )
 
 
-def direct_insert_variants(
+def direct_insert_annotations(
     table_name_builder: TableNameBuilder,
     **_,
 ) -> None:
@@ -901,67 +881,25 @@ def direct_insert_variants(
         )
         """,
     )
-    disk_backed_dst_table = table_name_builder.dst_table(ClickHouseTable.VARIANTS_DISK)
-    disk_backed_src_table = table_name_builder.src_table(ClickHouseTable.VARIANTS_DISK)
-    logged_query(
-        f"""
-        INSERT INTO {disk_backed_dst_table}
-        SELECT {ClickHouseTable.VARIANTS_DISK.select_fields}
-        FROM {disk_backed_src_table} WHERE {ClickHouseTable.VARIANTS_DISK.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
-        """,
-    )
+    for (
+        clickhouse_table
+    ) in ClickHouseTable.for_dataset_type_disk_backed_variants_tables(
+        table_name_builder.dataset_type,
+    ):
+        disk_backed_dst_table = table_name_builder.dst_table(clickhouse_table)
+        disk_backed_src_table = table_name_builder.src_table(clickhouse_table)
+        logged_query(
+            f"""
+            INSERT INTO {disk_backed_dst_table}
+            SELECT {clickhouse_table.select_fields}
+            FROM {disk_backed_src_table} WHERE {clickhouse_table.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
+            """,
+        )
     logged_query(
         f"""
         INSERT INTO {dst_table}
         SELECT {ClickHouseTable.VARIANTS_MEMORY.select_fields}
         FROM {src_table} WHERE {ClickHouseTable.VARIANTS_MEMORY.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
-        """,
-    )
-    drop_staging_db()
-
-
-def direct_insert_annotations(
-    table_name_builder: TableNameBuilder,
-    **_,
-) -> None:
-    dst_table = table_name_builder.dst_table(ClickHouseTable.ANNOTATIONS_MEMORY)
-    src_table = table_name_builder.src_table(ClickHouseTable.ANNOTATIONS_MEMORY)
-    drop_staging_db()
-    logged_query(
-        f"""
-        CREATE DATABASE {STAGING_CLICKHOUSE_DATABASE}
-        """,
-    )
-    # NB: Unfortunately there's a bug(?) or inaccuracy if this is attempted without an intermediate
-    # temporary table, likely due to writing to a table and joining against it at the same time.
-    logged_query(
-        f"""
-        CREATE TABLE {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys` ENGINE = Set AS (
-            SELECT {ClickHouseTable.ANNOTATIONS_MEMORY.key_field}
-            FROM {src_table} src
-            LEFT ANTI JOIN {dst_table} dst
-            ON {ClickHouseTable.ANNOTATIONS_MEMORY.join_condition}
-        )
-        """,
-    )
-    disk_backed_dst_table = table_name_builder.dst_table(
-        ClickHouseTable.ANNOTATIONS_DISK,
-    )
-    disk_backed_src_table = table_name_builder.src_table(
-        ClickHouseTable.ANNOTATIONS_DISK,
-    )
-    logged_query(
-        f"""
-        INSERT INTO {disk_backed_dst_table}
-        SELECT {ClickHouseTable.ANNOTATIONS_DISK.select_fields}
-        FROM {disk_backed_src_table} WHERE {ClickHouseTable.ANNOTATIONS_DISK.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
-        """,
-    )
-    logged_query(
-        f"""
-        INSERT INTO {dst_table}
-        SELECT {ClickHouseTable.ANNOTATIONS_MEMORY.select_fields}
-        FROM {src_table} WHERE {ClickHouseTable.ANNOTATIONS_MEMORY.key_field} IN {table_name_builder.staging_dst_prefix}/_tmp_loadable_keys`
         """,
     )
     drop_staging_db()

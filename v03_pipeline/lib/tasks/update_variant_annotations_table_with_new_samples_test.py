@@ -1,5 +1,4 @@
 import functools
-import shutil
 from unittest.mock import Mock, PropertyMock, patch
 
 import hail as hl
@@ -98,40 +97,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         worker.run()
         self.assertFalse(uvatwns_task.complete())
 
-    def test_missing_interval_reference_dataset(
-        self,
-    ) -> None:
-        copy_project_pedigree_to_mocked_dir(
-            TEST_PEDIGREE_3_REMAP,
-            ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
-            SampleType.WGS,
-            'R0113_test_project',
-        )
-        shutil.rmtree(
-            valid_reference_dataset_path(
-                ReferenceGenome.GRCh38,
-                ReferenceDataset.screen,
-            ),
-        )
-        uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
-            reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
-            callset_path=TEST_SNV_INDEL_VCF,
-            project_guids=['R0113_test_project'],
-            validations_to_skip=[ALL_VALIDATIONS],
-            run_id=TEST_RUN_ID,
-        )
-        worker = luigi.worker.Worker()
-        worker.add(uvatwns_task)
-        worker.run()
-        self.assertFalse(uvatwns_task.complete())
-
-    @patch(
-        'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
-    )
-    @patch('v03_pipeline.lib.tasks.update_new_variants_with_caids.Env')
     @patch(
         'v03_pipeline.lib.tasks.validate_callset.SKIPPABLE_VALIDATIONS',
         [
@@ -159,71 +124,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         mock_load_gencode_ensembl_to_refseq_id: Mock,
         mock_vep: Mock,
         mock_standard_contigs: Mock,
-        mock_env_caids: Mock,
-        mock_register_alleles: Mock,
     ) -> None:
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_38_VEP_DATA)
         mock_load_gencode_ensembl_to_refseq_id.return_value = hl.dict(
             {'ENST00000327044': 'NM_015658.4'},
         )
-        # make register_alleles return CAIDs for 4 of 30 variants
-        mock_env_caids.CLINGEN_ALLELE_REGISTRY_LOGIN = 'login'
-        mock_env_caids.CLINGEN_ALLELE_REGISTRY_PASSWORD = 'password1'  # noqa: S105
-        mock_register_alleles.side_effect = [
-            iter(
-                [
-                    hl.Table.parallelize(
-                        [
-                            hl.Struct(
-                                locus=hl.Locus(
-                                    contig='chr1',
-                                    position=871269,
-                                    reference_genome='GRCh38',
-                                ),
-                                alleles=['A', 'C'],
-                                CAID='CA1',
-                            ),
-                            hl.Struct(
-                                locus=hl.Locus(
-                                    contig='chr1',
-                                    position=874734,
-                                    reference_genome='GRCh38',
-                                ),
-                                alleles=['C', 'T'],
-                                CAID='CA2',
-                            ),
-                            hl.Struct(
-                                locus=hl.Locus(
-                                    contig='chr1',
-                                    position=876499,
-                                    reference_genome='GRCh38',
-                                ),
-                                alleles=['A', 'G'],
-                                CAID='CA3',
-                            ),
-                            hl.Struct(
-                                locus=hl.Locus(
-                                    contig='chr1',
-                                    position=878314,
-                                    reference_genome='GRCh38',
-                                ),
-                                alleles=['G', 'C'],
-                                CAID='CA4',
-                            ),
-                        ],
-                        hl.tstruct(
-                            locus=hl.tlocus('GRCh38'),
-                            alleles=hl.tarray(hl.tstr),
-                            CAID=hl.tstr,
-                        ),
-                        key=('locus', 'alleles'),
-                    ),
-                ],
-            ),
-            iter(
-                [],
-            ),  # for the second call, there are no new variants, return empty iterator
-        ]
         mock_standard_contigs.return_value = {'chr1'}
         # This creates a mock validation table with 1 coding and 1 non-coding variant
         # explicitly chosen from the VCF.
@@ -256,9 +161,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ),
             key='locus',
             globals=hl.Struct(
-                versions=hl.Struct(
-                    gnomad_genomes='1.0',
-                ),
                 enums=hl.Struct(
                     gnomad_genomes=hl.Struct(),
                 ),
@@ -293,26 +195,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         self.assertTrue(uvatwns_task_3.complete())
         ht = hl.read_table(uvatwns_task_3.output().path)
         self.assertEqual(ht.count(), 30)
-        self.assertEqual(
-            [
-                x
-                for x in ht.select(
-                    'CAID',
-                ).collect()
-                if x.locus.position <= 871269  # noqa: PLR2004
-            ],
-            [
-                hl.Struct(
-                    locus=hl.Locus(
-                        contig='chr1',
-                        position=871269,
-                        reference_genome='GRCh38',
-                    ),
-                    alleles=['A', 'C'],
-                    CAID='CA1',
-                ),
-            ],
-        )
         self.assertEqual(
             ht.globals.updates.collect(),
             [
@@ -357,11 +239,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             [
                 x
                 for x in ht.select(
-                    'hgmd',
                     'variant_id',
                     'xpos',
-                    'screen',
-                    'CAID',
                 ).collect()
                 if x.locus.position <= 878809  # noqa: PLR2004
             ],
@@ -373,14 +252,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     alleles=['A', 'C'],
-                    hgmd=hl.Struct(
-                        accession='abcdefg',
-                        class_id=3,
-                    ),
                     variant_id='1-871269-A-C',
                     xpos=1000871269,
-                    screen=hl.Struct(region_type_ids=[1]),
-                    CAID='CA1',
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -389,11 +262,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     alleles=['C', 'T'],
-                    hgmd=None,
                     variant_id='1-874734-C-T',
                     xpos=1000874734,
-                    screen=hl.Struct(region_type_ids=[]),
-                    CAID='CA2',
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -402,11 +272,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     alleles=['A', 'G'],
-                    hgmd=None,
                     variant_id='1-876499-A-G',
                     xpos=1000876499,
-                    screen=hl.Struct(region_type_ids=[]),
-                    CAID='CA3',
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -415,11 +282,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     alleles=['G', 'C'],
-                    hgmd=None,
                     variant_id='1-878314-G-C',
                     xpos=1000878314,
-                    screen=hl.Struct(region_type_ids=[]),
-                    CAID='CA4',
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -428,11 +292,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     alleles=['C', 'T'],
-                    hgmd=None,
                     variant_id='1-878809-C-T',
                     xpos=1000878809,
-                    screen=hl.Struct(region_type_ids=[]),
-                    CAID=None,
                 ),
             ],
         )
@@ -472,31 +333,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                             ),
                         ),
                     },
-                    versions=hl.Struct(
-                        dbnsfp='1.0',
-                        eigen='1.1',
-                        exac='1.1',
-                        gnomad_exomes='1.0',
-                        gnomad_genomes='1.0',
-                        splice_ai='1.1',
-                        topmed='1.1',
-                        gnomad_non_coding_constraint='1.0',
-                        screen='1.0',
-                        hgmd='1.0',
-                    ),
                     migrations=[],
                     max_key_=29,
                     enums=hl.Struct(
-                        dbnsfp=ReferenceDataset.dbnsfp.enum_globals,
-                        eigen=hl.Struct(),
-                        exac=hl.Struct(),
-                        gnomad_exomes=hl.Struct(),
-                        gnomad_genomes=hl.Struct(),
-                        splice_ai=ReferenceDataset.splice_ai.enum_globals,
-                        topmed=hl.Struct(),
-                        hgmd=ReferenceDataset.hgmd.enum_globals,
-                        gnomad_non_coding_constraint=hl.Struct(),
-                        screen=ReferenceDataset.screen.enum_globals,
                         sorted_motif_feature_consequences=hl.Struct(
                             consequence_term=MOTIF_CONSEQUENCE_TERMS,
                         ),
@@ -519,17 +358,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ],
         )
 
-    @patch(
-        'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
-    )
     @patch('v03_pipeline.lib.vep.hl.vep')
     def test_update_vat_grch37(
         self,
         mock_vep: Mock,
-        mock_register_alleles: Mock,
     ) -> None:
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_37_VEP_DATA)
-        mock_register_alleles.side_effect = None
         copy_project_pedigree_to_mocked_dir(
             TEST_PEDIGREE_3_REMAP,
             ReferenceGenome.GRCh37,
@@ -611,118 +445,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     position=935889,
                     reference_genome='GRCh38',
                 ),
-                eigen=hl.Struct(Eigen_phred=1.5880000591278076),
-                exac=hl.Struct(
-                    AF_POPMAX=0.0004100881633348763,
-                    AF=0.0004633000062312931,
-                    AC_Adj=51,
-                    AC_Het=51,
-                    AC_Hom=0,
-                    AC_Hemi=None,
-                    AN_Adj=108288,
-                ),
-                gnomad_exomes=hl.Struct(
-                    AF=0.00012876000255346298,
-                    AN=240758,
-                    AC=31,
-                    Hom=0,
-                    AF_POPMAX_OR_GLOBAL=0.0001119549197028391,
-                    FAF_AF=9.315000352216884e-05,
-                    Hemi=0,
-                ),
-                gnomad_genomes=hl.Struct(
-                    AF=None,
-                    AN=None,
-                    AC=None,
-                    Hom=None,
-                    AF_POPMAX_OR_GLOBAL=None,
-                    FAF_AF=None,
-                    Hemi=None,
-                ),
-                splice_ai=hl.Struct(
-                    delta_score=0.029999999329447746,
-                    splice_consequence_id=3,
-                ),
-                topmed=hl.Struct(AC=None, AF=None, AN=None, Hom=None, Het=None),
-                dbnsfp=hl.Struct(
-                    REVEL_score=0.0430000014603138,
-                    SIFT_score=None,
-                    Polyphen2_HVAR_score=None,
-                    MutationTaster_pred_id=0,
-                    CADD_phred=9.699999809265137,
-                    MPC_score=None,
-                    PrimateAI_score=None,
-                ),
-                hgmd=None,
-                CAID=None,
                 key_=0,
             ),
-        )
-
-    @patch(
-        'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
-    )
-    @patch('v03_pipeline.lib.reference_datasets.reference_dataset.FeatureFlag')
-    @patch('v03_pipeline.lib.vep.hl.vep')
-    @patch(
-        'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_ensembl_to_refseq_id',
-    )
-    def test_update_vat_without_accessing_private_datasets(
-        self,
-        mock_load_gencode_ensembl_to_refseq_id: Mock,
-        mock_vep: Mock,
-        mock_rd_ff: Mock,
-        mock_register_alleles: Mock,
-    ) -> None:
-        mock_load_gencode_ensembl_to_refseq_id.return_value = hl.dict(
-            {'ENST00000327044': 'NM_015658.4'},
-        )
-        shutil.rmtree(
-            valid_reference_dataset_path(
-                ReferenceGenome.GRCh38,
-                ReferenceDataset.hgmd,
-            ),
-        )
-        mock_rd_ff.ACCESS_PRIVATE_REFERENCE_DATASETS = False
-        mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_38_VEP_DATA)
-        mock_register_alleles.side_effect = None
-        copy_project_pedigree_to_mocked_dir(
-            TEST_PEDIGREE_3_REMAP,
-            ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
-            SampleType.WGS,
-            'R0113_test_project',
-        )
-        worker = luigi.worker.Worker()
-        uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
-            reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
-            callset_path=TEST_SNV_INDEL_VCF,
-            project_guids=['R0113_test_project'],
-            validations_to_skip=[ALL_VALIDATIONS],
-            run_id=TEST_RUN_ID,
-        )
-        worker.add(uvatwns_task)
-        worker.run()
-        self.assertTrue(uvatwns_task.complete())
-        ht = hl.read_table(uvatwns_task.output().path)
-        self.assertEqual(ht.count(), 30)
-        self.assertCountEqual(
-            ht.globals.versions.collect(),
-            [
-                hl.Struct(
-                    dbnsfp='1.0',
-                    eigen='1.1',
-                    exac='1.1',
-                    gnomad_exomes='1.0',
-                    gnomad_genomes='1.0',
-                    splice_ai='1.1',
-                    topmed='1.1',
-                    gnomad_non_coding_constraint='1.0',
-                    screen='1.0',
-                ),
-            ],
         )
 
     def test_mito_update_vat(
@@ -756,23 +480,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ht.globals.collect(),
             [
                 hl.Struct(
-                    versions=hl.Struct(
-                        dbnsfp='1.0',
-                        gnomad_mito='1.1',
-                        helix_mito='1.0',
-                        hmtvar='1.1',
-                        mitomap='1.0',
-                        mitimpact='1.0',
-                        local_constraint_mito='1.0',
-                    ),
                     enums=hl.Struct(
-                        local_constraint_mito=hl.Struct(),
-                        dbnsfp=ReferenceDataset.dbnsfp.enum_globals,
-                        gnomad_mito=hl.Struct(),
-                        helix_mito=hl.Struct(),
-                        hmtvar=hl.Struct(),
-                        mitomap=hl.Struct(),
-                        mitimpact=hl.Struct(),
                         sorted_transcript_consequences=hl.Struct(
                             biotype=BIOTYPES,
                             consequence_term=TRANSCRIPT_CONSEQUENCE_TERMS,
@@ -817,13 +525,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sorted_transcript_consequences=None,
                 variant_id='M-3-T-C',
                 xpos=25000000003,
-                dbnsfp=None,
-                gnomad_mito=None,
-                helix_mito=None,
-                hmtvar=None,
-                mitomap=None,
-                mitimpact=None,
-                local_constraint_mito=None,
                 key_=0,
             ),
         )
@@ -869,9 +570,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ht.globals.collect(),
             [
                 hl.Struct(
-                    versions=hl.Struct(gnomad_svs='1.1'),
                     enums=hl.Struct(
-                        gnomad_svs=hl.Struct(),
                         sv_type=SV_TYPES,
                         sv_type_detail=SV_TYPE_DETAILS,
                         sorted_gene_consequences=hl.Struct(
@@ -1324,9 +1023,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ht.globals.collect(),
             [
                 hl.Struct(
-                    versions=hl.Struct(gnomad_svs='1.1'),
                     enums=hl.Struct(
-                        gnomad_svs=hl.Struct(),
                         sv_type=SV_TYPES,
                         sv_type_detail=SV_TYPE_DETAILS,
                         sorted_gene_consequences=hl.Struct(
@@ -1481,7 +1178,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ht.globals.collect(),
             [
                 hl.Struct(
-                    versions=hl.Struct(),
                     enums=hl.Struct(
                         sv_type=SV_TYPES,
                         sorted_gene_consequences=hl.Struct(

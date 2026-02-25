@@ -34,7 +34,6 @@ from v03_pipeline.lib.misc.clickhouse import (
 )
 from v03_pipeline.lib.paths import (
     new_entries_parquet_path,
-    new_transcripts_parquet_path,
     new_variant_details_parquet_path,
     new_variants_parquet_path,
     runs_path,
@@ -45,7 +44,7 @@ TEST_RUN_ID = 'manual__2025-05-07T17-20-59.702114+00-00'
 
 
 class ClickhouseTest(MockedDatarootTestCase):
-    def setUp(self):  # noqa: PLR0915
+    def setUp(self):
         super().setUp()
         client = get_clickhouse_client()
         client.execute(
@@ -204,27 +203,10 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         client.execute(
             f"""
-            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts` (
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/variants/details` (
                 key UInt32,
+                variantId String,
                 transcripts String
-            ) ENGINE = EmbeddedRocksDB()
-            PRIMARY KEY `key`
-        """,
-        )
-        client.execute(
-            f"""
-            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/annotations_memory` (
-                key UInt32,
-                variantId String,
-            ) ENGINE = EmbeddedRocksDB()
-            PRIMARY KEY `key`
-        """,
-        )
-        client.execute(
-            f"""
-            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/annotations_disk` (
-                key UInt32,
-                variantId String,
             ) ENGINE = EmbeddedRocksDB()
             PRIMARY KEY `key`
         """,
@@ -338,24 +320,6 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         client.execute(
             f"""
-            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/annotations_memory` (
-                key UInt32,
-                variantId String,
-            ) ENGINE = EmbeddedRocksDB()
-            PRIMARY KEY `key`
-        """,
-        )
-        client.execute(
-            f"""
-            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/annotations_disk` (
-                key UInt32,
-                variantId String,
-            ) ENGINE = EmbeddedRocksDB()
-            PRIMARY KEY `key`
-        """,
-        )
-        client.execute(
-            f"""
             CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/variants_memory` (
                 key UInt32,
                 variantId String,
@@ -423,17 +387,6 @@ class ClickhouseTest(MockedDatarootTestCase):
             ),
         )
 
-        # Transcripts Parquet
-        df = pd.DataFrame({'key': [1, 2, 3, 4], 'transcripts': ['a', 'b', 'c', 'd']})
-        write_test_parquet(
-            df,
-            new_transcripts_parquet_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                TEST_RUN_ID,
-            ),
-        )
-
         # New Variants parquet.
         df = pd.DataFrame(
             {
@@ -443,12 +396,6 @@ class ClickhouseTest(MockedDatarootTestCase):
                     '2-4-A-T',
                     'Y-9-A-C',
                     'M-2-C-G',
-                ],
-                'populations': [
-                    {'gnomad_genomes': {'filter_af': None}},
-                    {'gnomad_genomes': {'filter_af': 0.1}},
-                    {'gnomad_genomes': {'filter_af': 0.01}},
-                    {'gnomad_genomes': {'filter_af': 0.001}},
                 ],
             },
         )
@@ -612,11 +559,11 @@ class ClickhouseTest(MockedDatarootTestCase):
     def test_direct_insert_all_keys(self):
         client = get_clickhouse_client()
         client.execute(
-            f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts` VALUES',
-            [(1, 'a'), (10, 'b'), (7, 'c')],
+            f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/variants/details` VALUES',
+            [(1, 'a', 'e'), (10, 'b', 'f'), (7, 'c', 'g')],
         )
         direct_insert_all_keys(
-            ClickHouseTable.TRANSCRIPTS,
+            ClickHouseTable.VARIANT_DETAILS,
             TableNameBuilder(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
@@ -624,16 +571,23 @@ class ClickhouseTest(MockedDatarootTestCase):
             ),
         )
         ret = client.execute(
-            f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts`',
+            f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/variants/details`',
         )
         self.assertEqual(
             ret,
-            [(1, 'a'), (2, 'b'), (3, 'c'), (4, 'd'), (7, 'c'), (10, 'b')],
+            [
+                (1, '1-13-A-C', 'a'),
+                (2, '2-14-A-T', 'b'),
+                (3, 'Y-19-A-C', 'c'),
+                (4, 'M-12-C-G', 'd'),
+                (7, 'c', 'g'),
+                (10, 'b', 'f'),
+            ],
         )
 
         # ensure multiple calls are idempotent
         direct_insert_all_keys(
-            ClickHouseTable.TRANSCRIPTS,
+            ClickHouseTable.VARIANT_DETAILS,
             TableNameBuilder(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
@@ -641,12 +595,9 @@ class ClickhouseTest(MockedDatarootTestCase):
             ),
         )
         ret = client.execute(
-            f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts`',
+            f'SELECT COUNT(*) FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/variants/details`',
         )
-        self.assertEqual(
-            ret,
-            [(1, 'a'), (2, 'b'), (3, 'c'), (4, 'd'), (7, 'c'), (10, 'b')],
-        )
+        self.assertEqual(ret[0][0], 6)
 
     @patch.object(
         ClickhouseReferenceDataset,
@@ -1078,15 +1029,15 @@ class ClickhouseTest(MockedDatarootTestCase):
                 (4, 1, 0),
             ],
         )
-        annotations_memory = client.execute(
+        variants_memory = client.execute(
             f"""
            SELECT *
            FROM
-           {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/annotations_memory`
+           {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/variants_memory`
            """,
         )
         self.assertCountEqual(
-            annotations_memory,
+            variants_memory,
             [
                 (10, '1-3-A-C'),
                 (11, '2-4-A-T'),
@@ -1094,15 +1045,15 @@ class ClickhouseTest(MockedDatarootTestCase):
                 (13, 'M-2-C-G'),
             ],
         )
-        annotations_disk = client.execute(
+        variants_disk = client.execute(
             f"""
            SELECT *
            FROM
-           {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/annotations_disk`
+           {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/variants_disk`
            """,
         )
         self.assertCountEqual(
-            annotations_disk,
+            variants_disk,
             [
                 (10, '1-3-A-C'),
                 (11, '2-4-A-T'),
@@ -1120,22 +1071,22 @@ class ClickhouseTest(MockedDatarootTestCase):
             ['family_d1', 'family_d2'],
         )
         client = get_clickhouse_client()
-        annotations_disk_count = client.execute(
+        variants_disk_count = client.execute(
             f"""
            SELECT COUNT(*)
            FROM
-           {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/annotations_memory`
+           {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/variants_memory`
            """,
         )[0][0]
-        self.assertEqual(annotations_disk_count, 4)
-        annotations_disk_count = client.execute(
+        self.assertEqual(variants_disk_count, 4)
+        variants_disk_count = client.execute(
             f"""
            SELECT COUNT(*)
            FROM
-           {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/annotations_disk`
+           {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/variants_disk`
            """,
         )[0][0]
-        self.assertEqual(annotations_disk_count, 4)
+        self.assertEqual(variants_disk_count, 4)
         entries_count = client.execute(
             f"""
            SELECT COUNT(*)

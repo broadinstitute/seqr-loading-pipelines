@@ -21,8 +21,8 @@ from v03_pipeline.lib.paths import (
 from v03_pipeline.lib.tasks.clickhouse_migration.migrate_all_projects_to_clickhouse import (
     MigrateAllProjectsToClickHouseTask,
 )
-from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
-    MockedReferenceDatasetsTestCase,
+from v03_pipeline.lib.test.mocked_dataroot_testcase import (
+    MockedDatarootTestCase,
 )
 
 TEST_SNV_INDEL_ANNOTATIONS = (
@@ -47,7 +47,7 @@ TEST_PROJECT_TABLES = [
 ]
 
 
-class MigrateAllProjectsToClickHouseTaskTest(MockedReferenceDatasetsTestCase):
+class MigrateAllProjectsToClickHouseTaskTest(MockedDatarootTestCase):
     def setUp(self) -> None:
         super().setUp()
         ht = hl.read_table(TEST_SNV_INDEL_ANNOTATIONS)
