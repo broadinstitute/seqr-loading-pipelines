@@ -256,6 +256,7 @@ class ClickhouseReferenceDataset(StrEnum):
     @property
     def all_variants_mv_timeout(self):
         return {
+            ClickhouseReferenceDataset.DBNSFP: WAIT_VIEW_TIMEOUT_S * 3,
             ClickhouseReferenceDataset.SPLICE_AI: WAIT_VIEW_TIMEOUT_S * 10,
         }.get(self, WAIT_VIEW_TIMEOUT_S)
 
@@ -441,7 +442,7 @@ class ClickhouseReferenceDataset(StrEnum):
             f"""
             SYSTEM WAIT VIEW {self.all_variants_mv(table_name_builder)}
             """,
-            timeout=WAIT_VIEW_TIMEOUT_S * 2,  # double the timeout for large downloads
+            timeout=self.all_variants_mv_timeout,
         )
         if self.has_seqr_variants:
             logged_query(
