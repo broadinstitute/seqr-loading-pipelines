@@ -117,8 +117,6 @@ def get_cluster_config(
                     'spark-env:HAIL_TMP_DIR': Env.HAIL_TMP_DIR,
                     'spark-env:LOADING_DATASETS_DIR': Env.LOADING_DATASETS_DIR,
                     'spark-env:REFERENCE_DATASETS_DIR': Env.REFERENCE_DATASETS_DIR,
-                    'spark-env:CLINGEN_ALLELE_REGISTRY_LOGIN': Env.CLINGEN_ALLELE_REGISTRY_LOGIN,
-                    'spark-env:CLINGEN_ALLELE_REGISTRY_PASSWORD': Env.CLINGEN_ALLELE_REGISTRY_PASSWORD,
                     'spark-env:SAMPLE_TYPE_VALIDATION_EXCLUDED_PROJECTS': ','.join(
                         Env.SAMPLE_TYPE_VALIDATION_EXCLUDED_PROJECTS,
                     ),
