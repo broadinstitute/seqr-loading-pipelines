@@ -1087,6 +1087,14 @@ class ClickhouseTest(MockedDatarootTestCase):
            """,
         )[0][0]
         self.assertEqual(variants_disk_count, 4)
+        key_lookup_count = client.execute(
+            f"""
+           SELECT COUNT(*)
+           FROM
+           {Env.CLICKHOUSE_DATABASE}.`GRCh38/GCNV/key_lookup`
+           """,
+        )[0][0]
+        self.assertEqual(key_lookup_count, 4)
         entries_count = client.execute(
             f"""
            SELECT COUNT(*)
