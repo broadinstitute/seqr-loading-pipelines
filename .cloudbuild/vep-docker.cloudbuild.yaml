@@ -1,6 +1,6 @@
 # Run locally with:
 #
-# gcloud builds submit --quiet --substitutions='_REFERENCE_GENOME=GRCh38' --config .cloudbuild/vep-docker.cloudbuild.yaml v03_pipeline/deploy
+# gcloud builds submit --quiet --substitutions='_REFERENCE_GENOME=GRCh38' --config .cloudbuild/vep-docker.cloudbuild.yaml loading_pipeline/deploy
 steps:
 - name: 'gcr.io/kaniko-project/executor:v1.3.0'
   args:

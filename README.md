@@ -9,21 +9,21 @@
 
 ## 📁 Repository Structure
 
-### `v03_pipeline/api/`
-Contains the interface layer to the _seqr_ application. 
+### `loading_pipeline/api/`
+Contains the interface layer to the _seqr_ application.
 - `api/model.py` defines pydantic models for the REST interface.
-- `api/app.py` specifies an `aiohttp` webserver that handles load data requests. 
+- `api/app.py` specifies an `aiohttp` webserver that handles load data requests.
 
-### `v03_pipeline/bin/`
+### `loading_pipeline/bin/`
 Scripts or command-line utilities used for setup or task execution.
 - `bin/pipeline_worker.py` — manages asynchronous jobs requested by _seqr_.
 
-### `v03_pipeline/deploy/`
+### `loading_pipeline/deploy/`
 Dockerfiles for the loading pipeline itself & any annotation utilities.
 Kubernetes manifests are managed separately in [seqr-helm](https://github.com/broadinstitute/seqr-helm/tree/main/charts/pipeline-runner)
 
-### `v03_pipeline/lib/`
-Core logic and shared libraries.  
+### `loading_pipeline/lib/`
+Core logic and shared libraries.
 - `annotations` defines hail logic to re-format and standardize fields.
 - `methods` wraps hail-defined genomics methods for QC.
 - `misc` contains single modules with defined utilities.
@@ -37,10 +37,10 @@ the pipeline is defined, effectively, in reverse.
 - `test` holds a few utilities used by the tests, which are dispersed throughout the rest of the repository.
 - `paths.py` defines paths for all intermediate and output files of the pipeline.
 
-### `v03_pipeline/ops/`
+### `loading_pipeline/ops/`
 Manual operations scripts.
 
-### `v03_pipeline/var/`
+### `loading_pipeline/var/`
 Static configuration and test files.
 
 ---
@@ -58,14 +58,14 @@ RUN uv sync --group dev --locked
 ### [Install](https://clickhouse.com/docs/getting-started/quick-start/oss) & start ClickHouse with provided test configuration:
 ```bash
 curl https://clickhouse.com/ | sh
-./clickhouse server --config-file=./seqr-loading-pipelines/v03_pipeline/var/clickhouse_config/test-clickhouse.xml
+./clickhouse server --config-file=./seqr-loading-pipelines/loading_pipeline/var/clickhouse_config/test-clickhouse.xml
 ```
 
 ### [Run the Tests](https://github.com/broadinstitute/seqr-loading-pipelines/blob/main/.github/workflows/unit-tests.yml#L66-L73)
 
 ### Run an Individual Test
 ```bash
-uv run nosetests v03_pipeline/lib/misc/math_test.py
+uv run nosetests loading_pipeline/lib/misc/math_test.py
 ```
 
 ### Formatting and Linting
