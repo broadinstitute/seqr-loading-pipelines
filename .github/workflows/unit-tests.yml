@@ -56,18 +56,18 @@ jobs:
       - name: Sync dependencies (prod + dataproc)
         run: uv sync --locked 
       - name: Check Ruff Format
-        run: uv run ruff format --check v03_pipeline --diff
+        run: uv run ruff format --check loading_pipeline --diff
       - name: Check Ruff
         run: uv run ruff check --output-format github
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master
         with:
           severity: error
-          scandir: './v03_pipeline/bin'
+          scandir: './loading_pipeline/bin'
       - name: Unit Tests
         run: |
           export CLICKHOUSE_OPTIMIZE_TABLE_WAIT_S=1
           export PYSPARK_SUBMIT_ARGS='--driver-memory 8G pyspark-shell'
           export CLICKHOUSE_DATABASE=test
-          uv run nosetests --with-coverage --cover-package v03_pipeline v03_pipeline
+          uv run nosetests --with-coverage --cover-package loading_pipeline loading_pipeline
           uv run coverage report --omit '*test*' --fail-under=85
