@@ -27,7 +27,6 @@ TEST_PEDIGREE_5 = 'loading_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 TEST_MITO_EXPORT_PEDIGREE = (
     'loading_pipeline/var/test/pedigrees/test_mito_export_pedigree.tsv'
 )
-TEST_PEDIGREE_5 = 'loading_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 TEST_SNV_INDEL_VCF = 'loading_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_MITO_CALLSET = 'loading_pipeline/var/test/callsets/mito_1.mt'
 TEST_SV_VCF_2 = 'loading_pipeline/var/test/callsets/sv_2.vcf'
@@ -43,8 +42,6 @@ TEST_RUN_ID = 'manual__2024-04-03'
 
 
 class WriteNewEntriesParquetTest(MockedDatarootTestCase):
-    maxDiff = None
-
     def setUp(self) -> None:
         super().setUp()
         ht = hl.read_table(
