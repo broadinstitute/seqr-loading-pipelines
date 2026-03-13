@@ -145,7 +145,7 @@ class TestPaths(unittest.TestCase):
                     DatasetType.SNV_INDEL,
                     TEST_VCF,
                 ),
-                '/var/seqr/seqr-loading-temp/GRCh38/SNV_INDEL/imported_callsets/42f2c9e2025c4b61106b3fecfd30443f882a1849b73c6f6903a7e421c20117e0.mt',
+                '/var/seqr/seqr-loading-temp/GRCh38/SNV_INDEL/imported_callsets/01327e46c8747f15feaad2c08875b928c274dcb248ad40837ea3f49d8b4dedfb.mt',
             )
 
     def test_tdr_metrics_path(self) -> None:
