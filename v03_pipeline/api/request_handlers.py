@@ -52,7 +52,7 @@ def run_loading_pipeline(
 
 def run_delete_families(dpr: DeleteFamiliesRequest, run_id: str, *_: Any):
     for dataset_type in DatasetType:
-        for reference_genome in dataset_type.reference_genomes:
+        for reference_genome in dpr.dataset_types:
             delete_family_guids(
                 reference_genome,
                 dataset_type,

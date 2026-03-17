@@ -91,6 +91,9 @@ class DeleteFamiliesRequest(PipelineRunnerRequest):
         min_length=1,
         frozen=True,
     )
+    dataset_types: list[DatasetType] = [
+        d.value for d in DatasetType
+    ]
 
 
 class RebuildGtStatsRequest(PipelineRunnerRequest):
