@@ -373,7 +373,7 @@ class DatasetType(StrEnum):
         return self == DatasetType.SV
 
     @property
-    def dataproc_preemptibles(self) -> int | None:
+    def dataproc_workers(self) -> int | None:
         if self == DatasetType.SNV_INDEL:
-            return Env.GCLOUD_DATAPROC_SECONDARY_WORKERS
+            return Env.GCLOUD_DATAPROC_WORKERS
         return 1

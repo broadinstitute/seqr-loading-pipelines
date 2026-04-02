@@ -15,10 +15,10 @@ from loading_pipeline.lib.tasks.base.base_loading_pipeline_params import (
 )
 from loading_pipeline.lib.tasks.dataproc.misc import get_cluster_name
 
-DEBIAN_IMAGE = '2.2.5-debian12'
+DEBIAN_IMAGE = '2.2.60-debian12'
 DISK_SIZE_GB = 600
 HAIL_VERSION = hl.version().split('-')[0]
-INSTANCE_TYPE = 'n1-highmem-8'
+INSTANCE_TYPE = 'n2-highmem-16'
 PKGS = '|'.join(
     [
         x.replace('gnomad_qc @ ', '').replace('onnxconverter-common @ ', '')
@@ -70,7 +70,7 @@ def get_cluster_config(
                 },
             },
             'worker_config': {
-                'num_instances': 2,
+                'num_instances': dataset_type.dataproc_workers,
                 'machine_type_uri': INSTANCE_TYPE,
                 'disk_config': {
                     'boot_disk_type': 'pd-standard',
@@ -78,7 +78,7 @@ def get_cluster_config(
                 },
             },
             'secondary_worker_config': {
-                'num_instances': dataset_type.dataproc_preemptibles,
+                'num_instances': 0,
                 'machine_type_uri': INSTANCE_TYPE,
                 'disk_config': {
                     'boot_disk_type': 'pd-standard',
@@ -90,23 +90,21 @@ def get_cluster_config(
             'software_config': {
                 'image_version': DEBIAN_IMAGE,
                 'properties': {
-                    'spark:spark.driver.maxResultSize': '0',
                     'spark:spark.task.maxFailures': '20',
-                    'spark:spark.kryoserializer.buffer.max': '2g',
                     'spark:spark.driver.extraJavaOptions': '-Xss16M',
                     'spark:spark.executor.extraJavaOptions': '-Xss16M',
+                    'spark:spark.speculation': 'true',
                     'hdfs:dfs.replication': '1',
                     'dataproc:dataproc.logging.stackdriver.enable': 'false',
                     'dataproc:dataproc.monitoring.stackdriver.enable': 'false',
-                    'spark:spark.driver.memory': '41g',
-                    'yarn:yarn.nodemanager.resource.memory-mb': '50585',
-                    'yarn:yarn.scheduler.maximum-allocation-mb': '25292',
+                    'spark:spark.driver.memory': '105g',
+                    'yarn:yarn.nodemanager.resource.memory-mb': '124518',
+                    'yarn:yarn.scheduler.maximum-allocation-mb': '31128',
                     'spark:spark.executor.cores': '4',
-                    'spark:spark.executor.memory': '10117m',
-                    'spark:spark.executor.memoryOverhead': '15175m',
+                    'spark:spark.executor.memory': '12452m',
+                    'spark:spark.executor.memoryOverhead': '18676m',
                     'spark:spark.memory.storageFraction': '0.2',
-                    'spark:spark.executorEnv.HAIL_WORKER_OFF_HEAP_MEMORY_PER_CORE_MB': '6323',
-                    'spark:spark.speculation': 'true',
+                    'spark:spark.executorEnv.HAIL_WORKER_OFF_HEAP_MEMORY_PER_CORE_MB': '7782',
                     'spark-env:CHECK_SEX_AND_RELATEDNESS': '1'
                     if FeatureFlag.CHECK_SEX_AND_RELATEDNESS
                     else '0',
