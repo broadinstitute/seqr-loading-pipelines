@@ -16,7 +16,7 @@ from loading_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
 from loading_pipeline.lib.tasks.write_validation_errors_for_run import (
-    WriteValidationErrorsForRunTask,
+    UpdatedValidationErrorsForRunTask,
 )
 from loading_pipeline.lib.test.misc import copy_project_pedigree_to_mocked_dir
 from loading_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
@@ -255,7 +255,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
         worker.add(wrsc_task)
         worker.run()
         self.assertFalse(wrsc_task.complete())
-        write_validation_errors_task = WriteValidationErrorsForRunTask(
+        updated_validation_errors_task = UpdatedValidationErrorsForRunTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WES,
@@ -264,8 +264,8 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
-        self.assertTrue(write_validation_errors_task.complete())
-        with write_validation_errors_task.output().open('r') as f:
+        self.assertTrue(updated_validation_errors_task.complete())
+        with updated_validation_errors_task.output().open('r') as f:
             self.assertDictEqual(
                 json.load(f),
                 {

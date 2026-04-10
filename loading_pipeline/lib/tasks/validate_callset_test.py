@@ -16,7 +16,7 @@ from loading_pipeline.lib.tasks.validate_callset import (
     ValidateCallsetTask,
 )
 from loading_pipeline.lib.tasks.write_validation_errors_for_run import (
-    WriteValidationErrorsForRunTask,
+    UpdatedValidationErrorsForRunTask,
 )
 from loading_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
@@ -59,7 +59,7 @@ class ValidateCallsetTest(MockedDatarootTestCase):
         worker.run()
         self.assertFalse(validate_callset_task.complete())
 
-        write_validation_errors_task = WriteValidationErrorsForRunTask(
+        updated_validation_errors_task = UpdatedValidationErrorsForRunTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WES,
@@ -67,8 +67,8 @@ class ValidateCallsetTest(MockedDatarootTestCase):
             project_guids=['project_a'],
             run_id=TEST_RUN_ID,
         )
-        self.assertTrue(write_validation_errors_task.complete())
-        with write_validation_errors_task.output().open('r') as f:
+        self.assertTrue(updated_validation_errors_task.complete())
+        with updated_validation_errors_task.output().open('r') as f:
             self.assertDictEqual(
                 json.load(f),
                 {

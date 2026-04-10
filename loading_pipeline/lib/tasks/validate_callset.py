@@ -22,7 +22,7 @@ from loading_pipeline.lib.tasks.write_postprocessed_callset import (
     WritePostprocessedCallsetTask,
 )
 from loading_pipeline.lib.tasks.write_validation_errors_for_run import (
-    WriteValidationErrorsForRunTask,
+    UpdatedValidationErrorsForRunTask,
 )
 
 MAX_SNV_INDEL_ALLELE_LENGTH = 500
@@ -127,16 +127,16 @@ class ValidateCallsetTask(BaseUpdateTask):
             except SeqrValidationError as e:
                 validation_exceptions.append(e)
         if validation_exceptions:
-            write_validation_errors_for_run_task = self.clone(
-                WriteValidationErrorsForRunTask,
+            updated_validation_errors_for_run_task = self.clone(
+                UpdatedValidationErrorsForRunTask,
                 error_messages=[e.msg for e in validation_exceptions],
                 error_body={
                     k: v for e in validation_exceptions for k, v in e.error_body.items()
                 },
             )
-            write_validation_errors_for_run_task.run()
+            updated_validation_errors_for_run_task.run()
             raise SeqrValidationError(
-                write_validation_errors_for_run_task.to_single_error_message(),
+                updated_validation_errors_for_run_task.to_single_error_message(),
             )
         return mt.select_globals(
             callset_path=self.callset_path,
