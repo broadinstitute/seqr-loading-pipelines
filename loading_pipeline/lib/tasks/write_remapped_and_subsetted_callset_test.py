@@ -23,7 +23,9 @@ from loading_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTes
 
 TEST_VCF = 'loading_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_PEDIGREE_3_REMAP = 'loading_pipeline/var/test/pedigrees/test_pedigree_3_remap.tsv'
-TEST_PEDIGREE_3_DIFFERENT_FAMILIES = 'loading_pipeline/var/test/pedigrees/test_pedigree_3_different_families.tsv'
+TEST_PEDIGREE_3_DIFFERENT_FAMILIES = (
+    'loading_pipeline/var/test/pedigrees/test_pedigree_3_different_families.tsv'
+)
 TEST_PEDIGREE_4_REMAP = 'loading_pipeline/var/test/pedigrees/test_pedigree_4_remap.tsv'
 TEST_PEDIGREE_7 = 'loading_pipeline/var/test/pedigrees/test_pedigree_7.tsv'
 TEST_SEX_CHECK_1 = 'loading_pipeline/var/test/sex_check/test_sex_check_1.ht'
@@ -32,6 +34,7 @@ TEST_RELATEDNESS_CHECK_1 = (
 )
 
 TEST_RUN_ID = 'manual__2024-04-03'
+
 
 class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
     def setUp(self) -> None:
@@ -429,7 +432,6 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
         self.assertTrue(updated_validation_errors_task.complete())
         with updated_validation_errors_task.output().open('r') as f:
             validation_errors = json.load(f)
-
 
         # Verify that all families failed in the second run
         self.assertIn(
