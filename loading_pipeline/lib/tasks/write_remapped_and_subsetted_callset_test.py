@@ -426,11 +426,10 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             validations_to_skip=[ALL_VALIDATIONS],
             run_id=TEST_RUN_ID,
         )
-        #self.assertTrue(updated_validation_errors_task.complete())
+        self.assertTrue(updated_validation_errors_task.complete())
         with updated_validation_errors_task.output().open('r') as f:
             validation_errors = json.load(f)
 
-        print(validation_errors)
 
         # Verify that all families failed in the second run
         self.assertIn(
