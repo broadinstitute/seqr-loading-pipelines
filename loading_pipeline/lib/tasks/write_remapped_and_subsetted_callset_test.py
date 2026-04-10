@@ -448,7 +448,9 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             validation_errors = json.load(f)
 
         # Verify that all families failed in the second run
-        self.assertIn('All families failed validation checks', validation_errors['error_messages'])
+        self.assertIn(
+            'All families failed validation checks', validation_errors['error_messages']
+        )
         # Should have missing samples, sex checks, and ploidy checks all failing
         failed_samples = validation_errors['failed_family_samples']
         self.assertTrue(failed_samples['missing_samples'])

@@ -15,7 +15,11 @@ def _deep_merge_dicts(existing: dict, new: dict) -> dict:
     """Recursively merge new dict into existing dict."""
     result = existing.copy()
     for key, new_value in new.items():
-        if key in result and isinstance(result[key], dict) and isinstance(new_value, dict):
+        if (
+            key in result
+            and isinstance(result[key], dict)
+            and isinstance(new_value, dict)
+        ):
             result[key] = _deep_merge_dicts(result[key], new_value)
         else:
             result[key] = new_value
@@ -45,8 +49,9 @@ class UpdatedValidationErrorsForRunTask(luigi.Task):
             input_error_messages = set(self.error_messages)
 
             # Check if all input items are in output
-            return (input_project_guids.issubset(output_project_guids) and
-                    input_error_messages.issubset(output_error_messages))
+            return input_project_guids.issubset(
+                output_project_guids
+            ) and input_error_messages.issubset(output_error_messages)
         except Exception:
             return False
 
@@ -76,14 +81,22 @@ class UpdatedValidationErrorsForRunTask(luigi.Task):
                 existing_data = json.load(f)
 
         # Append new project_guids to existing ones
-        project_guids = existing_data.get('project_guids', []) + list(self.project_guids)
+        project_guids = existing_data.get('project_guids', []) + list(
+            self.project_guids
+        )
 
         # Append new error_messages to existing ones
-        error_messages = existing_data.get('error_messages', []) + list(self.error_messages)
+        error_messages = existing_data.get('error_messages', []) + list(
+            self.error_messages
+        )
 
         # Merge error_body with new data recursively
         error_body = _deep_merge_dicts(
-            {k: v for k, v in existing_data.items() if k not in ('project_guids', 'error_messages')},
+            {
+                k: v
+                for k, v in existing_data.items()
+                if k not in ('project_guids', 'error_messages')
+            },
             luigi.freezing.recursively_unfreeze(self.error_body),
         )
 
