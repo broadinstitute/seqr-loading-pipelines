@@ -31,6 +31,7 @@ TEST_RELATEDNESS_CHECK_1 = (
 )
 
 TEST_RUN_ID = 'manual__2024-04-03'
+TEST_RUN_ID_2 = 'manual__2024-04-04'
 
 
 class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
@@ -358,3 +359,98 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
                     },
                 },
             )
+
+    @patch(
+        'loading_pipeline.lib.tasks.write_remapped_and_subsetted_callset.FeatureFlag',
+    )
+    def test_write_remapped_and_subsetted_callset_task_combined_validation_errors(
+        self,
+        mock_ff: Mock,
+    ) -> None:
+        """Test that validation errors are properly written across multiple runs.
+
+        This combines the results of:
+        - test_write_remapped_and_subsetted_callset_task_failed_some_family_checks
+        - test_write_remapped_and_subsetted_callset_task_all_families_failed
+
+        Uses different run IDs for the same project to verify that validation errors
+        from both runs are properly written.
+        """
+        # First run: load pedigree 4 where some families fail validation checks
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_4_REMAP,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            SampleType.WGS,
+            'R0114_project4',
+        )
+        mock_ff.CHECK_SEX_AND_RELATEDNESS = True
+        worker = luigi.worker.Worker()
+
+        wrsc_task_1 = WriteRemappedAndSubsettedCallsetTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            run_id=TEST_RUN_ID,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_VCF,
+            project_guids=['R0114_project4'],
+            project_i=0,
+            validations_to_skip=[ALL_VALIDATIONS],
+            skip_expect_tdr_metrics=True,
+        )
+        worker.add(wrsc_task_1)
+        worker.run()
+
+        # Verify first task completes with some families passing
+        self.assertTrue(wrsc_task_1.complete())
+        mt_1 = hl.read_matrix_table(wrsc_task_1.output().path)
+        self.assertEqual(mt_1.count(), (30, 8))
+
+        # Second run: load pedigree 7 where all families fail validation checks
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_7,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            SampleType.WGS,
+            'R0114_project4',
+        )
+        worker_2 = luigi.worker.Worker()
+
+        wrsc_task_2 = WriteRemappedAndSubsettedCallsetTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            run_id=TEST_RUN_ID_2,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_VCF,
+            project_guids=['R0114_project4'],
+            project_i=0,
+            validations_to_skip=[ALL_VALIDATIONS],
+            skip_expect_tdr_metrics=True,
+        )
+        worker_2.add(wrsc_task_2)
+        worker_2.run()
+
+        # Verify second task does not complete (all families failed)
+        self.assertFalse(wrsc_task_2.complete())
+
+        # Verify validation errors for second run
+        updated_validation_errors_task = UpdatedValidationErrorsForRunTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WES,
+            callset_path=TEST_VCF,
+            project_guids=['R0114_project4'],
+            validations_to_skip=[ALL_VALIDATIONS],
+            run_id=TEST_RUN_ID_2,
+        )
+        self.assertTrue(updated_validation_errors_task.complete())
+        with updated_validation_errors_task.output().open('r') as f:
+            validation_errors = json.load(f)
+
+        # Verify that all families failed in the second run
+        self.assertIn('All families failed validation checks', validation_errors['error_messages'])
+        # Should have missing samples, sex checks, and ploidy checks all failing
+        failed_samples = validation_errors['failed_family_samples']
+        self.assertTrue(failed_samples['missing_samples'])
+        self.assertTrue(failed_samples['sex_check'])
+        self.assertTrue(failed_samples['ploidy_check'])
