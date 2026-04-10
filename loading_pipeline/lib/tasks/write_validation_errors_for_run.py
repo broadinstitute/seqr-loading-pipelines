@@ -38,22 +38,19 @@ class UpdatedValidationErrorsForRunTask(luigi.Task):
         if not output_path.exists():
             return False
 
-        try:
-            with output_path.open('r') as f:
-                data = json.load(f)
+        with output_path.open('r') as f:
+            data = json.load(f)
 
-            output_project_guids = set(data.get('project_guids', []))
-            output_error_messages = set(data.get('error_messages', []))
+        output_project_guids = set(data.get('project_guids', []))
+        output_error_messages = set(data.get('error_messages', []))
 
-            input_project_guids = set(self.project_guids)
-            input_error_messages = set(self.error_messages)
+        input_project_guids = set(self.project_guids)
+        input_error_messages = set(self.error_messages)
 
-            # Check if all input items are in output
-            return input_project_guids.issubset(
-                output_project_guids
-            ) and input_error_messages.issubset(output_error_messages)
-        except Exception:
-            return False
+        # Check if all input items are in output
+        return input_project_guids.issubset(
+            output_project_guids,
+        ) and input_error_messages.issubset(output_error_messages)
 
     def to_single_error_message(self) -> str:
         with self.output().open('r') as f:
@@ -82,12 +79,12 @@ class UpdatedValidationErrorsForRunTask(luigi.Task):
 
         # Append new project_guids to existing ones
         project_guids = existing_data.get('project_guids', []) + list(
-            self.project_guids
+            self.project_guids,
         )
 
         # Append new error_messages to existing ones
         error_messages = existing_data.get('error_messages', []) + list(
-            self.error_messages
+            self.error_messages,
         )
 
         # Merge error_body with new data recursively

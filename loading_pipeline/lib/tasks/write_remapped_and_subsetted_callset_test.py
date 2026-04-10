@@ -449,7 +449,8 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
 
         # Verify that all families failed in the second run
         self.assertIn(
-            'All families failed validation checks', validation_errors['error_messages']
+            'All families failed validation checks',
+            validation_errors['error_messages'],
         )
         # Should have missing samples, sex checks, and ploidy checks all failing
         failed_samples = validation_errors['failed_family_samples']
