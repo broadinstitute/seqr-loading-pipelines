@@ -77,14 +77,18 @@ class UpdatedValidationErrorsForRunTask(luigi.Task):
             with output_path.open('r') as f:
                 existing_data = json.load(f)
 
-        # Append new project_guids to existing ones
-        project_guids = existing_data.get('project_guids', []) + list(
-            self.project_guids,
+        # Append new project_guids to existing ones and deduplicate while preserving order
+        project_guids = list(
+            dict.fromkeys(
+                existing_data.get('project_guids', []) + list(self.project_guids),
+            ),
         )
 
-        # Append new error_messages to existing ones
-        error_messages = existing_data.get('error_messages', []) + list(
-            self.error_messages,
+        # Append new error_messages to existing ones and deduplicate while preserving order
+        error_messages = list(
+            dict.fromkeys(
+                existing_data.get('error_messages', []) + list(self.error_messages),
+            ),
         )
 
         # Merge error_body with new data recursively
