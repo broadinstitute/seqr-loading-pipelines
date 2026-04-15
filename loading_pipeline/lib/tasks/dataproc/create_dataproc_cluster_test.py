@@ -17,7 +17,6 @@ from loading_pipeline.lib.tasks.dataproc.create_dataproc_cluster import (
     'loading_pipeline.lib.tasks.dataproc.create_dataproc_cluster.Env',
     GCLOUD_PROJECT='proj',
     GCLOUD_REGION='us-a',
-    GCLOUD_ZONE='us-a-1',
 )
 @patch(
     'loading_pipeline.lib.tasks.dataproc.create_dataproc_cluster.get_service_account_credentials',

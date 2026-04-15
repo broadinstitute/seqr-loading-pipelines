@@ -48,7 +48,6 @@ def get_cluster_config(
         # Schema found at https://cloud.google.com/dataproc/docs/reference/rest/v1/ClusterConfig
         'config': {
             'gce_cluster_config': {
-                'zone_uri': Env.GCLOUD_ZONE,
                 'metadata': {
                     'WHEEL': f'gs://hail-common/hailctl/dataproc/{HAIL_VERSION}/hail-{HAIL_VERSION}-py3-none-any.whl',
                     'PKGS': PKGS,
@@ -189,8 +188,8 @@ class CreateDataprocClusterTask(luigi.Task):
         )
 
     def run(self):
-        if not Env.GCLOUD_PROJECT or not Env.GCLOUD_REGION or not Env.GCLOUD_ZONE:
-            msg = 'Environment Variables GCLOUD_PROJECT, GCLOUD_REGION, GCLOUD_ZONE are required for running the pipeline on dataproc.'
+        if not Env.GCLOUD_PROJECT or not Env.GCLOUD_REGION:
+            msg = 'Environment Variables GCLOUD_PROJECT, GCLOUD_REGION are required for running the pipeline on dataproc.'
             raise RuntimeError(msg)
         cluster = self.safely_get_cluster()
         if not cluster:
