@@ -84,7 +84,9 @@ class BaseRunJobOnDataprocTask(luigi.Task):
         # Delete the job if it exists and was failed.  This handles manual re-runs of the
         # same run_id.
         if job and job.status.state in FAILURE_STATUSES:
-            logger.error(f'Previous job {self.job_id} failed with state {job.status.state.name}')
+            logger.error(
+                f'Previous job {self.job_id} failed with state {job.status.state.name}'
+            )
             logger.error(job.status.details)
             self.client.delete_job(
                 request={
