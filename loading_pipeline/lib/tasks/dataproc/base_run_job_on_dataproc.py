@@ -85,7 +85,7 @@ class BaseRunJobOnDataprocTask(luigi.Task):
         # same run_id.
         if job and job.status.state in FAILURE_STATUSES:
             logger.error(
-                f'Previous job {self.job_id} failed with state {job.status.state.name}'
+                f'Previous job {self.job_id} failed with state {job.status.state.name}',
             )
             logger.error(job.status.details)
             self.client.delete_job(
