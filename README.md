@@ -65,13 +65,13 @@ curl https://clickhouse.com/ | sh
 
 ### Run an Individual Test
 ```bash
-uv run nosetests loading_pipeline/lib/misc/math_test.py
+uv run pytest loading_pipeline/lib/misc/math_test.py
 ```
 
 ### Formatting and Linting
 ```bash
-ruff format .
-ruff check .
+uv run ruff format .
+uv run ruff check .
 ```
 
 ## 🚪 Schema Entrypoints
