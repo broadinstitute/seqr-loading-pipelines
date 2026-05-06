@@ -13,7 +13,7 @@ from loading_pipeline.lib.tasks.exports.write_new_variant_details_parquet import
 from loading_pipeline.lib.tasks.exports.write_new_variants_parquet import (
     WriteNewVariantsParquetTask,
 )
-from loading_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
+from loading_pipeline.lib.tasks.update_variant_annotations_table_with_new_variants import (
     UpdateVariantAnnotationsTableWithNewVariantsTask,
 )
 from loading_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRunTask

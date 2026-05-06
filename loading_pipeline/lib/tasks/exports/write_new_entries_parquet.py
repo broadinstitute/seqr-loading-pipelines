@@ -18,7 +18,7 @@ from loading_pipeline.lib.tasks.base.base_loading_run_params import (
 from loading_pipeline.lib.tasks.base.base_write_parquet import BaseWriteParquetTask
 from loading_pipeline.lib.tasks.exports.fields import get_entries_export_fields
 from loading_pipeline.lib.tasks.files import GCSorLocalTarget
-from loading_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
+from loading_pipeline.lib.tasks.update_variant_annotations_table_with_new_variants import (
     UpdateVariantAnnotationsTableWithNewVariantsTask,
 )
 from loading_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (

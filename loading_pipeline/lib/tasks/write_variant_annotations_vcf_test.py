@@ -6,7 +6,7 @@ import luigi.worker
 
 from loading_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from loading_pipeline.lib.misc.validation import ALL_VALIDATIONS
-from loading_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
+from loading_pipeline.lib.tasks.update_variant_annotations_table_with_new_variants import (
     UpdateVariantAnnotationsTableWithNewVariantsTask,
 )
 from loading_pipeline.lib.tasks.write_variant_annotations_vcf import (

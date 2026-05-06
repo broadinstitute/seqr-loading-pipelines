@@ -33,7 +33,7 @@ from loading_pipeline.lib.paths import (
 )
 from loading_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 from loading_pipeline.lib.tasks.files import GCSorLocalFolderTarget
-from loading_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
+from loading_pipeline.lib.tasks.update_variant_annotations_table_with_new_variants import (
     UpdateVariantAnnotationsTableWithNewVariantsTask,
 )
 from loading_pipeline.lib.test.misc import copy_project_pedigree_to_mocked_dir
