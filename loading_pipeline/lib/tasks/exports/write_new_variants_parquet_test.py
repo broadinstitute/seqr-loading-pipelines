@@ -346,7 +346,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
         )
 
     @mock.patch(
-        'loading_pipeline.lib.tasks.exports.write_new_variants_parquet.UpdateVariantAnnotationsTableWithNewSamplesTask',
+        'loading_pipeline.lib.tasks.exports.write_new_variants_parquet.UpdateVariantAnnotationsTableWithNewVariantsTask',
     )
     @mock.patch(
         'loading_pipeline.lib.tasks.exports.write_new_variants_parquet.get_callset_ht',

@@ -31,7 +31,7 @@ prod = [
 ]
 dev = [
     "coverage>=7.2.2",
-    "nose-py3>=1.6.3", # bug in regular nose here: https://github.com/nose-devs/nose/issues/1099#issuecomment-577647469
+    "pytest>=7.0.0",
     "responses>=0.23.1",
     "ruff==0.11.3",
     "shellcheck-py>=0.10.0",

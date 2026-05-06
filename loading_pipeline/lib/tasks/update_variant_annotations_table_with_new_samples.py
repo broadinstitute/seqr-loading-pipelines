@@ -23,7 +23,7 @@ from loading_pipeline.lib.tasks.write_new_variants_table import (
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
-class UpdateVariantAnnotationsTableWithNewSamplesTask(
+class UpdateVariantAnnotationsTableWithNewVariantsTask(
     BaseUpdateTask,
 ):
     def output(self) -> luigi.Target:

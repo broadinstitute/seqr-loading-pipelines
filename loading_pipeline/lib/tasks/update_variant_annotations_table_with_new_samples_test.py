@@ -34,7 +34,7 @@ from loading_pipeline.lib.paths import (
 from loading_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 from loading_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from loading_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
-    UpdateVariantAnnotationsTableWithNewSamplesTask,
+    UpdateVariantAnnotationsTableWithNewVariantsTask,
 )
 from loading_pipeline.lib.test.misc import copy_project_pedigree_to_mocked_dir
 from loading_pipeline.lib.test.mocked_reference_datasets_testcase import (
@@ -80,13 +80,13 @@ GENE_ID_MAPPING = {
 TEST_RUN_ID = 'manual__2024-04-03'
 
 
-class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
+class UpdateVariantAnnotationsTableWithNewVariantsTaskTest(
     MockedReferenceDatasetsTestCase,
 ):
     def test_missing_pedigree(
         self,
     ) -> None:
-        uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
+        uvatwns_task = UpdateVariantAnnotationsTableWithNewVariantsTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
@@ -184,7 +184,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             'R0113_test_project',
         )
         worker = luigi.worker.Worker()
-        uvatwns_task_3 = UpdateVariantAnnotationsTableWithNewSamplesTask(
+        uvatwns_task_3 = UpdateVariantAnnotationsTableWithNewVariantsTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
@@ -225,7 +225,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             'R0114_project4',
         )
         # Ensure that new variants are added correctly to the table.
-        uvatwns_task_4 = UpdateVariantAnnotationsTableWithNewSamplesTask(
+        uvatwns_task_4 = UpdateVariantAnnotationsTableWithNewVariantsTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
@@ -375,7 +375,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             'R0113_test_project',
         )
         worker = luigi.worker.Worker()
-        uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
+        uvatwns_task = UpdateVariantAnnotationsTableWithNewVariantsTask(
             reference_genome=ReferenceGenome.GRCh37,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
@@ -464,7 +464,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         )
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
-            UpdateVariantAnnotationsTableWithNewSamplesTask(
+            UpdateVariantAnnotationsTableWithNewVariantsTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.MITO,
                 sample_type=SampleType.WGS,
@@ -549,7 +549,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         )
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
-            UpdateVariantAnnotationsTableWithNewSamplesTask(
+            UpdateVariantAnnotationsTableWithNewVariantsTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SV,
                 sample_type=SampleType.WGS,
@@ -1007,7 +1007,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             'R0115_test_project2',
         )
         update_variant_annotations_task = (
-            UpdateVariantAnnotationsTableWithNewSamplesTask(
+            UpdateVariantAnnotationsTableWithNewVariantsTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SV,
                 sample_type=SampleType.WGS,
@@ -1125,7 +1125,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         )
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
-            UpdateVariantAnnotationsTableWithNewSamplesTask(
+            UpdateVariantAnnotationsTableWithNewVariantsTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SV,
                 sample_type=SampleType.WGS,
@@ -1157,7 +1157,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         )
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
-            UpdateVariantAnnotationsTableWithNewSamplesTask(
+            UpdateVariantAnnotationsTableWithNewVariantsTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.GCNV,
                 sample_type=SampleType.WES,
@@ -1295,7 +1295,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             'R0115_test_project2',
         )
         update_variant_annotations_task = (
-            UpdateVariantAnnotationsTableWithNewSamplesTask(
+            UpdateVariantAnnotationsTableWithNewVariantsTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.GCNV,
                 sample_type=SampleType.WES,
