@@ -7,9 +7,9 @@ import luigi
 import luigi.util
 import onnx
 
-from loading_pipeline.lib.misc.callsets import get_callset_mt
 from loading_pipeline.lib.methods.sample_qc import call_sample_qc
-from loading_pipeline.lib.misc.io import import_tdr_qc_metrics, checkpoint
+from loading_pipeline.lib.misc.callsets import get_callset_mt
+from loading_pipeline.lib.misc.io import checkpoint, import_tdr_qc_metrics
 from loading_pipeline.lib.paths import (
     ancestry_model_rf_path,
     sample_qc_json_path,
@@ -21,7 +21,9 @@ from loading_pipeline.lib.tasks.files import GCSorLocalTarget, RawFileTask
 from loading_pipeline.lib.tasks.reference_data.updated_reference_dataset import (
     UpdatedReferenceDatasetTask,
 )
-from loading_pipeline.lib.tasks.validate_callset import ValidateCallsetTask
+from loading_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
+    WriteRemappedAndSubsettedCallsetTask,
+)
 from loading_pipeline.lib.tasks.write_tdr_metrics_files import WriteTDRMetricsFilesTask
 
 
