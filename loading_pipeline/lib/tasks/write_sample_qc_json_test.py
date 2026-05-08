@@ -11,12 +11,14 @@ from loading_pipeline.lib.core import DatasetType, ReferenceGenome, SampleType
 from loading_pipeline.lib.misc.validation import ALL_VALIDATIONS
 from loading_pipeline.lib.paths import ancestry_model_rf_path, tdr_metrics_dir
 from loading_pipeline.lib.tasks.write_sample_qc_json import WriteSampleQCJsonTask
+from loading_pipeline.lib.test.misc import copy_project_pedigree_to_mocked_dir
 from loading_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from loading_pipeline.lib.test.mocked_reference_datasets_testcase import (
     MockedReferenceDatasetsTestCase,
 )
 
 TEST_VCF = 'loading_pipeline/var/test/callsets/1kg_30variants.vcf'
+TEST_PEDIGREE_3_REMAP = 'loading_pipeline/var/test/pedigrees/test_pedigree_3_remap.tsv'
 TEST_TDR_METRICS_FILE = 'loading_pipeline/var/test/tdr_metrics.tsv'
 TEST_RUN_ID = 'manual__2024-04-03'
 
@@ -47,6 +49,13 @@ class WriteSampleQCJsonTaskTest(MockedReferenceDatasetsTestCase):
         mock_pc_project: Mock,
         mock_assign_population_pcs: Mock,
     ) -> None:
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_3_REMAP,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            SampleType.WGS,
+            'R0113_test_project',
+        )
         os.makedirs(
             os.path.dirname(ancestry_model_rf_path()),
             exist_ok=True,
@@ -129,7 +138,7 @@ class WriteSampleQCJsonTaskTest(MockedReferenceDatasetsTestCase):
             res = json.load(f)
 
         self.assertCountEqual(
-            res['HG00731'],
+            res['HG00731_1'],
             {
                 'filtered_callrate': 1.0,
                 'contamination_rate': 5.099999904632568,
@@ -170,7 +179,7 @@ class WriteSampleQCJsonTaskTest(MockedReferenceDatasetsTestCase):
             },
         )
         self.assertCountEqual(
-            res['HG00732'],
+            res['HG00732_1'],
             {
                 'filtered_callrate': 1.0,
                 'contamination_rate': 5.0,
@@ -211,7 +220,7 @@ class WriteSampleQCJsonTaskTest(MockedReferenceDatasetsTestCase):
             },
         )
         self.assertCountEqual(
-            res['HG00733'],
+            res['HG00733_1'],
             {
                 'filtered_callrate': 1.0,
                 'contamination_rate': 6.0,
@@ -251,44 +260,4 @@ class WriteSampleQCJsonTaskTest(MockedReferenceDatasetsTestCase):
                 'qc_metrics_filters': ['n_deletion', 'n_insertion', 'n_snp'],
             },
         )
-        self.assertCountEqual(
-            res['NA19675'],
-            {
-                'filtered_callrate': 1.0,
-                'contamination_rate': 0.0,
-                'percent_bases_at_20x': 80.0,
-                'mean_coverage': 30.0,
-                'filter_flags': [],
-                **expected_qc_gen_anc_results,
-                'sample_qc.call_rate': 0.9666666666666667,
-                'sample_qc.n_called': 29,
-                'sample_qc.n_not_called': 1,
-                'sample_qc.n_filtered': 0,
-                'sample_qc.n_hom_ref': 18,
-                'sample_qc.n_het': 1,
-                'sample_qc.n_hom_var': 10,
-                'sample_qc.n_non_ref': 11,
-                'sample_qc.n_singleton': 1,
-                'sample_qc.n_snp': 21,
-                'sample_qc.n_insertion': 0,
-                'sample_qc.n_deletion': 0,
-                'sample_qc.n_transition': 12,
-                'sample_qc.n_transversion': 9,
-                'sample_qc.n_star': 0,
-                'sample_qc.r_ti_tv': 1.3333333333333333,
-                'sample_qc.r_het_hom_var': 0.1,
-                'sample_qc.r_insertion_deletion': None,
-                'sample_qc.f_inbreeding.f_stat': 0.6538664159736507,
-                'sample_qc.f_inbreeding.n_called': 29,
-                'sample_qc.f_inbreeding.expected_homs': 26.11094199999999,
-                'sample_qc.f_inbreeding.observed_homs': 28,
-                'fail_n_snp': False,
-                'fail_r_ti_tv': False,
-                'fail_r_insertion_deletion': None,
-                'fail_n_insertion': True,
-                'fail_n_deletion': True,
-                'fail_r_het_hom_var': False,
-                'fail_call_rate': True,
-                'qc_metrics_filters': ['call_rate', 'n_deletion', 'n_insertion'],
-            },
-        )
+        self.assertFalse('NA19675' in res)
