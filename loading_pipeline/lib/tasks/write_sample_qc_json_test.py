@@ -140,6 +140,8 @@ class WriteSampleQCJsonTaskTest(MockedReferenceDatasetsTestCase):
         self.assertCountEqual(
             res['HG00731_1'],
             {
+                'seqr_id': 'HG00731_1',
+                'vcf_id': 'HG00731',
                 'filtered_callrate': 1.0,
                 'contamination_rate': 5.099999904632568,
                 'percent_bases_at_20x': 93.69000244140625,
@@ -181,6 +183,8 @@ class WriteSampleQCJsonTaskTest(MockedReferenceDatasetsTestCase):
         self.assertCountEqual(
             res['HG00732_1'],
             {
+                'seqr_id': 'HG00732_1',
+                'vcf_id': 'HG00732',
                 'filtered_callrate': 1.0,
                 'contamination_rate': 5.0,
                 'percent_bases_at_20x': 90.0,
@@ -222,6 +226,8 @@ class WriteSampleQCJsonTaskTest(MockedReferenceDatasetsTestCase):
         self.assertCountEqual(
             res['HG00733_1'],
             {
+                'seqr_id': 'HG00733_1',
+                'vcf_id': 'HG00733',
                 'filtered_callrate': 1.0,
                 'contamination_rate': 6.0,
                 'percent_bases_at_20x': 85.0,
