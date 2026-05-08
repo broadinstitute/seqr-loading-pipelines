@@ -35,6 +35,21 @@ def get_callset_ht(
 
 
 def union_callset_mts(callset_mts):
+    """Merge multiple callset matrix tables into a single matrix table.
+
+    Combines callset matrix tables from multiple projects by unioning the column
+    dimension (samples/individuals). Uses an outer join on rows (variants) to
+    preserve all unique variants across all callsets, with missing genotypes
+    filled in as appropriate. Row fields are deduplicated by keeping only the
+    left table's row metadata.
+
+    Args:
+        callset_mts: A sequence of Hail matrix tables to merge.
+
+    Returns:
+        A single matrix table containing all samples and variants from the input
+        callsets, with row and entry fields merged.
+    """
     return functools.reduce(
         (
             lambda mt1, mt2: mt1.union_cols(
