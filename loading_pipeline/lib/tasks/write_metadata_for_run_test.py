@@ -29,8 +29,12 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
     @mock.patch(
         'loading_pipeline.lib.tasks.write_sex_check_table.WriteTDRMetricsFilesTask',
     )
+    @mock.patch(
+        'loading_pipeline.lib.tasks.write_metadata_for_run.WriteSampleQCJsonTask',
+    )
     def test_write_metadata_for_run_task(
         self,
+        write_sample_qc_json_task: Mock,
         write_tdr_metrics_task: Mock,
         mock_ff: Mock,
     ) -> None:
@@ -50,6 +54,7 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
         )
         mock_ff.EXPECT_TDR_METRICS = True
         write_tdr_metrics_task.return_value = MockCompleteTask()
+        write_sample_qc_json_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         write_metadata_for_run_task = WriteMetadataForRunTask(
             reference_genome=ReferenceGenome.GRCh38,
