@@ -18,6 +18,7 @@ from loading_pipeline.lib.tasks.files import GCSorLocalTarget
 from loading_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
+from loading_pipeline.lib.tasks.write_sample_qc_json import WriteSampleQCJsonTask
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
@@ -32,13 +33,25 @@ class WriteMetadataForRunTask(luigi.Task):
         )
 
     def requires(self) -> list[luigi.Task]:
-        return [
+        requirements = [
             self.clone(
                 WriteRemappedAndSubsettedCallsetTask,
                 project_i=i,
             )
             for i in range(len(self.project_guids))
         ]
+        if (
+            FeatureFlag.EXPECT_TDR_METRICS
+            and not self.skip_expect_tdr_metrics
+            and self.dataset_type.expect_tdr_metrics(
+                self.reference_genome,
+            )
+        ):
+            requirements = [
+                *requirements,
+                self.clone(WriteSampleQCJsonTask),
+            ]
+        return requirements
 
     def run(self) -> None:
         metadata_json = {
@@ -61,7 +74,7 @@ class WriteMetadataForRunTask(luigi.Task):
             'sample_qc': {},
         }
         sample_qc_loadable_samples = {}
-        for remapped_and_subsetted_callset in self.input():
+        for remapped_and_subsetted_callset in self.input()[:-1]:
             callset_mt = hl.read_matrix_table(remapped_and_subsetted_callset.path)
             collected_globals = callset_mt.globals.collect()[0]
             metadata_json['family_samples'] = {

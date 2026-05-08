@@ -74,8 +74,8 @@ class WriteSampleQCJsonTask(luigi.Task):
             tdr_metrics_ht = tdr_metrics_ht.union(
                 import_tdr_qc_metrics(tdr_metrics_file.path),
             )
-        pop_pca_loadings_ht = hl.read_table(self.input()[2].path)
-        with hfs.open(self.input()[3].path, 'rb') as f:
+        pop_pca_loadings_ht = hl.read_table(self.input()[1].path)
+        with hfs.open(self.input()[2].path, 'rb') as f:
             ancestry_rf_model = onnx.load(f)
         callset_mt = call_sample_qc(
             callset_mt,

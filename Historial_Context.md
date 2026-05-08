@@ -37,7 +37,7 @@ Notes on Loading Pipeline Orchestration
 	- Failures moved to deadletter queue after 5 retries.
 - Loading pipeline runs "Luigi" via --local-scheduler locally or via Dataproc.
 	- Luigi manages task flow and nothing else.
-- Output looks like:
+- Output looks like (as of 05/26):
 ```
 gs://seqr-hail-search-data/v3.1/GRCh38/SNV_INDEL/runs/20260421-125644-303855/_CLICKHOUSE_LOAD_SUCCESS
 gs://seqr-hail-search-data/v3.1/GRCh38/SNV_INDEL/runs/20260421-125644-303855/_SUCCESS
