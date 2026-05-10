@@ -29,7 +29,7 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
 
     async def test_loading_pipeline_invalid_requests(self):
         with self.assertLogs(level='ERROR') as log:
-            async with self.client.request('GET', '/loading_pipeline_enqueue') as resp:
+            async with self.client.request('GET', '/tasks/loading_pipeline/queue') as resp:
                 self.assertEqual(
                     resp.status,
                     web_exceptions.HTTPMethodNotAllowed.status_code,
@@ -39,7 +39,7 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
                 )
 
         with self.assertLogs(level='ERROR') as log:
-            async with self.client.request('POST', '/loading_pipeline_enqueue') as resp:
+            async with self.client.request('POST', '/tasks/loading_pipeline/queue') as resp:
                 self.assertEqual(
                     resp.status,
                     web_exceptions.HTTPUnprocessableEntity.status_code,
@@ -58,7 +58,7 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
         with self.assertLogs(level='ERROR') as log:
             async with self.client.request(
                 'POST',
-                '/loading_pipeline_enqueue',
+                '/tasks/loading_pipeline/queue',
                 json=body,
             ) as resp:
                 self.assertEqual(
@@ -80,7 +80,7 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
         with self.assertLogs(level='ERROR') as log:
             async with self.client.request(
                 'POST',
-                '/loading_pipeline_enqueue',
+                '/tasks/loading_pipeline/queue',
                 json=body,
             ) as resp:
                 self.assertEqual(
@@ -91,7 +91,7 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
                     "input_value='bad_validation" in log.output[0],
                 )
 
-    async def test_loading_pipeline_enqueue(self):
+    async def test_loading_pipeline_queue(self):
         body = {
             'callset_path': CALLSET_PATH,
             'project_guids': ['project_a'],
@@ -101,7 +101,7 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
         }
         async with self.client.request(
             'POST',
-            '/loading_pipeline_enqueue',
+            '/tasks/loading_pipeline/queue',
             json=body,
         ) as resp:
             self.assertEqual(
@@ -131,10 +131,30 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
         body['project_guids'] = ['project_b', 'project_c']
         async with self.client.request(
             'POST',
-            '/loading_pipeline_enqueue',
+            '/tasks/loading_pipeline/queue',
             json=body,
         ) as resp:
             self.assertEqual(
                 resp.status,
                 web_exceptions.HTTPAccepted.status_code,
             )
+
+    async def test_loading_pipeline_enqueue_redirect(self):
+        body = {
+            'callset_path': CALLSET_PATH,
+            'project_guids': ['project_a'],
+            'sample_type': SampleType.WGS.value,
+            'reference_genome': ReferenceGenome.GRCh38.value,
+            'dataset_type': DatasetType.SNV_INDEL.value,
+        }
+        async with self.client.request(
+            'POST',
+            '/loading_pipeline_enqueue',
+            json=body,
+            allow_redirects=False,
+        ) as resp:
+            self.assertEqual(
+                resp.status,
+                web_exceptions.HTTPMovedPermanently.status_code,
+            )
+            self.assertEqual(resp.headers['Location'], '/tasks/loading_pipeline/queue')

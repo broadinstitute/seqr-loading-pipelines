@@ -64,33 +64,48 @@ async def _enqueue_request(
     )
 
 
+TASK_TYPE_TO_MODEL = {
+    'loading_pipeline': LoadingPipelineRequest,
+    'delete_families': DeleteFamiliesRequest,
+    'rebuild_gt_stats': RebuildGtStatsRequest,
+    'refresh_clickhouse_reference_dataset': RefreshClickhouseReferenceDataRequest,
+}
+
+
+async def tasks_queue(request: web.Request) -> web.Response:
+    task_type = request.match_info['task_type']
+    if task_type not in TASK_TYPE_TO_MODEL:
+        raise web.HTTPNotFound()
+    return await _enqueue_request(request, TASK_TYPE_TO_MODEL[task_type])
+
+
 async def loading_pipeline_enqueue(request: web.Request) -> web.Response:
-    return await _enqueue_request(
-        request,
-        LoadingPipelineRequest,
+    return web.Response(
+        status=web_exceptions.HTTPMovedPermanently.status_code,
+        headers={'Location': '/tasks/loading_pipeline/queue'},
     )
 
 
 async def delete_families_enqueue(request: web.Request) -> web.Response:
-    return await _enqueue_request(
-        request,
-        DeleteFamiliesRequest,
+    return web.Response(
+        status=web_exceptions.HTTPMovedPermanently.status_code,
+        headers={'Location': '/tasks/delete_families/queue'},
     )
 
 
 async def rebuild_gt_stats_enqueue(request: web.Request) -> web.Response:
-    return await _enqueue_request(
-        request,
-        RebuildGtStatsRequest,
+    return web.Response(
+        status=web_exceptions.HTTPMovedPermanently.status_code,
+        headers={'Location': '/tasks/rebuild_gt_stats/queue'},
     )
 
 
 async def refresh_clickhouse_reference_dataset_enqueue(
     request: web.Request,
 ) -> web.Response:
-    return await _enqueue_request(
-        request,
-        RefreshClickhouseReferenceDataRequest,
+    return web.Response(
+        status=web_exceptions.HTTPMovedPermanently.status_code,
+        headers={'Location': '/tasks/refresh_clickhouse_reference_dataset/queue'},
     )
 
 
@@ -107,6 +122,8 @@ async def init_web_app():
     app.add_routes(
         [
             web.get('/status', status),
+            web.post('/tasks/{task_type}/queue', tasks_queue),
+            # Legacy routes (redirect to new ones)
             web.post('/loading_pipeline_enqueue', loading_pipeline_enqueue),
             web.post('/delete_families_enqueue', delete_families_enqueue),
             web.post('/rebuild_gt_stats_enqueue', rebuild_gt_stats_enqueue),
