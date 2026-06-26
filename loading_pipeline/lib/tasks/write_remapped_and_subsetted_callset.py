@@ -67,7 +67,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                     self.sample_type,
                     self.project_guids[self.project_i],
                 ),
-            )
+            ),
         )
 
     def output(self) -> luigi.Target:
