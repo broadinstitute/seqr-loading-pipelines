@@ -55,10 +55,10 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
     def complete(self) -> luigi.Target:
         if not super().complete():
             return False
-        globals = hl.eval(hl.read_matrix_table(self.output().path).globals)
+        mt_globals = hl.eval(hl.read_matrix_table(self.output().path).globals)
         return (
-            globals.family_samples
-            and globals.remap_pedigree_hash
+            mt_globals.family_samples
+            and mt_globals.remap_pedigree_hash
             == remap_pedigree_hash(
                 project_pedigree_path(
                     self.reference_genome,
