@@ -1113,13 +1113,22 @@ def rebuild_gt_stats(
         msg = f'Skipping gt stats rebuild for {reference_genome.value}/{dataset_type.value} {project_guids[:10]}...'
         logger.info(msg)
         return
-    msg = f'Attempting rebuild gt stats for {reference_genome.value}/{dataset_type.value} {project_guids[:10]}...'
-    logger.info(msg)
     table_name_builder = TableNameBuilder(
         reference_genome,
         dataset_type,
         run_id,
     )
+    max_key = logged_query(
+        f"""
+        SELECT max(key) FROM {table_name_builder.dst_table(ClickHouseTable.GT_STATS)}
+        """,
+    )[0][0]
+    if not max_key:
+        msg = f'Skipping gt stats rebuild for empty dataset {reference_genome.value}/{dataset_type.value} {project_guids[:10]}...'
+        logger.info(msg)
+        return
+    msg = f'Attempting rebuild gt stats for {reference_genome.value}/{dataset_type.value} {project_guids[:10]}...'
+    logger.info(msg)
     drop_staging_db()
     create_staging_tables(
         table_name_builder,
@@ -1160,11 +1169,6 @@ def rebuild_gt_stats(
         table_name_builder.staging_dst_prefix,
     )
     # NB: encountered OOMs with large projects, necessitating sharding the insertion query.
-    max_key = logged_query(
-        f"""
-        SELECT max(key) FROM {table_name_builder.dst_table(ClickHouseTable.GT_STATS)}
-        """,
-    )[0][0]
     step = math.ceil(max_key / 5)
     for range_start in range(0, max_key, step):
         range_end = min(range_start + step, max_key + 1)

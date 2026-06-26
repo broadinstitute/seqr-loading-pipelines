@@ -1278,6 +1278,21 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         self.assertCountEqual(gt_stats, [(1, 0)])
 
+        rebuild_gt_stats(
+            ReferenceGenome.GRCh38,
+            DatasetType.MITO,
+            TEST_RUN_ID,
+            ['project_a', 'project_b'],
+        )
+        gt_stats = client.execute(
+            f"""
+            SELECT sum(ac_wes), sum(ac_wgs)
+            FROM
+            {Env.CLICKHOUSE_DATABASE}.`GRCh38/MITO/gt_stats`
+            """,
+        )
+        self.assertCountEqual(gt_stats, [(0, 0)])
+
     @patch.object(
         ClickhouseReferenceDataset,
         'for_reference_genome_dataset_type',
