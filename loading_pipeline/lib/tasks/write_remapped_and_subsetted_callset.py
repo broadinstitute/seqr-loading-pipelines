@@ -58,7 +58,8 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         globals = hl.eval(hl.read_matrix_table(self.output().path).globals)
         return (
             globals.family_samples
-            and globals.remap_pedigree_hash == remap_pedigree_hash(
+            and globals.remap_pedigree_hash
+            == remap_pedigree_hash(
                 project_pedigree_path(
                     self.reference_genome,
                     self.dataset_type,
