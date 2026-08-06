@@ -761,9 +761,8 @@ def optimize_entries(
             )
 
         time.sleep(Env.CLICKHOUSE_OPTIMIZE_TABLE_WAIT_S)
-    raise TimeoutError(
-        f'Entries table still contains decrement rows after {max_attempts} attempts.'
-    )
+    msg = f'Entries table still contains decrement rows after {max_attempts} attempts.'
+    raise TimeoutError(msg)
 
 
 @retry(tries=2)
