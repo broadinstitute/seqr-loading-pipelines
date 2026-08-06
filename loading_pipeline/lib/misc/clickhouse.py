@@ -695,8 +695,8 @@ def optimize_entries(
     table_name_builder: TableNameBuilder,
     project_guids: list[str],
 ) -> None:
-    safely_optimized = False
-    while not safely_optimized:
+    max_attempts = 10
+    for attempt in range(max_attempts):
         decrs_exist = logged_query(
             f"""
             SELECT EXISTS (
@@ -706,6 +706,7 @@ def optimize_entries(
             );
             """,
         )[0][0]
+
         merges_running = logged_query(
             """
             SELECT EXISTS (
@@ -722,32 +723,47 @@ def optimize_entries(
                 .replace('`', ''),
             },
         )[0][0]
-        if decrs_exist:
-            if merges_running:
-                logger.info('Decrs exist and merges are running, so waiting')
-            else:
-                logger.info('Decrs exist and no merges are running, so optimizing')
-                partitions = get_partitions_for_projects(
-                    table_name_builder,
-                    ClickHouseTable.ENTRIES,
-                    project_guids,
-                    staging=True,
-                )
-                table_name = table_name_builder.staging_dst_table(
-                    ClickHouseTable.ENTRIES,
-                )
-                optimize_statements = [
-                    f'OPTIMIZE TABLE {table_name} PARTITION {partition} FINAL'
-                    for partition in partitions
-                ]
-                parallel_optimize_sql = '\nPARALLEL WITH\n'.join(optimize_statements)
-                logged_query(
-                    parallel_optimize_sql,
-                    timeout=OPTIMIZE_TABLE_TIMEOUT_S,
-                )
-            time.sleep(Env.CLICKHOUSE_OPTIMIZE_TABLE_WAIT_S)
+
+        if not decrs_exist:
+            return
+
+        if merges_running:
+            logger.info(
+                'Decrs exist and merges are running, so waiting (attempt %d/%d)',
+                attempt + 1,
+                max_attempts,
+            )
         else:
-            safely_optimized = True
+            logger.info(
+                'Decrs exist and no merges are running, so optimizing (attempt %d/%d)',
+                attempt + 1,
+                max_attempts,
+            )
+
+            partitions = get_partitions_for_projects(
+                table_name_builder,
+                ClickHouseTable.ENTRIES,
+                project_guids,
+                staging=True,
+            )
+            table_name = table_name_builder.staging_dst_table(
+                ClickHouseTable.ENTRIES,
+            )
+            optimize_statements = [
+                f'OPTIMIZE TABLE {table_name} PARTITION {partition} FINAL'
+                for partition in partitions
+            ]
+            parallel_optimize_sql = '\nPARALLEL WITH\n'.join(optimize_statements)
+
+            logged_query(
+                parallel_optimize_sql,
+                timeout=OPTIMIZE_TABLE_TIMEOUT_S,
+            )
+
+        time.sleep(Env.CLICKHOUSE_OPTIMIZE_TABLE_WAIT_S)
+    raise TimeoutError(
+        f'Entries table still contains decrement rows after {max_attempts} attempts.'
+    )
 
 
 @retry(tries=2)

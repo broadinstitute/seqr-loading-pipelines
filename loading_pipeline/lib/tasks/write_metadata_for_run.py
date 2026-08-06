@@ -131,5 +131,16 @@ class WriteMetadataForRunTask(luigi.Task):
                     for k, v in json.load(f).items()
                     if k in sample_qc_loadable_samples
                 }
+        if not metadata_json['family_samples']:
+            msg = 'Found no loadable families in the callset.'
+            raise RuntimeError(msg)
+        empty_families = [
+            family_guid
+            for family_guid, samples in metadata_json['family_samples'].items()
+            if not samples
+        ]
+        if empty_families:
+            msg = f'Found families with no loadable samples: {sorted(empty_families)}'
+            raise RuntimeError(msg)
         with self.output().open('w') as f:
             json.dump(metadata_json, f)
