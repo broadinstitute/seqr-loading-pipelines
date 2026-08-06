@@ -43,10 +43,6 @@ class WriteClickhouseLoadSuccessFileTask(luigi.Task):
             ),
         ) as f:
             family_guids = list(json.load(f)['family_samples'].keys())
-        if not family_guids:
-            raise RuntimeError(
-                'ClickHouse Load cannot run with no loadable family guids.'
-            )
         load_complete_run(
             self.reference_genome,
             self.dataset_type,
