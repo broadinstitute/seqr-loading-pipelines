@@ -717,12 +717,10 @@ def optimize_entries(
             );
             """,
             {
-                "database": STAGING_CLICKHOUSE_DATABASE,
-                "table": table_name_builder.staging_dst_table(
-                    ClickHouseTable.ENTRIES
-                )
-                .split(".")[1]
-                .replace("`", ""),
+                'database': STAGING_CLICKHOUSE_DATABASE,
+                'table': table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)
+                .split('.')[1]
+                .replace('`', ''),
             },
         )[0][0]
 
@@ -731,15 +729,13 @@ def optimize_entries(
 
         if merges_running:
             logger.info(
-                "Decrs exist and merges are running, so waiting "
-                "(attempt %d/%d)",
+                'Decrs exist and merges are running, so waiting (attempt %d/%d)',
                 attempt + 1,
                 max_attempts,
             )
         else:
             logger.info(
-                "Decrs exist and no merges are running, so optimizing "
-                "(attempt %d/%d)",
+                'Decrs exist and no merges are running, so optimizing (attempt %d/%d)',
                 attempt + 1,
                 max_attempts,
             )
@@ -754,10 +750,10 @@ def optimize_entries(
                 ClickHouseTable.ENTRIES,
             )
             optimize_statements = [
-                f"OPTIMIZE TABLE {table_name} PARTITION {partition} FINAL"
+                f'OPTIMIZE TABLE {table_name} PARTITION {partition} FINAL'
                 for partition in partitions
             ]
-            parallel_optimize_sql = "\nPARALLEL WITH\n".join(optimize_statements)
+            parallel_optimize_sql = '\nPARALLEL WITH\n'.join(optimize_statements)
 
             logged_query(
                 parallel_optimize_sql,
@@ -766,8 +762,10 @@ def optimize_entries(
 
         time.sleep(Env.CLICKHOUSE_OPTIMIZE_TABLE_WAIT_S)
     raise TimeoutError(
-        f"Entries table still contains decrement rows after {max_attempts} attempts."
+        f'Entries table still contains decrement rows after {max_attempts} attempts.'
     )
+
+
 @retry(tries=2)
 def refresh_materialized_views(
     table_name_builder,
