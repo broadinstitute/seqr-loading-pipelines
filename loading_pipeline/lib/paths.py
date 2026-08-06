@@ -128,7 +128,7 @@ def postprocessed_callset_path(
             reference_genome,
             dataset_type,
         ),
-        'posprocessed_callsets',
+        'postprocessed_callsets',
         f'{_callset_path_hash(callset_path)}.mt',
     )
 
