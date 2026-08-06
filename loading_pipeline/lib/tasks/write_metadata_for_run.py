@@ -74,7 +74,10 @@ class WriteMetadataForRunTask(luigi.Task):
             'sample_qc': {},
         }
         sample_qc_loadable_samples = {}
-        for remapped_and_subsetted_callset in self.input()[:-1]:
+        # NB: the trailing WriteSampleQCJsonTask output is conditionally
+        # present in requires(), so slice by project count rather than
+        # dropping the last input.
+        for remapped_and_subsetted_callset in self.input()[: len(self.project_guids)]:
             callset_mt = hl.read_matrix_table(remapped_and_subsetted_callset.path)
             collected_globals = callset_mt.globals.collect()[0]
             metadata_json['family_samples'] = {

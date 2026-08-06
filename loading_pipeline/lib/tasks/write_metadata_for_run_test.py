@@ -125,3 +125,64 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
                     },
                 },
             )
+
+    @mock.patch('loading_pipeline.lib.tasks.write_metadata_for_run.FeatureFlag')
+    def test_write_metadata_for_run_task_without_tdr_metrics(
+        self,
+        mock_ff: Mock,
+    ) -> None:
+        # When WriteSampleQCJsonTask is not a requirement, every project's
+        # remapped and subsetted callset must still be collected.
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_3_REMAP,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            SampleType.WGS,
+            'R0113_test_project',
+        )
+        copy_project_pedigree_to_mocked_dir(
+            TEST_PEDIGREE_4_REMAP_2,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            SampleType.WGS,
+            'R0114_project4',
+        )
+        mock_ff.EXPECT_TDR_METRICS = False
+        worker = luigi.worker.Worker()
+        write_metadata_for_run_task = WriteMetadataForRunTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_VCF,
+            project_guids=['R0113_test_project', 'R0114_project4'],
+            validations_to_skip=[ALL_VALIDATIONS],
+            run_id='run_123457',
+        )
+        worker.add(write_metadata_for_run_task)
+        worker.run()
+        self.assertTrue(write_metadata_for_run_task.complete())
+        with write_metadata_for_run_task.output().open('r') as f:
+            metadata_json = json.load(f)
+        self.assertDictEqual(
+            metadata_json['family_samples'],
+            {
+                'abc_1': [
+                    'HG00731_1',
+                    'HG00732_1',
+                    'HG00733_1',
+                ],
+                '123_1': ['NA19675_1'],
+                '234_1': ['NA19678_1'],
+                '345_1': ['NA19679_1'],
+                '456_1': ['NA20870_1'],
+                '567_1': ['NA20872_1'],
+                '678_1': ['NA20874_1'],
+                '789_1': ['NA20875_1'],
+                '890_1': ['NA20876_1'],
+                '901_1': ['NA20877_1'],
+                'bcd_1': ['NA20878_1'],
+                'cde_1': ['NA20881_1'],
+                'def_1': ['NA20885_1'],
+            },
+        )
+        self.assertDictEqual(metadata_json['sample_qc'], {})
